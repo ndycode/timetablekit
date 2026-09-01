@@ -168,3 +168,14 @@ test("robots and sitemap use public URLs", async ({ page }) => {
     "Sitemap: https://timetablekit.vercel.app/sitemap.xml",
   );
 });
+
+test("the public JSON Schema endpoint serves the package schema", async ({
+  page,
+}) => {
+  const schema = await page.request.get("/schema/timetable-result.schema.json");
+  expect(schema).toBeOK();
+  expect(schema.headers()["cache-control"]).toContain("max-age=3600");
+  expect((await schema.json()).$id).toBe(
+    "https://timetablekit.vercel.app/schema/timetable-result.schema.json",
+  );
+});

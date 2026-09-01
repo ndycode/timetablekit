@@ -14,6 +14,8 @@ class RequestBodyTooLargeError extends Error {}
 
 class RequestTimedOutError extends Error {}
 
+class RequestAbortedError extends Error {}
+
 async function readBoundedBody(
   request: Request,
   signal: AbortSignal,
@@ -24,12 +26,18 @@ async function readBoundedBody(
   let totalBytes = 0;
   try {
     while (true) {
-      if (signal.aborted) throw new RequestTimedOutError();
+      if (signal.aborted) {
+        const reason = signal.reason;
+        throw reason instanceof Error ? reason : new RequestAbortedError();
+      }
       const next = await new Promise<ReadableStreamReadResult<Uint8Array>>(
         (resolve, reject) => {
           const onAbort = () => {
             void reader.cancel().catch(() => undefined);
-            reject(new RequestTimedOutError());
+            const reason = signal.reason;
+            reject(
+              reason instanceof Error ? reason : new RequestAbortedError(),
+            );
           };
           signal.addEventListener("abort", onAbort, { once: true });
           void reader.read().then(
@@ -97,9 +105,15 @@ export async function POST(request: Request): Promise<Response> {
   activeRequests += 1;
   const controller = new AbortController();
   let timedOut = false;
+  let clientDisconnected = false;
+  const onRequestAbort = () => {
+    clientDisconnected = true;
+    controller.abort(new RequestAbortedError());
+  };
+  request.signal.addEventListener("abort", onRequestAbort, { once: true });
   const timeout = setTimeout(() => {
     timedOut = true;
-    controller.abort();
+    controller.abort(new RequestTimedOutError());
   }, REQUEST_TIMEOUT_MS);
   try {
     const contentLength = request.headers.get("content-length");
@@ -167,6 +181,7 @@ export async function POST(request: Request): Promise<Response> {
         { status: 413 },
       );
     }
+    if (clientDisconnected) return new Response(null, { status: 499 });
     if (timedOut) {
       return Response.json(
         { error: "The parser request timed out." },
@@ -180,6 +195,7 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: message }, { status: 400 });
   } finally {
     clearTimeout(timeout);
+    request.signal.removeEventListener("abort", onRequestAbort);
     activeRequests -= 1;
   }
 }

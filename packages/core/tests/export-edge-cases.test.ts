@@ -116,5 +116,22 @@ describe("ICS export edge cases", () => {
     expect(
       errorCode(() => toICS(result, { dtstamp: "20261340T256099Z" })),
     ).toBe("EXPORT_INVALID_RESULT");
+    const weeklyDateInjection: TimetableParseResult = {
+      ...result,
+      events: [
+        {
+          ...event,
+          schedule: {
+            kind: "weekly",
+            weekdays: ["MO"],
+            startsOn: "2026-09-01",
+            endsOn: "2026-09-30\r\nX-Bad: yes",
+          },
+        },
+      ],
+    };
+    expect(errorCode(() => toICS(weeklyDateInjection))).toBe(
+      "EXPORT_INVALID_RESULT",
+    );
   });
 });

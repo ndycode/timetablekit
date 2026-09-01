@@ -22,6 +22,7 @@ type IcsOptions = {
 const ICS_TIMESTAMP = /^\d{8}T\d{6}Z$/u;
 
 function validIcsTimestamp(value: string): boolean {
+  if (value.length !== 16) return false;
   const match = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/u.exec(value);
   if (match === null || match.some((part) => part === undefined)) return false;
   const year = Number(match[1]);
@@ -94,6 +95,7 @@ function dateParts(
 ):
   | { readonly year: number; readonly month: number; readonly day: number }
   | undefined {
+  if (date.length !== 10) return undefined;
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (
     match === null ||
@@ -107,6 +109,19 @@ function dateParts(
     month: Number(match[2]),
     day: Number(match[3]),
   };
+}
+
+function validIsoDate(date: IsoDate): boolean {
+  const parts = dateParts(date);
+  if (parts === undefined) return false;
+  const candidate = new Date(0);
+  candidate.setUTCFullYear(parts.year, parts.month - 1, parts.day);
+  candidate.setUTCHours(0, 0, 0, 0);
+  return (
+    candidate.getUTCFullYear() === parts.year &&
+    candidate.getUTCMonth() === parts.month - 1 &&
+    candidate.getUTCDate() === parts.day
+  );
 }
 
 function localStamp(date: IsoDate, time: string): string {
@@ -185,6 +200,11 @@ function dateRange(
       "EXPORT_REQUIRES_TERM",
       "Weekly events require a concrete recurrence range.",
     );
+  if (!validIsoDate(startsOn) || !validIsoDate(endsOn))
+    throw new TimetableError(
+      "EXPORT_INVALID_RESULT",
+      "A weekly recurrence range contains an invalid date.",
+    );
   return { startsOn, endsOn };
 }
 
@@ -252,6 +272,11 @@ function eventLines(
       "END:VEVENT",
     ];
   } else {
+    if (event.schedule.exactDates.some((date) => !validIsoDate(date)))
+      throw new TimetableError(
+        "EXPORT_INVALID_RESULT",
+        "An exact schedule contains an invalid date.",
+      );
     return event.schedule.exactDates.flatMap((date) => {
       const uid = `${escapeIcs(event.id)}-${date}@timetablekit`;
       const start = stamp(date, event.startTime, event.timezone, mode);

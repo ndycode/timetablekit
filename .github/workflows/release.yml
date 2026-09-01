@@ -36,6 +36,12 @@ jobs:
             exit 1
           fi
           git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"
+          tag_commit=$(git rev-list -n 1 "$RELEASE_TAG")
+          head_commit=$(git rev-parse HEAD)
+          if [[ "$tag_commit" != "$head_commit" ]]; then
+            echo "Release tag must point to the checked-out commit."
+            exit 1
+          fi
           package_version=$(node -p "require('./packages/core/package.json').version")
           if [[ "v$package_version" != "$RELEASE_TAG" ]]; then
             echo "Release tag does not match the core package version."

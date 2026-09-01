@@ -1,7 +1,5 @@
 # Impact evidence
 
-# Impact evidence
-
 Snapshot date: 2026-09-01.
 
 Verified public facts:
