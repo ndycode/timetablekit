@@ -26,7 +26,7 @@ The companion CLI workspace package is `@ndycode/timetablekit-cli` and exposes t
 ## Public surfaces
 
 - [Production playground](https://timetablekit.vercel.app/)
-- [Preview deployment](https://timetablekit-namatvf0x-ndycode.vercel.app/)
+- [Preview deployment](https://timetablekit-c0v9prgnt-ndycode.vercel.app/)
 - [GitHub repository](https://github.com/ndycode/timetablekit)
 
 ## Repository map

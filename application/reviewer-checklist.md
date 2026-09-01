@@ -10,7 +10,7 @@ Status: public repository and deployment checks complete on 2026-09-01. npm publ
 - [x] Open local repository documentation, license, Code of Conduct, security, roadmap, and contribution links.
 - [x] Run the clean local validation command.
 - [x] Open the production site without an account at https://timetablekit.vercel.app/.
-- [x] Open the preview deployment at https://timetablekit-namatvf0x-ndycode.vercel.app/.
+- [x] Open the preview deployment at https://timetablekit-c0v9prgnt-ndycode.vercel.app/.
 - [ ] Install the published package in a clean directory. Public npm publication is blocked by `npm whoami` returning `ENEEDAUTH`.
 - [ ] Compare the final release tag, package version, and deployed commit SHA after the release PR merges.
 - [x] Recheck the live Vercel form and map its current 14 fields in [answers.md](answers.md).
