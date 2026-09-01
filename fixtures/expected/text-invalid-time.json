@@ -1,0 +1,13 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-invalid-time.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [],
+  "warningCodes": ["INVALID_TIME_RANGE"],
+  "conflicts": []
+}

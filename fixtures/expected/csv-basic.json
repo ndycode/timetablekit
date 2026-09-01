@@ -1,0 +1,19 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": { "kind": "csv", "filename": "csv-basic.csv", "pageCount": 1 },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Algebra Garden",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "08:00",
+      "endTime": "09:00",
+      "timezone": "Asia/Manila",
+      "location": "Maple Hall",
+      "instructor": "Nia Quill"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

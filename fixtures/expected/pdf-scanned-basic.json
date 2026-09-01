@@ -1,0 +1,23 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "pdf",
+    "filename": "pdf-scanned-basic.pdf",
+    "mimeType": "application/pdf",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Systems Lab",
+      "schedule": { "kind": "weekly", "weekdays": ["TH"] },
+      "startTime": "16:00",
+      "endTime": "17:30",
+      "timezone": "Asia/Manila",
+      "location": "Cedar"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

@@ -1,0 +1,13 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-unknown-day.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [],
+  "warningCodes": ["UNKNOWN_DAY_LABEL"],
+  "conflicts": []
+}

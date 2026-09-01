@@ -1,0 +1,12 @@
+.git
+.omo
+.next
+dist
+coverage
+node_modules
+pnpm-lock.yaml
+fixtures/generated
+packages/core/src/**/*.js
+packages/core/src/**/*.js.map
+packages/core/src/**/*.d.ts
+packages/core/src/**/*.d.ts.map

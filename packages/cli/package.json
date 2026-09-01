@@ -1,0 +1,30 @@
+{
+  "name": "@ndycode/timetablekit-cli",
+  "version": "0.1.0",
+  "description": "A bounded local CLI for TimetableKit text and CSV parsing.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "timetablekit": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "vitest run tests/cli.test.ts --config ../../vitest.config.ts"
+  },
+  "dependencies": {
+    "@ndycode/timetablekit": "workspace:*"
+  }
+}

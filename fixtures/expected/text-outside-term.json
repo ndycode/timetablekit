@@ -1,0 +1,21 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-outside-term.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Special Session",
+      "schedule": { "kind": "exact", "exactDates": ["2026-08-31"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": ["OUTSIDE_TERM_RANGE"],
+  "conflicts": []
+}

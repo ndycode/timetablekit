@@ -1,0 +1,13 @@
+{
+  "name": "timetablekit-node-example",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Minimal Node example for the TimetableKit public API.",
+  "type": "module",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@ndycode/timetablekit": "file:../../packages/core"
+  }
+}

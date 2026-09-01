@@ -1,0 +1,29 @@
+{
+  "name": "@ndycode/timetablekit-provider-vercel-ai",
+  "version": "0.1.0",
+  "description": "Opt-in Vercel AI structured recovery provider for TimetableKit.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts"
+  },
+  "dependencies": {
+    "@ndycode/timetablekit": "workspace:*",
+    "ai": "^7.0.87",
+    "zod": "^4.5.4"
+  }
+}

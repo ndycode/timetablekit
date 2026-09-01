@@ -1,0 +1,17 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": { "kind": "csv", "filename": "csv-exact-date.csv", "pageCount": 1 },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Portfolio Review",
+      "schedule": { "kind": "exact", "exactDates": ["2026-10-05"] },
+      "startTime": "09:30",
+      "endTime": "10:30",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

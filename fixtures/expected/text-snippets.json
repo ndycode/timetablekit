@@ -1,0 +1,17 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": { "kind": "text", "filename": "text-snippets.txt", "pageCount": 1 },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Snippet Review",
+      "schedule": { "kind": "weekly", "weekdays": ["TH"] },
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

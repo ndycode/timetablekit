@@ -1,0 +1,33 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-weekly-conflict.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Math Circle",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "09:00",
+      "endTime": "10:30",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Music Circle",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": ["SCHEDULE_CONFLICT"],
+  "conflicts": [
+    {
+      "occurrence": { "kind": "weekday", "weekday": "MO" },
+      "overlap": { "startsAt": "10:00", "endsAt": "10:30" }
+    }
+  ]
+}

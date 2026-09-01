@@ -1,0 +1,19 @@
+# Claims ledger
+
+Claims are recorded before they are used in public copy or an application. A maintainer must replace provisional evidence with a directly verifiable source before treating a claim as settled.
+
+| Claim                  | Exact wording                                                                                                                                                                                              | Evidence source                                              | Verification date | Allowed publicly           | Notes                                                                        |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------- | -------------------------- | ---------------------------------------------------------------------------- |
+| Project status         | "The TimetableKit implementation, local validation suite, and manual local QA are complete; public repository, release, package, and deployment status remain external facts until verified."              | Local worktree inspection and captured verification artifact | 2026-09-01        | Yes, as dated status       | Refresh after each external publication step.                                |
+| Repository target      | "The requested repository is `ndycode/timetablekit`."                                                                                                                                                      | Maintainer task brief                                        | 2026-09-01        | Yes, as a requested target | Do not describe it as public until the repository is independently verified. |
+| MySched relationship   | "The project is designed from production timetable-import lessons associated with MySched; no TimetableKit integration or adoption is claimed."                                                            | Maintainer-provided project plan                             | 2026-09-01        | Yes, with this limitation  | Do not publish MySched metrics from this bootstrap.                          |
+| Vercel program timing  | "The Summer cohort is open until September 13, 2026."                                                                                                                                                      | Official Vercel Open Source Program page                     | 2026-09-01        | Yes, dated and linked      | Re-open the source before an application is submitted.                       |
+| Vercel program benefit | "Selected projects receive $3,600 in Vercel platform credits over 3 years."                                                                                                                                | Official Vercel Open Source Program page                     | 2026-09-01        | Yes, dated and linked      | Selection is not claimed.                                                    |
+| External impact        | No user, download, star, fork, contributor, or adoption metric is claimed before an authoritative public source exists. Local performance and accessibility results are reported only with their commands. | No public adoption artifact exists yet                       | 2026-09-01        | Yes, as a limitation       | Refresh from authoritative sources before application use.                   |
+
+## Rules
+
+- Keep exact wording separate from interpretation.
+- Record the source and verification date for every metric or external state.
+- Do not use a plan, draft, screenshot, or previous report as proof of current external state.
+- Remove claims that cannot be reproduced from a source or captured artifact.

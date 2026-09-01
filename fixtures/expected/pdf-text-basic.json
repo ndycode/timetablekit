@@ -1,0 +1,23 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "pdf",
+    "filename": "pdf-text-basic.pdf",
+    "mimeType": "application/pdf",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Foundations of Mapping",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "09:00",
+      "endTime": "10:30",
+      "timezone": "Asia/Manila",
+      "location": "Indigo"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

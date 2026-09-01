@@ -1,0 +1,21 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "csv",
+    "filename": "csv-ambiguous-time.csv",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Short Studio",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": ["AMBIGUOUS_TIME"],
+  "conflicts": []
+}

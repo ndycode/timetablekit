@@ -1,0 +1,22 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "pdf",
+    "filename": "pdf-text-filipino.pdf",
+    "mimeType": "application/pdf",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Community Lab",
+      "schedule": { "kind": "weekly", "weekdays": ["MO", "WE"] },
+      "startTime": "13:00",
+      "endTime": "14:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

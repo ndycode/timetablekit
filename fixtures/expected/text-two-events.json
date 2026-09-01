@@ -1,0 +1,28 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-two-events.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Logic Workshop",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "08:00",
+      "endTime": "09:00",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Writing Clinic",
+      "schedule": { "kind": "weekly", "weekdays": ["FR"] },
+      "startTime": "15:00",
+      "endTime": "16:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

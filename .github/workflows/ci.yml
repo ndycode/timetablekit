@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  foundation:
+    name: Foundation checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Run foundation validation
+        run: pnpm validate
+      - name: Check whitespace errors
+        run: git diff --check

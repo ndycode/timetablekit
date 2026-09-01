@@ -1,0 +1,32 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "csv",
+    "filename": "csv-multiple-rows.csv",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Map Theory",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "08:00",
+      "endTime": "09:00",
+      "timezone": "Asia/Manila",
+      "code": "MAP-201",
+      "eventType": "Lecture"
+    },
+    {
+      "title": "Map Practice",
+      "schedule": { "kind": "weekly", "weekdays": ["WE"] },
+      "startTime": "13:00",
+      "endTime": "15:00",
+      "timezone": "Asia/Manila",
+      "code": "MAP-202",
+      "eventType": "Lab"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

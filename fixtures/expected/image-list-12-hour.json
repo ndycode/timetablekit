@@ -1,0 +1,29 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "image",
+    "filename": "image-list-12-hour.png",
+    "mimeType": "image/png",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Sound Design",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "09:00",
+      "endTime": "10:30",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Night Seminar",
+      "schedule": { "kind": "weekly", "weekdays": ["TH"] },
+      "startTime": "18:00",
+      "endTime": "19:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

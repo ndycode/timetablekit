@@ -1,0 +1,24 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-multiple-exact-dates.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Field Check",
+      "schedule": {
+        "kind": "exact",
+        "exactDates": ["2026-09-15", "2026-09-29"]
+      },
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

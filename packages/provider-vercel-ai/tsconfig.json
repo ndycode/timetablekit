@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ndycode/timetablekit": ["src/core-compat.d.ts"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}

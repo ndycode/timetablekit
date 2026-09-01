@@ -1,0 +1,29 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "image",
+    "filename": "image-grid-compact-times.png",
+    "mimeType": "image/png",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Night Studio",
+      "schedule": { "kind": "weekly", "weekdays": ["FR"] },
+      "startTime": "18:00",
+      "endTime": "19:30",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Night Studio",
+      "schedule": { "kind": "weekly", "weekdays": ["SA"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

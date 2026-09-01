@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#fff"/>
+  <path d="M56 108h1088M56 530h1088" stroke="#d9dee3"/>
+  <text x="58" y="82" fill="#1f252b" font-family="Arial, sans-serif" font-size="28" font-weight="700">TimetableKit</text>
+  <text x="58" y="260" fill="#161b22" font-family="Arial, sans-serif" font-size="68" font-weight="700">Turn timetables into</text>
+  <text x="58" y="338" fill="#161b22" font-family="Arial, sans-serif" font-size="68" font-weight="700">calendar events.</text>
+  <text x="60" y="402" fill="#68717a" font-family="Arial, sans-serif" font-size="25">Local-first TypeScript parsing, correction, and export.</text>
+  <rect x="834" y="172" width="310" height="264" rx="10" fill="#fbfcfd" stroke="#b7c0c8"/>
+  <path d="M868 220h242M868 276h242M868 332h183" stroke="#d9dee3" stroke-width="8" stroke-linecap="round"/>
+  <path d="M868 388h140" stroke="#155eef" stroke-width="8" stroke-linecap="round"/>
+</svg>

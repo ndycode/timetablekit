@@ -1,0 +1,21 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-unicode-title.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Ocean Signals",
+      "schedule": { "kind": "weekly", "weekdays": ["TH"] },
+      "startTime": "11:00",
+      "endTime": "12:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

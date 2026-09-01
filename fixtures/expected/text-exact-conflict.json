@@ -1,0 +1,33 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-exact-conflict.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Exam Prep",
+      "schedule": { "kind": "exact", "exactDates": ["2026-09-16"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Review Hour",
+      "schedule": { "kind": "exact", "exactDates": ["2026-09-16"] },
+      "startTime": "09:30",
+      "endTime": "10:30",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": ["SCHEDULE_CONFLICT"],
+  "conflicts": [
+    {
+      "occurrence": { "kind": "date", "date": "2026-09-16" },
+      "overlap": { "startsAt": "09:30", "endsAt": "10:00" }
+    }
+  ]
+}

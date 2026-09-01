@@ -1,0 +1,21 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-duplicate-event.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Open Lab",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": ["DUPLICATE_EVENT"],
+  "conflicts": []
+}

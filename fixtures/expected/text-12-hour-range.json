@@ -1,0 +1,22 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-12-hour-range.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Sound Design",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "09:00",
+      "endTime": "10:30",
+      "timezone": "Asia/Manila",
+      "location": "Lumen"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

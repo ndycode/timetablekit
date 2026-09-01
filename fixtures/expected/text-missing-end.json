@@ -1,0 +1,13 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-missing-end.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [],
+  "warningCodes": ["AMBIGUOUS_TIME", "MISSING_END_TIME"],
+  "conflicts": []
+}

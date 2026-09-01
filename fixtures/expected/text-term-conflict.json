@@ -1,0 +1,43 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-term-conflict.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Circle Math",
+      "schedule": {
+        "kind": "weekly",
+        "weekdays": ["MO"],
+        "startsOn": "2026-09-01",
+        "endsOn": "2026-09-07"
+      },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Circle Music",
+      "schedule": {
+        "kind": "weekly",
+        "weekdays": ["MO"],
+        "startsOn": "2026-09-01",
+        "endsOn": "2026-09-07"
+      },
+      "startTime": "09:30",
+      "endTime": "10:30",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": ["SCHEDULE_CONFLICT"],
+  "conflicts": [
+    {
+      "occurrence": { "kind": "date", "date": "2026-09-07" },
+      "overlap": { "startsAt": "09:30", "endsAt": "10:00" }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": { "kind": "text", "filename": "text-no-start.txt", "pageCount": 1 },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [],
+  "warningCodes": ["MISSING_START_TIME"],
+  "conflicts": []
+}

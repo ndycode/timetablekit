@@ -1,0 +1,29 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "image",
+    "filename": "image-list-exact-date.png",
+    "mimeType": "image/png",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Project Review",
+      "schedule": { "kind": "exact", "exactDates": ["2026-10-05"] },
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Field Check",
+      "schedule": { "kind": "exact", "exactDates": ["2026-10-12"] },
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

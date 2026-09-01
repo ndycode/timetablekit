@@ -1,0 +1,22 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "pdf",
+    "filename": "pdf-scanned-low-contrast.pdf",
+    "mimeType": "application/pdf",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Night Seminar",
+      "schedule": { "kind": "weekly", "weekdays": ["SA"] },
+      "startTime": "18:00",
+      "endTime": "19:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

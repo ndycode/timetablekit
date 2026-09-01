@@ -1,0 +1,6 @@
+ts	phase	decision	why	evidence	result
+2026-09-01T00:41:07Z	phase-0	Use public repository visibility	Latest direct user request and Vercel eligibility require an active open-source project	User request; official Vercel program page	Selected public ndycode/timetablekit target
+2026-09-01T00:41:15Z	phase-0	Use current Vercel Summer 2026 wording	The official page overrides stale plan wording	https://vercel.com/open-source-program says open until September 13 and $3,600 over 3 years	Docs and application copy must use current wording
+2026-09-01T00:41:16Z	phase-0	Keep local browser parsing as default	Plan requires local-first privacy and no raw schedule transport	Master plan privacy requirements; no npm auth needed for local build	No network request for local import
+2026-09-01T00:41:17Z	phase-0	Treat npm publish as a separately verified gate	npm whoami is unauthenticated in this environment	npm whoami returned ENEEDAUTH and package lookup returned E404	Build and package can proceed; publish remains blocked until auth
+2026-09-01T00:41:17Z	phase-0	Keep MySched changes isolated	Plan requires a focused adapter PR without unrelated working-tree edits	Master plan MySched integration section	Use a separate clone and branch from ndycode/mysched dev

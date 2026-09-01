@@ -1,0 +1,31 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "image",
+    "filename": "image-grid-metadata.png",
+    "mimeType": "image/png",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Design Studio",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "10:00",
+      "endTime": "12:00",
+      "timezone": "Asia/Manila",
+      "location": "Cedar"
+    },
+    {
+      "title": "Design Studio",
+      "schedule": { "kind": "weekly", "weekdays": ["FR"] },
+      "startTime": "13:00",
+      "endTime": "15:00",
+      "timezone": "Asia/Manila",
+      "location": "Birch"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible parser, export, or playground problem.
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Use synthetic or redacted input only.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true

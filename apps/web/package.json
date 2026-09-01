@@ -1,0 +1,27 @@
+{
+  "name": "web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TimetableKit public playground and documentation site.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "pnpm --filter @ndycode/timetablekit build && pnpm --filter @ndycode/timetablekit-provider-tesseract build && pnpm --filter @ndycode/timetablekit-provider-pdfjs build && next build",
+    "typecheck": "pnpm --filter @ndycode/timetablekit build && pnpm --filter @ndycode/timetablekit-provider-tesseract build && pnpm --filter @ndycode/timetablekit-provider-pdfjs build && tsc --noEmit",
+    "lint": "pnpm --dir ../.. lint",
+    "test": "pnpm exec playwright test --config ../../playwright.config.ts"
+  },
+  "dependencies": {
+    "@ndycode/timetablekit": "workspace:*",
+    "@ndycode/timetablekit-provider-pdfjs": "workspace:*",
+    "@ndycode/timetablekit-provider-tesseract": "workspace:*",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@types/node": "24.10.0",
+    "typescript": "5.9.3"
+  }
+}

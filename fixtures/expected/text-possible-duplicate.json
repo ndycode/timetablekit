@@ -1,0 +1,35 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-possible-duplicate.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Open Lab",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila",
+      "location": "Amber"
+    },
+    {
+      "title": "Open Lab",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila",
+      "location": "Birch"
+    }
+  ],
+  "warningCodes": ["POSSIBLE_DUPLICATE", "SCHEDULE_CONFLICT"],
+  "conflicts": [
+    {
+      "occurrence": { "kind": "weekday", "weekday": "TU" },
+      "overlap": { "startsAt": "09:00", "endsAt": "10:00" }
+    }
+  ]
+}

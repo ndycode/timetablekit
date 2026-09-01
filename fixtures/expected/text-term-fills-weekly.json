@@ -1,0 +1,26 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-term-fills-weekly.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Systems Lab",
+      "schedule": {
+        "kind": "weekly",
+        "weekdays": ["TH"],
+        "startsOn": "2026-09-01",
+        "endsOn": "2026-12-18"
+      },
+      "startTime": "16:00",
+      "endTime": "17:30",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

@@ -1,0 +1,21 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-evidence-none.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Quiet Evidence",
+      "schedule": { "kind": "weekly", "weekdays": ["FR"] },
+      "startTime": "12:00",
+      "endTime": "13:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

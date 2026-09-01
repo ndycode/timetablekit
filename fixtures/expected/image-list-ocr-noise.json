@@ -1,0 +1,29 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "image",
+    "filename": "image-list-ocr-noise.png",
+    "mimeType": "image/png",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Map Theory",
+      "schedule": { "kind": "weekly", "weekdays": ["WE"] },
+      "startTime": "11:00",
+      "endTime": "12:00",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Open Lab",
+      "schedule": { "kind": "weekly", "weekdays": ["SA"] },
+      "startTime": "13:00",
+      "endTime": "14:00",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

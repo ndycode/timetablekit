@@ -1,0 +1,31 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "image",
+    "filename": "image-grid-rooms.png",
+    "mimeType": "image/png",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Field Methods",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila",
+      "location": "Cedar"
+    },
+    {
+      "title": "Field Methods",
+      "schedule": { "kind": "weekly", "weekdays": ["TH"] },
+      "startTime": "14:00",
+      "endTime": "15:30",
+      "timezone": "Asia/Manila",
+      "location": "Pine"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@ndycode/timetablekit",
+  "version": "0.1.0",
+  "description": "Framework-independent timetable parsing, validation, and calendar exports.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema/timetable-result.schema.json": "./schema/timetable-result.schema.json"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts",
+    "test:coverage": "vitest run --config ../../vitest.config.ts --coverage"
+  },
+  "dependencies": {
+    "zod": "^4.5.4"
+  }
+}

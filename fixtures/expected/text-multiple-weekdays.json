@@ -1,0 +1,22 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-multiple-weekdays.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Studio Practice",
+      "schedule": { "kind": "weekly", "weekdays": ["MO", "WE", "FR"] },
+      "startTime": "08:30",
+      "endTime": "09:45",
+      "timezone": "Asia/Manila",
+      "location": "Indigo"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ndycode.github.io/timetablekit/schema/timetable-result.schema.json",
+  "title": "TimetableParseResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "source",
+    "timezone",
+    "locale",
+    "events",
+    "warnings",
+    "conflicts",
+    "parse"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "source": { "$ref": "#/$defs/source" },
+    "timezone": { "type": "string", "minLength": 1 },
+    "locale": { "type": "string", "minLength": 1 },
+    "term": { "$ref": "#/$defs/term" },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "warnings": { "type": "array", "items": { "$ref": "#/$defs/warning" } },
+    "conflicts": { "type": "array", "items": { "$ref": "#/$defs/conflict" } },
+    "parse": { "$ref": "#/$defs/parse" }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["text", "csv", "image", "pdf"] },
+        "filename": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "pageCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "time": {
+      "type": "string",
+      "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+    },
+    "term": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startsOn", "endsOn"],
+      "properties": {
+        "startsOn": { "$ref": "#/$defs/date" },
+        "endsOn": { "$ref": "#/$defs/date" }
+      }
+    },
+    "weekday": { "enum": ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] },
+    "schedule": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "weekdays"],
+          "properties": {
+            "kind": { "const": "weekly" },
+            "weekdays": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/weekday" },
+              "minItems": 1
+            },
+            "startsOn": { "$ref": "#/$defs/date" },
+            "endsOn": { "$ref": "#/$defs/date" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "exactDates"],
+          "properties": {
+            "kind": { "const": "exact" },
+            "exactDates": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/date" },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "line": { "type": "integer", "minimum": 1 },
+        "charStart": { "type": "integer", "minimum": 0 },
+        "charEnd": { "type": "integer", "minimum": 0 },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "width", "height"],
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "width": { "type": "number", "minimum": 0 },
+            "height": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "location"],
+      "properties": {
+        "source": { "$ref": "#/$defs/source" },
+        "location": { "$ref": "#/$defs/location" },
+        "excerpt": { "type": "string" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "schedule",
+        "startTime",
+        "endTime",
+        "timezone",
+        "confidence",
+        "fieldConfidence",
+        "evidence"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "code": { "type": "string" },
+        "eventType": { "type": "string" },
+        "schedule": { "$ref": "#/$defs/schedule" },
+        "startTime": { "$ref": "#/$defs/time" },
+        "endTime": { "$ref": "#/$defs/time" },
+        "timezone": { "type": "string", "minLength": 1 },
+        "location": { "type": "string" },
+        "instructor": { "type": "string" },
+        "notes": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "fieldConfidence": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/evidence" }
+          }
+        }
+      }
+    },
+    "warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "severity": { "enum": ["info", "warning", "error"] },
+        "message": { "type": "string" },
+        "eventId": { "type": "string" },
+        "field": { "type": "string" },
+        "source": { "$ref": "#/$defs/location" },
+        "details": { "type": "object" }
+      }
+    },
+    "conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "id", "eventIds", "occurrence", "overlap"],
+      "properties": {
+        "code": { "const": "SCHEDULE_CONFLICT" },
+        "id": { "type": "string" },
+        "eventIds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "string" }
+        },
+        "occurrence": { "type": "object" },
+        "overlap": { "type": "object" }
+      }
+    },
+    "stageReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "status", "durationMs", "warningCount"],
+      "properties": {
+        "stage": { "type": "string" },
+        "status": { "enum": ["completed", "skipped", "failed"] },
+        "durationMs": { "type": "number", "minimum": 0 },
+        "warningCount": { "type": "integer", "minimum": 0 },
+        "providerId": { "type": "string" }
+      }
+    },
+    "parse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "durationMs",
+        "deterministicConfidence",
+        "aiRecoveryUsed",
+        "providersUsed",
+        "stageReports"
+      ],
+      "properties": {
+        "durationMs": { "type": "number", "minimum": 0 },
+        "deterministicConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "aiRecoveryUsed": { "type": "boolean" },
+        "providersUsed": { "type": "array", "items": { "type": "string" } },
+        "stageReports": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stageReport" }
+        }
+      }
+    }
+  }
+}

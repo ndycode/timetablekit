@@ -1,0 +1,18 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": { "kind": "csv", "filename": "csv-tab.csv", "pageCount": 1 },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "River Archive",
+      "schedule": { "kind": "weekly", "weekdays": ["FR"] },
+      "startTime": "15:00",
+      "endTime": "16:30",
+      "timezone": "Asia/Manila",
+      "location": "South Loft"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

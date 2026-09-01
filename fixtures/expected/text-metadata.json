@@ -1,0 +1,21 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": { "kind": "text", "filename": "text-metadata.txt", "pageCount": 1 },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Design Studio",
+      "schedule": { "kind": "weekly", "weekdays": ["WE"] },
+      "startTime": "10:00",
+      "endTime": "12:00",
+      "timezone": "Asia/Manila",
+      "eventType": "Lab",
+      "location": "Cedar",
+      "instructor": "Mira Vale",
+      "notes": "Bring atlas"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

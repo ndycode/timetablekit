@@ -1,0 +1,24 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "csv",
+    "filename": "csv-header-aliases.csv",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Signal Drawing",
+      "schedule": { "kind": "weekly", "weekdays": ["WE"] },
+      "startTime": "10:00",
+      "endTime": "11:30",
+      "timezone": "Asia/Manila",
+      "location": "North Annex",
+      "instructor": "Oren Vale",
+      "notes": "Bring ruler"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

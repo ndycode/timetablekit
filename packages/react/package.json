@@ -1,0 +1,34 @@
+{
+  "name": "@ndycode/timetablekit-react",
+  "version": "0.1.0",
+  "description": "Framework-light React correction and preview components for TimetableKit.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "test": "vitest run --config ../../vitest.config.ts packages/react/tests/corrections.test.ts"
+  },
+  "dependencies": {
+    "@ndycode/timetablekit": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "react": "19.2.8"
+  }
+}

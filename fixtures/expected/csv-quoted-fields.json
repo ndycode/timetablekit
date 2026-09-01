@@ -1,0 +1,22 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "csv",
+    "filename": "csv-quoted-fields.csv",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Signals, Maps",
+      "schedule": { "kind": "weekly", "weekdays": ["MO"] },
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "timezone": "Asia/Manila",
+      "notes": "Use \"blue\" markers"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

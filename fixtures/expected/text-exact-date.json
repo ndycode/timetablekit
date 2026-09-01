@@ -1,0 +1,22 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "text",
+    "filename": "text-exact-date.txt",
+    "pageCount": 1
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Project Review",
+      "schedule": { "kind": "exact", "exactDates": ["2026-09-14"] },
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "timezone": "Asia/Manila",
+      "location": "Juniper"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

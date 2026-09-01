@@ -1,0 +1,29 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": {
+    "kind": "pdf",
+    "filename": "pdf-text-multipage.pdf",
+    "mimeType": "application/pdf",
+    "pageCount": 2
+  },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Atlas Reading",
+      "schedule": { "kind": "weekly", "weekdays": ["TU"] },
+      "startTime": "08:00",
+      "endTime": "09:00",
+      "timezone": "Asia/Manila"
+    },
+    {
+      "title": "Field Methods",
+      "schedule": { "kind": "weekly", "weekdays": ["TH"] },
+      "startTime": "14:00",
+      "endTime": "15:30",
+      "timezone": "Asia/Manila"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}

@@ -1,0 +1,18 @@
+{
+  "format": "timetablekit-normalized-v1",
+  "source": { "kind": "csv", "filename": "csv-semicolon.csv", "pageCount": 1 },
+  "timezone": "Asia/Manila",
+  "locale": "en-PH",
+  "events": [
+    {
+      "title": "Garden Planning",
+      "schedule": { "kind": "weekly", "weekdays": ["TH"] },
+      "startTime": "13:00",
+      "endTime": "14:00",
+      "timezone": "Asia/Manila",
+      "location": "Fern Hall"
+    }
+  ],
+  "warningCodes": [],
+  "conflicts": []
+}
