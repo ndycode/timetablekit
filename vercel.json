@@ -6,8 +6,8 @@
       "src": "apps/web/package.json",
       "use": "@vercel/next",
       "config": {
-        "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-        "buildCommand": "pnpm build"
+        "installCommand": "corepack pnpm install --frozen-lockfile",
+        "buildCommand": "corepack pnpm --filter web build"
       }
     }
   ]
