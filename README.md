@@ -28,6 +28,30 @@ The companion CLI workspace package is `@ndycode/timetablekit-cli` and exposes t
 - [Production playground](https://timetablekit.vercel.app/)
 - [Preview deployment](https://timetablekit-c0v9prgnt-ndycode.vercel.app/)
 - [GitHub repository](https://github.com/ndycode/timetablekit)
+- [GitHub release v0.1.0](https://github.com/ndycode/timetablekit/releases/tag/v0.1.0)
+
+## Try the playground
+
+Open the [production playground](https://timetablekit.vercel.app/playground) and
+parse the fictional sample without an account. Edit an event, review warnings,
+then download JSON, CSV, or iCalendar output.
+
+![TimetableKit playground after a local parse](application/screenshots/playground.png)
+
+## Install from source
+
+The v0.1.0 source is available in the public repository. Run:
+
+```sh
+git clone https://github.com/ndycode/timetablekit.git
+cd timetablekit
+pnpm install
+pnpm build
+```
+
+The public npm package is not published yet because the available release
+environment has no npm authentication. Do not use an npm install command until
+the package appears in the npm registry.
 
 ## Repository map
 
@@ -40,7 +64,7 @@ The companion CLI workspace package is `@ndycode/timetablekit-cli` and exposes t
 
 ## Governance
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md), and [GOVERNANCE.md](GOVERNANCE.md) before opening a change.
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md), [SUPPORT.md](SUPPORT.md), and [GOVERNANCE.md](GOVERNANCE.md) before opening a change.
 
 ## Vercel Open Source Program
 

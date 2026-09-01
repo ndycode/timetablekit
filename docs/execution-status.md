@@ -23,7 +23,7 @@ This file records implementation and release evidence. External URLs and metrics
 - [x] Public synthetic fixtures and golden outputs.
 - [x] Original public GitHub repository and Vercel production and preview deployments verified on 2026-09-01.
 - [ ] Published npm package. `npm whoami` and `npm publish` returned `ENEEDAUTH` on 2026-09-01.
-- [ ] GitHub release tag. Create and verify after the release-readiness PR merges.
+- [x] GitHub release tag and release. `v0.1.0` points to merge commit `e3aeafc3ebf4e1d3ab9082446b3b42eda1f20b23`.
 - [x] Local production build, browser E2E, accessibility, security, and fixture evidence.
 - [x] Focused MySched adapter PR opened at https://github.com/ndycode/mysched/pull/1553 with isolated tests.
 - [ ] MySched integration merge or production adoption. The open PR remains a separate external gate.

@@ -1,6 +1,6 @@
 # Reviewer checklist
 
-Status: public repository and deployment checks complete on 2026-09-01. npm publication remains blocked by local authentication. The release tag is finalized after the release PR merges.
+Status: public repository, release, and deployment checks complete on 2026-09-01. npm publication remains blocked by local authentication.
 
 - [x] Open the local site without an account.
 - [x] Click the sample action and see normalized events.
@@ -12,7 +12,7 @@ Status: public repository and deployment checks complete on 2026-09-01. npm publ
 - [x] Open the production site without an account at https://timetablekit.vercel.app/.
 - [x] Open the preview deployment at https://timetablekit-c0v9prgnt-ndycode.vercel.app/.
 - [ ] Install the published package in a clean directory. Public npm publication is blocked by `npm whoami` returning `ENEEDAUTH`.
-- [ ] Compare the final release tag, package version, and deployed commit SHA after the release PR merges.
+- [x] Compare the final release tag, package version, and deployed commit SHA. v0.1.0, core package 0.1.0, and production deployment dpl_5TivqjGfmiNPjgk7q4LQfDJeihCK all resolve to e3aeafc3ebf4e1d3ab9082446b3b42eda1f20b23.
 - [x] Recheck the live Vercel form and map its current 14 fields in [answers.md](answers.md).
 - [x] Check the claims ledger before copying any impact statement.
 
