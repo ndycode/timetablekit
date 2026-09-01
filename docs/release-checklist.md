@@ -8,7 +8,7 @@ Verified 2026-09-01. The checklist records the release surfaces without claiming
 | MIT license and Code of Conduct                                            | Pass          | Repository root files                                 |
 | Contribution, security, privacy, governance, support, and application docs | Pass          | Repository root, `docs/`, and `application/`          |
 | Local validation                                                           | Pass          | `pnpm validate`, recorded in `docs/quality-report.md` |
-| Core coverage                                                              | Pass          | 91.90% line coverage and 87.43% branch coverage       |
+| Core coverage                                                              | Pass          | 92.10% line coverage and 87.58% branch coverage       |
 | Fixture validation                                                         | Pass          | 63 manifests, 63 inputs, and 63 expected outputs      |
 | Browser matrix                                                             | Pass          | 18 E2E cases across Chromium, Firefox, and WebKit     |
 | Production deployment                                                      | Pass          | https://timetablekit.vercel.app/                      |

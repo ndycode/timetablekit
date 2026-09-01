@@ -12,11 +12,11 @@ Evidence snapshot recorded on 2026-09-01 for release-readiness source commit `14
 - Core and provider test matrix passed with 15 files and 118 tests in each provider run.
 - CLI tests passed with 1 file and 5 tests.
 - React tests passed with 1 file and 3 tests.
-- Core coverage passed with 91.92% statements, 87.62% branches, 96.87% functions, and 92.04% lines.
+- Core coverage passed with 91.98% statements, 87.58% branches, 96.91% functions, and 92.10% lines.
 - Fixture validation passed with 63 manifests, 63 inputs, and 63 expected outputs.
 - Build passed with 7 of 7 workspace tasks.
 - Browser E2E passed with 18 tests across Chromium, Firefox, and WebKit.
-- Markdown link validation passed with 70 links in 34 files.
+- Markdown link validation passed with 69 links in 34 files.
 - Secret scan passed with no credential patterns found.
 - Dependency audit passed with no known vulnerabilities at the configured high threshold.
 
