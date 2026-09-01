@@ -18,6 +18,7 @@ import type {
   PDFPageProxy,
   RenderTask,
 } from "pdfjs-dist";
+import type * as PdfJsLegacy from "pdfjs-dist/legacy/build/pdf.mjs";
 
 /** The stable provider identifier used by the PDF.js adapter. */
 export const PDFJS_PROVIDER_ID = "pdfjs";
@@ -199,6 +200,7 @@ async function extractPdf(
     const source = sourceDescriptor(input, pageCount);
     const pages: TextPage[] = [];
     const warnings: ParseWarning[] = [];
+    let outputBytes = 0;
 
     context.reportProgress({
       stage: "extract",
@@ -255,6 +257,15 @@ async function extractPdf(
         }
       }
 
+      const pageBytes = textPageByteLength(page);
+      if (pageBytes > context.limits.maxOutputBytes - outputBytes) {
+        throw new ProviderError(
+          PDFJS_PROVIDER_ID,
+          "RESOURCE_LIMIT",
+          "PDF text exceeds the configured output limit.",
+        );
+      }
+      outputBytes += pageBytes;
       pages.push(page);
       context.reportProgress({
         stage: "extract",
@@ -314,6 +325,16 @@ function validateLimits(context: ProviderContext): void {
       PDFJS_PROVIDER_ID,
       "RESOURCE_LIMIT",
       "The PDF pixel limit is invalid.",
+    );
+  }
+  if (
+    !Number.isSafeInteger(context.limits.maxOutputBytes) ||
+    context.limits.maxOutputBytes < 1
+  ) {
+    throw new ProviderError(
+      PDFJS_PROVIDER_ID,
+      "RESOURCE_LIMIT",
+      "The PDF output limit is invalid.",
     );
   }
 }
@@ -443,6 +464,14 @@ function joinText(current: string, next: string): string {
 
 function hasText(page: TextPage): boolean {
   return page.lines.some((line) => line.text.trim().length > 0);
+}
+
+function textPageByteLength(page: TextPage): number {
+  const encoder = new TextEncoder();
+  return page.lines.reduce(
+    (total, line) => total + encoder.encode(line.text).byteLength,
+    0,
+  );
 }
 
 function validateRaster(
@@ -726,9 +755,9 @@ function errorName(error: unknown): string | undefined {
 async function loadPdfDocumentWithPdfJs(
   options: PdfDocumentLoadOptions,
 ): Promise<PdfDocument> {
-  let pdfjs: typeof import("pdfjs-dist");
+  let pdfjs: typeof PdfJsLegacy;
   try {
-    pdfjs = await import("pdfjs-dist");
+    pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   } catch {
     throw new PdfProviderError(
       "RENDER_UNAVAILABLE",

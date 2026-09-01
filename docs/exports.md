@@ -12,7 +12,7 @@ CSV uses a fixed UTF-8 header order and CRLF line endings. Every field is escape
 
 ## iCalendar
 
-The `.ics` exporter emits RFC 5545-compatible VCALENDAR output. Each event has a stable UID, a valid `DTSTART`, a valid `DTEND`, and a `VTIMEZONE` block for the selected IANA timezone. Text values escape commas, semicolons, backslashes, and line breaks. Lines are folded at the format boundary. Weekly events use `RRULE:FREQ=WEEKLY` when a valid term range is available. Exact-date events emit concrete dates.
+The `.ics` exporter emits RFC 5545-compatible VCALENDAR output. Each event has a stable UID, a valid `DTSTART`, and a valid `DTEND`. The calendar declares the selected IANA timezone with `X-WR-TIMEZONE`. Text values escape commas, semicolons, backslashes, and line breaks. Lines are folded at the format boundary. Weekly events use `RRULE:FREQ=WEEKLY` when a valid term range is available. Exact-date events emit concrete dates.
 
 ## Time and recurrence rules
 

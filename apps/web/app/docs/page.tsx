@@ -69,7 +69,7 @@ const calendar = toICS(result)`}</pre>
               confidence, and source evidence when the caller requests it.
             </p>
             <p>
-              The published{" "}
+              The public{" "}
               <a href="/schema/timetable-result.schema.json">JSON Schema</a> is
               available as a versioned package export and a public URL.
             </p>

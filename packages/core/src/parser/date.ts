@@ -27,11 +27,12 @@ function validDate(
   if (
     !Number.isInteger(year) ||
     !Number.isInteger(month) ||
-    !Number.isInteger(day)
+    !Number.isInteger(day) ||
+    year < 1
   ) {
     return undefined;
   }
-  const date = new Date(Date.UTC(year, month - 1, day));
+  const date = utcDate(year, month - 1, day);
   if (
     date.getUTCFullYear() !== year ||
     date.getUTCMonth() !== month - 1 ||
@@ -40,6 +41,13 @@ function validDate(
     return undefined;
   }
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function utcDate(year: number, month: number, day: number): Date {
+  const date = new Date(0);
+  date.setUTCFullYear(year, month, day);
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
 }
 
 export function parseDate(
@@ -123,8 +131,10 @@ export function weekdayForDate(date: IsoDate): Weekday | undefined {
   ) {
     return undefined;
   }
-  const dayIndex = new Date(
-    Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])),
+  const dayIndex = utcDate(
+    Number(parts[1]),
+    Number(parts[2]) - 1,
+    Number(parts[3]),
   ).getUTCDay();
   return WEEKDAY_BY_UTC_INDEX[dayIndex];
 }
@@ -154,9 +164,12 @@ export function addDays(date: IsoDate, amount: number): IsoDate | undefined {
   ) {
     return undefined;
   }
-  const result = new Date(
-    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + amount),
+  const result = utcDate(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
   );
+  result.setUTCDate(result.getUTCDate() + amount);
   return validDate(
     result.getUTCFullYear(),
     result.getUTCMonth() + 1,

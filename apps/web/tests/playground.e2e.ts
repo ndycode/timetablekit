@@ -175,7 +175,18 @@ test("the public JSON Schema endpoint serves the package schema", async ({
   const schema = await page.request.get("/schema/timetable-result.schema.json");
   expect(schema).toBeOK();
   expect(schema.headers()["cache-control"]).toContain("max-age=3600");
-  expect((await schema.json()).$id).toBe(
+  const schemaBody = await schema.json();
+  expect(schemaBody.$id).toBe(
     "https://timetablekit.vercel.app/schema/timetable-result.schema.json",
   );
+  expect(schemaBody.$defs.location).toMatchObject({
+    type: "object",
+    additionalProperties: false,
+  });
+  expect(schemaBody.$defs.evidence.properties.location).toEqual({
+    $ref: "#/$defs/location",
+  });
+  expect(schemaBody.$defs.warning.properties.source).toEqual({
+    $ref: "#/$defs/location",
+  });
 });

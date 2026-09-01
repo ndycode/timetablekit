@@ -112,6 +112,16 @@ async function recognizeImage(
     );
     validateRecognition(recognition);
     checkAbort(context.signal);
+    if (
+      new TextEncoder().encode(recognition.text).byteLength >
+      context.limits.maxOutputBytes
+    ) {
+      throw new ProviderError(
+        TESSERACT_PROVIDER_ID,
+        "RESOURCE_LIMIT",
+        "OCR text exceeds the configured output limit.",
+      );
+    }
     const page = textPage(recognition.text, image.pageNumber);
     context.reportProgress({
       stage: "extract",

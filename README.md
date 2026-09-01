@@ -68,7 +68,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md
 
 ## Vercel Open Source Program
 
-Thanks to Vercel for their support of open-source software.
+The playground is configured for Vercel hosting.
 
 [Deploy this repository with Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fndycode%2Ftimetablekit)
 

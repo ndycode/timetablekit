@@ -9,6 +9,7 @@ import {
 } from "./recovery.js";
 import { parseCsvCandidates } from "./parser/csv-rows.js";
 import { parseDocument } from "./parser/rows.js";
+import { utf8ByteLength } from "./parser/text.js";
 import { makeWarning } from "./parser/warnings.js";
 import {
   TimetableInputSchema,
@@ -220,6 +221,22 @@ async function extract(
           }),
         );
         continue;
+      }
+      const extractedTextBytes = value.document.pages.reduce(
+        (total, page) =>
+          total +
+          page.lines.reduce(
+            (pageTotal, line) => pageTotal + utf8ByteLength(line.text),
+            0,
+          ),
+        0,
+      );
+      if (extractedTextBytes > limits.maxOutputBytes) {
+        throw new ProviderError(
+          provider.id,
+          "RESOURCE_LIMIT",
+          "Extraction output exceeds the configured output limit.",
+        );
       }
       warnings.push(...value.warnings);
       return { artifact: value, providerId: value.providerId };

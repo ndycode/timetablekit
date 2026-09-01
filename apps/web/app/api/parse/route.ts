@@ -20,6 +20,10 @@ async function readBoundedBody(
   request: Request,
   signal: AbortSignal,
 ): Promise<Uint8Array> {
+  if (signal.aborted) {
+    const reason = signal.reason;
+    throw reason instanceof Error ? reason : new RequestAbortedError();
+  }
   if (request.body === null) return new Uint8Array();
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -93,6 +97,7 @@ function csvDelimiter(value: unknown): "," | ";" | "\t" | undefined {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  if (request.signal.aborted) return new Response(null, { status: 499 });
   if (activeRequests >= MAX_ACTIVE_REQUESTS) {
     return Response.json(
       { error: "The parser is busy. Try again shortly." },
@@ -110,7 +115,11 @@ export async function POST(request: Request): Promise<Response> {
     clientDisconnected = true;
     controller.abort(new RequestAbortedError());
   };
-  request.signal.addEventListener("abort", onRequestAbort, { once: true });
+  if (request.signal.aborted) {
+    onRequestAbort();
+  } else {
+    request.signal.addEventListener("abort", onRequestAbort, { once: true });
+  }
   const timeout = setTimeout(() => {
     timedOut = true;
     controller.abort(new RequestTimedOutError());
@@ -175,13 +184,13 @@ export async function POST(request: Request): Promise<Response> {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
+    if (clientDisconnected) return new Response(null, { status: 499 });
     if (error instanceof RequestBodyTooLargeError) {
       return Response.json(
         { error: "The remote request is too large." },
         { status: 413 },
       );
     }
-    if (clientDisconnected) return new Response(null, { status: 499 });
     if (timedOut) {
       return Response.json(
         { error: "The parser request timed out." },

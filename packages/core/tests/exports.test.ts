@@ -76,6 +76,9 @@ describe("public JSON, CSV, and ICS exports", () => {
     expect(escapeCsvField("\t=fictional formula")).toBe(
       "'\t=fictional formula",
     );
+    expect(escapeCsvField("\r\n=fictional formula")).toBe(
+      '"\'\r\n=fictional formula"',
+    );
     expect(escapeCsvField('comma, line\nquote"')).toBe(
       '"comma, line\nquote"""',
     );

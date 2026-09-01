@@ -134,4 +134,43 @@ describe("ICS export edge cases", () => {
       "EXPORT_INVALID_RESULT",
     );
   });
+
+  it("preserves supported low four-digit years in UTC output", async () => {
+    const result = await weeklyResult();
+    const event = result.events[0];
+    expect(event).toBeDefined();
+    if (event === undefined) return;
+    const lowYear: TimetableParseResult = {
+      ...result,
+      timezone: "UTC",
+      events: [
+        {
+          ...event,
+          timezone: "UTC",
+          startTime: "01:00",
+          endTime: "02:00",
+          schedule: { kind: "exact", exactDates: ["0099-09-14"] },
+        },
+      ],
+    };
+    expect(toICS(lowYear, { timezoneMode: "UTC" })).toContain(
+      "DTSTART:00990914T010000Z",
+    );
+    const lowYearEvent = lowYear.events[0];
+    expect(lowYearEvent).toBeDefined();
+    if (lowYearEvent === undefined) return;
+    expect(
+      errorCode(() =>
+        toICS({
+          ...lowYear,
+          events: [
+            {
+              ...lowYearEvent,
+              schedule: { kind: "exact", exactDates: ["0000-09-14"] },
+            },
+          ],
+        }),
+      ),
+    ).toBe("EXPORT_INVALID_RESULT");
+  });
 });

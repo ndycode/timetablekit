@@ -4,7 +4,11 @@ import { fileURLToPath } from "node:url";
 export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   test: {
-    include: ["packages/**/tests/**/*.test.ts", "packages/**/src/**/*.test.ts"],
+    include: [
+      "packages/**/tests/**/*.test.ts",
+      "packages/**/src/**/*.test.ts",
+      "apps/web/**/*.test.ts",
+    ],
     exclude: ["**/node_modules/**", "**/dist/**"],
     passWithNoTests: false,
     coverage: {

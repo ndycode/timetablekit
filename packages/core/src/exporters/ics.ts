@@ -113,7 +113,7 @@ function dateParts(
 
 function validIsoDate(date: IsoDate): boolean {
   const parts = dateParts(date);
-  if (parts === undefined) return false;
+  if (parts === undefined || parts.year < 1) return false;
   const candidate = new Date(0);
   candidate.setUTCFullYear(parts.year, parts.month - 1, parts.day);
   candidate.setUTCHours(0, 0, 0, 0);
@@ -136,7 +136,7 @@ function utcStamp(date: IsoDate, time: string, timezone: TimeZone): string {
       "EXPORT_INVALID_RESULT",
       "An event has an invalid date or time.",
     );
-  const localEpoch = Date.UTC(
+  const localEpoch = utcEpoch(
     parts.year,
     parts.month - 1,
     parts.day,
@@ -157,7 +157,7 @@ function utcStamp(date: IsoDate, time: string, timezone: TimeZone): string {
       .formatToParts(new Date(localEpoch))
       .map((part) => [part.type, part.value]),
   );
-  const represented = Date.UTC(
+  const represented = utcEpoch(
     Number(values["year"]),
     Number(values["month"]) - 1,
     Number(values["day"]),
@@ -169,6 +169,19 @@ function utcStamp(date: IsoDate, time: string, timezone: TimeZone): string {
     .toISOString()
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z$/u, "Z");
+}
+
+function utcEpoch(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+): number {
+  const value = new Date(0);
+  value.setUTCFullYear(year, month, day);
+  value.setUTCHours(hour, minute, 0, 0);
+  return value.getTime();
 }
 
 function stamp(

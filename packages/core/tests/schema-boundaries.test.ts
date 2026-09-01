@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   FieldValueSchema,
@@ -10,6 +12,7 @@ import {
   timetableEventSchema,
   timetableInputSchema,
   timetableParseResultSchema,
+  timetableResultJsonSchema,
 } from "../src";
 import type { TimetableEvent, TimetableParseResult } from "../src";
 
@@ -19,7 +22,20 @@ const options = {
   evidence: "none" as const,
 };
 
+const packageSchema = JSON.parse(
+  readFileSync(
+    fileURLToPath(
+      new URL("../schema/timetable-result.schema.json", import.meta.url),
+    ),
+    "utf8",
+  ),
+) as unknown;
+
 describe("runtime schema boundaries", () => {
+  it("keeps the TypeScript and package JSON schemas identical", () => {
+    expect(timetableResultJsonSchema).toEqual(packageSchema);
+  });
+
   it("accepts every supported input kind at both schema layers", async () => {
     const text = {
       kind: "text" as const,

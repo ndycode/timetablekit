@@ -2,6 +2,7 @@
 
 import {
   DEFAULT_MAX_CONFLICTS,
+  ProviderError,
   createTimetableParser,
   detectConflictsBounded,
   parseTimetable,
@@ -23,7 +24,11 @@ import type {
   Weekday,
 } from "@ndycode/timetablekit";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fileToTimetableInput } from "../lib/input-boundary";
+import {
+  exceedsImagePixelLimit,
+  fileToTimetableInput,
+  readImageDimensions,
+} from "../lib/input-boundary";
 import {
   SAMPLE_INPUT,
   SAMPLE_LABEL,
@@ -194,11 +199,34 @@ function imageExtractionProvider(ocrProvider: OcrProvider): ExtractionProvider {
     async extract(input, context): Promise<ExtractionArtifact> {
       if (input.kind !== "image")
         throw new Error("Image provider received an unsupported source.");
+      const dimensions = readImageDimensions(input.bytes, input.mimeType);
+      if (
+        dimensions !== undefined &&
+        exceedsImagePixelLimit(dimensions, context.limits.maxImagePixels)
+      ) {
+        throw new ProviderError(
+          "tesseract-image",
+          "RESOURCE_LIMIT",
+          "Image exceeds the configured pixel limit.",
+        );
+      }
       const blob = new Blob([new Uint8Array(input.bytes)], {
         type: input.mimeType,
       });
       const bitmap = await createImageBitmap(blob);
       try {
+        if (
+          exceedsImagePixelLimit(
+            { width: bitmap.width, height: bitmap.height },
+            context.limits.maxImagePixels,
+          )
+        ) {
+          throw new ProviderError(
+            "tesseract-image",
+            "RESOURCE_LIMIT",
+            "Image exceeds the configured pixel limit.",
+          );
+        }
         const recognized = await ocrProvider.recognize(
           {
             bytes: input.bytes,

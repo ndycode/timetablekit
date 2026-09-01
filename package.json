@@ -20,6 +20,7 @@
     "test:coverage": "pnpm --filter @ndycode/timetablekit test:coverage",
     "e2e": "playwright test",
     "test:e2e": "playwright test",
+    "test:web-boundary": "pnpm --filter web test:unit",
     "fixtures:generate": "node scripts/generate-fixtures.mjs",
     "fixture:new": "node scripts/new-fixture.mjs",
     "validate:links": "node scripts/validate-links.mjs",
@@ -27,7 +28,7 @@
     "fixtures:validate": "node scripts/validate-fixtures.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
     "dependencies:check": "pnpm audit --audit-level=high && pnpm licenses list",
-    "validate": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:coverage && pnpm fixtures:validate && pnpm build && pnpm e2e && pnpm validate:links && pnpm security:check && pnpm dependencies:check"
+    "validate": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:coverage && pnpm test:web-boundary && pnpm fixtures:validate && pnpm build && pnpm e2e && pnpm validate:links && pnpm security:check && pnpm dependencies:check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
