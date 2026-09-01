@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { detectConflicts, validateTimetable } from "../src";
+import {
+  detectConflicts,
+  detectConflictsBounded,
+  parseTimetable,
+  validateTimetable,
+} from "../src";
 import type { EventSchedule, TimetableEvent } from "../src";
 
 function event(
@@ -64,6 +69,91 @@ describe("timetable validation", () => {
 });
 
 describe("schedule conflicts", () => {
+  it("bounds conflict output for large overlapping inputs", async () => {
+    const letters = (value: number): string => {
+      let result = "";
+      let current = value;
+      do {
+        result = String.fromCharCode(65 + (current % 26)) + result;
+        current = Math.floor(current / 26) - 1;
+      } while (current >= 0);
+      return result;
+    };
+    const text = [
+      "title,day,start,end",
+      ...Array.from(
+        { length: 1_000 },
+        (_, index) => `Topic ${letters(index)} Section,Monday,09:00,10:00`,
+      ),
+    ].join("\n");
+
+    const result = await parseTimetable(
+      { kind: "csv", text },
+      { locale: "en-PH", timezone: "UTC" },
+    );
+
+    expect(result.events).toHaveLength(1_000);
+    expect(result.conflicts).toHaveLength(1_000);
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "CONFLICT_LIMIT",
+          details: { limit: 1_000 },
+        }),
+      ]),
+    );
+  });
+
+  it("keeps the unbounded public helper complete", () => {
+    const events = Array.from({ length: 46 }, (_, index) =>
+      event(
+        `evt-${String(index).padStart(2, "0")}`,
+        { kind: "weekly", weekdays: ["MO"] },
+        "09:00",
+        "10:00",
+      ),
+    );
+
+    expect(detectConflicts(events)).toHaveLength(1_035);
+  });
+
+  it("bounds pair work separately from conflict output", () => {
+    const events = [
+      event("evt-a", { kind: "weekly", weekdays: ["MO"] }, "09:00", "10:00"),
+      event("evt-b", { kind: "weekly", weekdays: ["MO"] }, "09:00", "10:00"),
+      event("evt-c", { kind: "weekly", weekdays: ["MO"] }, "09:00", "10:00"),
+    ];
+
+    const result = detectConflictsBounded(events, {
+      maxConflicts: Number.MAX_SAFE_INTEGER,
+      maxPairs: 1,
+    });
+
+    expect(result.conflicts).toHaveLength(1);
+    expect(result.truncated).toBe(true);
+  });
+
+  it("skips an impossible long weekly term without enumerating it", () => {
+    const monday = event(
+      "evt-monday",
+      { kind: "weekly", weekdays: ["MO"] },
+      "09:00",
+      "10:00",
+    );
+    const tuesday = event(
+      "evt-tuesday",
+      { kind: "weekly", weekdays: ["TU"] },
+      "09:00",
+      "10:00",
+    );
+
+    expect(
+      detectConflicts([monday, tuesday], {
+        term: { startsOn: "2026-01-01", endsOn: "9999-12-31" },
+      }),
+    ).toEqual([]);
+  });
+
   it("sorts event ids and reports a shared weekly overlap", () => {
     const first = event(
       "evt-a",

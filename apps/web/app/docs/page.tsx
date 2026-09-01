@@ -68,6 +68,11 @@ const calendar = toICS(result)`}</pre>
               Every event carries an overall confidence score, field-level
               confidence, and source evidence when the caller requests it.
             </p>
+            <p>
+              The published{" "}
+              <a href="/schema/timetable-result.schema.json">JSON Schema</a> is
+              available as a versioned package export and a public URL.
+            </p>
           </section>
           <section id="providers">
             <h2>Provider boundary</h2>

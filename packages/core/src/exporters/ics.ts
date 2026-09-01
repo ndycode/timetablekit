@@ -19,6 +19,39 @@ type IcsOptions = {
   readonly weeklyStartsOn?: IsoDate;
 };
 
+const ICS_TIMESTAMP = /^\d{8}T\d{6}Z$/u;
+
+function validIcsTimestamp(value: string): boolean {
+  if (value.length !== 16) return false;
+  const match = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/u.exec(value);
+  if (match === null || match.some((part) => part === undefined)) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31 ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59
+  )
+    return false;
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  date.setUTCHours(0, 0, 0, 0);
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
 function escapeIcs(value: string): string {
   return value
     .replace(/\\/g, "\\\\")
@@ -62,6 +95,7 @@ function dateParts(
 ):
   | { readonly year: number; readonly month: number; readonly day: number }
   | undefined {
+  if (date.length !== 10) return undefined;
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   if (
     match === null ||
@@ -75,6 +109,19 @@ function dateParts(
     month: Number(match[2]),
     day: Number(match[3]),
   };
+}
+
+function validIsoDate(date: IsoDate): boolean {
+  const parts = dateParts(date);
+  if (parts === undefined) return false;
+  const candidate = new Date(0);
+  candidate.setUTCFullYear(parts.year, parts.month - 1, parts.day);
+  candidate.setUTCHours(0, 0, 0, 0);
+  return (
+    candidate.getUTCFullYear() === parts.year &&
+    candidate.getUTCMonth() === parts.month - 1 &&
+    candidate.getUTCDate() === parts.day
+  );
 }
 
 function localStamp(date: IsoDate, time: string): string {
@@ -153,6 +200,11 @@ function dateRange(
       "EXPORT_REQUIRES_TERM",
       "Weekly events require a concrete recurrence range.",
     );
+  if (!validIsoDate(startsOn) || !validIsoDate(endsOn))
+    throw new TimetableError(
+      "EXPORT_INVALID_RESULT",
+      "A weekly recurrence range contains an invalid date.",
+    );
   return { startsOn, endsOn };
 }
 
@@ -194,6 +246,11 @@ function eventLines(
   options: IcsOptions,
   dtstamp: IsoInstant,
 ): readonly string[] {
+  if (!validTimezone(event.timezone))
+    throw new TimetableError(
+      "EXPORT_INVALID_RESULT",
+      "An event timezone is not valid.",
+    );
   const mode = options.timezoneMode ?? "TZID";
   const timezoneParameter = mode === "TZID" ? `;TZID=${event.timezone}` : "";
   const common = commonLines(event, dtstamp);
@@ -215,6 +272,11 @@ function eventLines(
       "END:VEVENT",
     ];
   } else {
+    if (event.schedule.exactDates.some((date) => !validIsoDate(date)))
+      throw new TimetableError(
+        "EXPORT_INVALID_RESULT",
+        "An exact schedule contains an invalid date.",
+      );
     return event.schedule.exactDates.flatMap((date) => {
       const uid = `${escapeIcs(event.id)}-${date}@timetablekit`;
       const start = stamp(date, event.startTime, event.timezone, mode);
@@ -250,6 +312,11 @@ export function toICS(
       "The result timezone is not valid.",
     );
   const dtstamp = options.dtstamp ?? "19700101T000000Z";
+  if (!ICS_TIMESTAMP.test(dtstamp) || !validIcsTimestamp(dtstamp))
+    throw new TimetableError(
+      "EXPORT_INVALID_RESULT",
+      "The iCalendar timestamp is not valid.",
+    );
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",

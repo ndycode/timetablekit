@@ -1,6 +1,6 @@
 export const timetableResultJsonSchema = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
-  $id: "https://ndycode.github.io/timetablekit/schema/timetable-result.schema.json",
+  $id: "https://timetablekit.vercel.app/schema/timetable-result.schema.json",
   title: "TimetableParseResult",
   type: "object",
   additionalProperties: false,

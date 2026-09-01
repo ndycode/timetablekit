@@ -17,6 +17,14 @@ type Occurrence =
     }
   | { readonly key: string; readonly kind: "date"; readonly date: string };
 
+export const DEFAULT_MAX_CONFLICTS = 1_000;
+const DEFAULT_MAX_CONFLICT_PAIRS = 1_000_000;
+
+export type ConflictDetectionResult = {
+  readonly conflicts: readonly ScheduleConflict[];
+  readonly truncated: boolean;
+};
+
 function scheduleHasWeekday(
   schedule: EventSchedule,
   weekday: Weekday,
@@ -41,74 +49,109 @@ function dateIsInWeeklySchedule(
   );
 }
 
-function datesForTerm(term: TermRange): readonly string[] {
-  const dates: string[] = [];
+function* datesForTerm(term: TermRange): Iterable<string> {
   let current: string | undefined = term.startsOn;
   while (current !== undefined && current <= term.endsOn) {
-    dates.push(current);
+    yield current;
     current = addDays(current, 1);
   }
-  return dates;
 }
 
 function exactDates(schedule: EventSchedule): readonly string[] {
   return schedule.kind === "exact" ? schedule.exactDates : [];
 }
 
-function occurrencesForEvent(
-  event: TimetableEvent,
-  term: TermRange | undefined,
-): readonly Occurrence[] {
-  if (event.schedule.kind === "exact") {
-    return event.schedule.exactDates.map((date) => ({
-      key: `d:${date}`,
-      kind: "date",
-      date,
-    }));
-  }
-  if (term === undefined) {
-    return event.schedule.weekdays.map((weekday) => ({
-      key: `w:${weekday}`,
-      kind: "weekday",
-      weekday,
-    }));
-  }
-  return datesForTerm(term)
-    .filter((date) => dateIsInWeeklySchedule(event.schedule, date))
-    .map((date) => ({ key: `d:${date}`, kind: "date", date }));
+function latestDate(
+  values: readonly (string | undefined)[],
+): string | undefined {
+  const defined = values.filter(
+    (value): value is string => value !== undefined,
+  );
+  defined.sort((left, right) => left.localeCompare(right));
+  return defined[defined.length - 1];
 }
 
-function sharedOccurrences(
+function earliestDate(
+  values: readonly (string | undefined)[],
+): string | undefined {
+  const defined = values.filter(
+    (value): value is string => value !== undefined,
+  );
+  defined.sort((left, right) => left.localeCompare(right));
+  return defined[0];
+}
+
+function* sharedOccurrences(
   left: TimetableEvent,
   right: TimetableEvent,
   term: TermRange | undefined,
-): readonly Occurrence[] {
-  const leftOccurrences = occurrencesForEvent(left, term);
-  const rightOccurrences = occurrencesForEvent(right, term);
-  const rightKeys = new Set(rightOccurrences.map((entry) => entry.key));
-  const shared = leftOccurrences.filter((entry) => rightKeys.has(entry.key));
-  if (shared.length > 0) {
-    return shared;
-  }
-  if (term !== undefined) {
-    return [];
+): Iterable<Occurrence> {
+  if (left.schedule.kind === "exact" && right.schedule.kind === "exact") {
+    const rightDates = new Set(exactDates(right.schedule));
+    for (const date of exactDates(left.schedule)) {
+      if (rightDates.has(date)) yield { key: `d:${date}`, kind: "date", date };
+    }
+    return;
   }
   if (left.schedule.kind === "exact" && right.schedule.kind === "weekly") {
-    return exactDates(left.schedule)
-      .filter((date) => dateIsInWeeklySchedule(right.schedule, date))
-      .map((date) => ({ key: `d:${date}`, kind: "date", date }));
+    for (const date of exactDates(left.schedule)) {
+      if (
+        (term === undefined ||
+          (date >= term.startsOn && date <= term.endsOn)) &&
+        dateIsInWeeklySchedule(right.schedule, date)
+      ) {
+        yield { key: `d:${date}`, kind: "date", date };
+      }
+    }
+    return;
   }
   if (left.schedule.kind === "weekly" && right.schedule.kind === "exact") {
-    return exactDates(right.schedule)
-      .filter((date) => dateIsInWeeklySchedule(left.schedule, date))
-      .map((date) => ({ key: `d:${date}`, kind: "date", date }));
+    for (const date of exactDates(right.schedule)) {
+      if (
+        (term === undefined ||
+          (date >= term.startsOn && date <= term.endsOn)) &&
+        dateIsInWeeklySchedule(left.schedule, date)
+      ) {
+        yield { key: `d:${date}`, kind: "date", date };
+      }
+    }
+    return;
   }
-  if (left.schedule.kind === "weekly" && right.schedule.kind === "weekly") {
-    return left.schedule.weekdays
-      .filter((weekday) => scheduleHasWeekday(right.schedule, weekday))
-      .map((weekday) => ({ key: `w:${weekday}`, kind: "weekday", weekday }));
+  if (left.schedule.kind !== "weekly" || right.schedule.kind !== "weekly") {
+    return;
   }
-  return [];
+  if (term === undefined) {
+    for (const weekday of left.schedule.weekdays) {
+      if (scheduleHasWeekday(right.schedule, weekday)) {
+        yield { key: `w:${weekday}`, kind: "weekday", weekday };
+      }
+    }
+    return;
+  }
+  const sharedWeekdays = left.schedule.weekdays.filter((weekday) =>
+    scheduleHasWeekday(right.schedule, weekday),
+  );
+  if (sharedWeekdays.length === 0) return;
+  const startsOn = latestDate([
+    term.startsOn,
+    left.schedule.startsOn,
+    right.schedule.startsOn,
+  ]);
+  const endsOn = earliestDate([
+    term.endsOn,
+    left.schedule.endsOn,
+    right.schedule.endsOn,
+  ]);
+  if (startsOn === undefined || endsOn === undefined || startsOn > endsOn)
+    return;
+  for (const date of datesForTerm({ startsOn, endsOn })) {
+    if (
+      dateIsInWeeklySchedule(left.schedule, date) &&
+      dateIsInWeeklySchedule(right.schedule, date)
+    ) {
+      yield { key: `d:${date}`, kind: "date", date };
+    }
+  }
 }
 
 function overlap(
@@ -180,15 +223,33 @@ function conflictFor(
   };
 }
 
-export function detectConflicts(
+export function detectConflictsBounded(
   events: readonly TimetableEvent[],
-  context: { readonly term?: TermRange } = {},
-): readonly ScheduleConflict[] {
+  context: {
+    readonly term?: TermRange;
+    readonly maxConflicts?: number;
+    readonly maxPairs?: number;
+  } = {},
+): ConflictDetectionResult {
+  const maxConflicts =
+    context.maxConflicts === undefined ||
+    !Number.isSafeInteger(context.maxConflicts) ||
+    context.maxConflicts < 0
+      ? DEFAULT_MAX_CONFLICTS
+      : context.maxConflicts;
+  const maxPairs =
+    context.maxPairs === undefined ||
+    !Number.isSafeInteger(context.maxPairs) ||
+    context.maxPairs < 0
+      ? DEFAULT_MAX_CONFLICT_PAIRS
+      : context.maxPairs;
   const ordered = [...events].sort((left, right) =>
     left.id.localeCompare(right.id),
   );
   const conflicts: ScheduleConflict[] = [];
-  for (let leftIndex = 0; leftIndex < ordered.length; leftIndex += 1) {
+  let pairsChecked = 0;
+  let truncated = false;
+  outer: for (let leftIndex = 0; leftIndex < ordered.length; leftIndex += 1) {
     const left = ordered[leftIndex];
     if (left === undefined) continue;
     for (
@@ -196,15 +257,38 @@ export function detectConflicts(
       rightIndex < ordered.length;
       rightIndex += 1
     ) {
+      if (pairsChecked >= maxPairs) {
+        truncated = true;
+        break outer;
+      }
+      pairsChecked += 1;
       const right = ordered[rightIndex];
       if (right === undefined || left.timezone !== right.timezone) continue;
       const overlapRange = overlap(left, right);
       if (overlapRange === undefined) continue;
       const occurrences = sharedOccurrences(left, right, context.term);
       for (const occurrence of occurrences) {
+        if (conflicts.length >= maxConflicts) {
+          truncated = true;
+          break outer;
+        }
         conflicts.push(conflictFor(left, right, occurrence, overlapRange));
       }
     }
   }
-  return conflicts.sort((left, right) => left.id.localeCompare(right.id));
+  return {
+    conflicts: conflicts.sort((left, right) => left.id.localeCompare(right.id)),
+    truncated,
+  };
+}
+
+export function detectConflicts(
+  events: readonly TimetableEvent[],
+  context: { readonly term?: TermRange } = {},
+): readonly ScheduleConflict[] {
+  return detectConflictsBounded(events, {
+    ...context,
+    maxConflicts: Number.MAX_SAFE_INTEGER,
+    maxPairs: Number.MAX_SAFE_INTEGER,
+  }).conflicts;
 }

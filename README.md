@@ -21,7 +21,13 @@ Local parsing keeps uploaded content in the browser. Optional remote recovery wi
 
 The package accepts text and CSV directly. The PDF.js and Tesseract adapters add text-PDF, scanned-PDF, and image input without adding those runtimes to the core package.
 
-The companion CLI is published as `@ndycode/timetablekit-cli` and exposes the `timetablekit` command. Run `timetablekit parse schedule.txt --format ics --output timetable.ics` after installing it.
+The companion CLI workspace package is `@ndycode/timetablekit-cli` and exposes the `timetablekit` command. Run `timetablekit parse schedule.txt --format ics --output timetable.ics` after building or installing it.
+
+## Public surfaces
+
+- [Production playground](https://timetablekit.vercel.app/)
+- [Preview deployment](https://timetablekit-c0v9prgnt-ndycode.vercel.app/)
+- [GitHub repository](https://github.com/ndycode/timetablekit)
 
 ## Repository map
 
@@ -35,6 +41,12 @@ The companion CLI is published as `@ndycode/timetablekit-cli` and exposes the `t
 ## Governance
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md), and [GOVERNANCE.md](GOVERNANCE.md) before opening a change.
+
+## Vercel Open Source Program
+
+Thanks to Vercel for their support of open-source software.
+
+[Deploy this repository with Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fndycode%2Ftimetablekit)
 
 ## Status
 

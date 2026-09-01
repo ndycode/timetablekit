@@ -110,6 +110,10 @@ test("API validation, upload boundaries, and mobile keyboard flow work", async (
     data: { text: "x".repeat(200_001) },
   });
   expect(oversized.status()).toBe(413);
+  const oversizedEnvelope = await page.request.post("/api/parse", {
+    data: { text: "ok", metadata: "x".repeat(260_000) },
+  });
+  expect(oversizedEnvelope.status()).toBe(413);
 
   await page.getByRole("link", { name: "Try a sample" }).click();
   await page.getByRole("tab", { name: "Upload" }).click();
@@ -143,4 +147,35 @@ test("landing page and playground have no automated accessibility violations", a
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations, `${path} accessibility violations`).toEqual([]);
   }
+});
+
+test("robots and sitemap use public URLs", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.locator('meta[property="og:image"]').getAttribute("content"),
+  ).resolves.toBe("https://timetablekit.vercel.app/opengraph.svg");
+
+  const sitemap = await page.request.get("/sitemap.xml");
+  expect(sitemap).toBeOK();
+  const sitemapText = await sitemap.text();
+  expect(sitemapText).not.toContain("localhost");
+  expect(sitemapText).toContain("https://timetablekit.vercel.app/");
+
+  const robots = await page.request.get("/robots.txt");
+  expect(robots).toBeOK();
+  const robotsText = await robots.text();
+  expect(robotsText).toContain(
+    "Sitemap: https://timetablekit.vercel.app/sitemap.xml",
+  );
+});
+
+test("the public JSON Schema endpoint serves the package schema", async ({
+  page,
+}) => {
+  const schema = await page.request.get("/schema/timetable-result.schema.json");
+  expect(schema).toBeOK();
+  expect(schema.headers()["cache-control"]).toContain("max-age=3600");
+  expect((await schema.json()).$id).toBe(
+    "https://timetablekit.vercel.app/schema/timetable-result.schema.json",
+  );
 });

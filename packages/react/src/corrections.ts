@@ -1,4 +1,8 @@
-import { detectConflicts, validateTimetable } from "@ndycode/timetablekit";
+import {
+  DEFAULT_MAX_CONFLICTS,
+  detectConflictsBounded,
+  validateTimetable,
+} from "@ndycode/timetablekit";
 import type {
   EventField,
   ParseWarning,
@@ -16,6 +20,7 @@ const VALIDATION_WARNING_CODES: ReadonlySet<WarningCode> = new Set([
   "MISSING_END_TIME",
   "INVALID_TIME_RANGE",
   "LOW_CONFIDENCE",
+  "CONFLICT_LIMIT",
   "UNKNOWN_DAY_LABEL",
   "INVALID_DATE",
   "OUTSIDE_TERM_RANGE",
@@ -27,6 +32,15 @@ function warningForConflict(conflictId: string): ParseWarning {
     severity: "error",
     message: "Two events overlap on the same occurrence.",
     details: { conflictId },
+  };
+}
+
+function warningForConflictLimit(): ParseWarning {
+  return {
+    code: "CONFLICT_LIMIT",
+    severity: "warning",
+    message: "Conflict detection was limited by resource bounds.",
+    details: { limit: DEFAULT_MAX_CONFLICTS },
   };
 }
 
@@ -188,10 +202,11 @@ function recalculateResult(
     timezone: result.timezone,
     ...(result.term === undefined ? {} : { term: result.term }),
   });
-  const conflicts = detectConflicts(
+  const detected = detectConflictsBounded(
     events,
     result.term === undefined ? {} : { term: result.term },
   );
+  const conflicts = detected.conflicts;
   return {
     ...result,
     events,
@@ -199,6 +214,7 @@ function recalculateResult(
       ...preservedWarnings,
       ...validationWarnings,
       ...conflicts.map((conflict) => warningForConflict(conflict.id)),
+      ...(detected.truncated ? [warningForConflictLimit()] : []),
     ],
     conflicts,
     parse: {

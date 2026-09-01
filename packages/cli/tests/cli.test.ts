@@ -112,4 +112,35 @@ describe("timetablekit CLI", () => {
       );
     }
   });
+
+  it("accepts the documented --output alias", async () => {
+    const directory = await temporaryDirectory();
+    const inputPath = join(directory, "alias.txt");
+    const outputPath = join(directory, "alias.json");
+    await writeFile(inputPath, "Alias Check Monday 09:00-10:00", "utf8");
+    const captured = capture(directory);
+
+    const exitCode = await runCli(
+      [inputPath, "--format", "json", "--output", outputPath],
+      captured.io,
+    );
+
+    expect(exitCode).toBe(0);
+    expect(captured.output.stdout).toBe("");
+    expect(captured.output.stderr).toBe("");
+    await expect(readFile(outputPath, "utf8")).resolves.toContain('"events"');
+  });
+
+  it("rejects UNC input paths before filesystem access", async () => {
+    const captured = capture(process.cwd());
+
+    const exitCode = await runCli(
+      ["\\\\server\\share\\schedule.txt"],
+      captured.io,
+    );
+
+    expect(exitCode).toBe(1);
+    expect(captured.output.stdout).toBe("");
+    expect(captured.output.stderr).toContain("Remote URLs are not accepted");
+  });
 });

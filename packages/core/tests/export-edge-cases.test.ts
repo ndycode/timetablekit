@@ -89,6 +89,13 @@ describe("ICS export edge cases", () => {
       timezone: "Mars/Orbit",
     };
     expect(errorCode(() => toICS(badTimezone))).toBe("EXPORT_INVALID_RESULT");
+    const eventTimezoneInjection: TimetableParseResult = {
+      ...result,
+      events: [{ ...event, timezone: "Asia/Manila\r\nX-Bad: yes" }],
+    };
+    expect(errorCode(() => toICS(eventTimezoneInjection))).toBe(
+      "EXPORT_INVALID_RESULT",
+    );
     const impossibleRange: TimetableParseResult = {
       ...result,
       events: [{ ...event, schedule: { kind: "weekly", weekdays: ["MO"] } }],
@@ -101,5 +108,30 @@ describe("ICS export edge cases", () => {
       name: "TimetableError",
       code: "EXPORT_INVALID_RESULT",
     });
+    expect(
+      errorCode(() =>
+        toICS(result, { dtstamp: "20260901T000000Z\r\nX-Bad: yes" }),
+      ),
+    ).toBe("EXPORT_INVALID_RESULT");
+    expect(
+      errorCode(() => toICS(result, { dtstamp: "20261340T256099Z" })),
+    ).toBe("EXPORT_INVALID_RESULT");
+    const weeklyDateInjection: TimetableParseResult = {
+      ...result,
+      events: [
+        {
+          ...event,
+          schedule: {
+            kind: "weekly",
+            weekdays: ["MO"],
+            startsOn: "2026-09-01",
+            endsOn: "2026-09-30\r\nX-Bad: yes",
+          },
+        },
+      ],
+    };
+    expect(errorCode(() => toICS(weeklyDateInjection))).toBe(
+      "EXPORT_INVALID_RESULT",
+    );
   });
 });

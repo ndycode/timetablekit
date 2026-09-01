@@ -11,6 +11,7 @@ const ignored = new Set([
   "dist",
   "node_modules",
   ".turbo",
+  ".vercel",
 ]);
 const sourceExtensions = new Set([".cjs", ".js", ".mjs", ".ts", ".tsx"]);
 const forbidden = [

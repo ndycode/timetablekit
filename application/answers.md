@@ -1,10 +1,70 @@
 # Vercel Open Source Program application answers
 
-Status: prepared, not submitted. Verified 2026-09-01. Public repository, deployment, package, and release URLs are added to this file only after each external surface is independently verified.
+Status: prepared, not submitted. Verified 2026-09-01. The public repository and the exact Vercel preview below are independently verified. The production URL remains live on the pre-release deployment. npm publication and the GitHub release are pending their external gates.
 
 ## Applicant-owned fields
 
 The applicant must enter their own first name, last name, email address, preferred social link, and optional company. These identity fields are intentionally not stored in this repository.
+
+## Current live-form mapping
+
+The live form checked on 2026-09-01 contains the following fields. Applicant-owned identity fields stay out of this repository.
+
+### 1. About you
+
+Enter the applicant's own first name, last name, email address, and optional company.
+
+### 2. Preferred social link
+
+Enter the applicant's own public social or professional profile URL.
+
+### 3. Project name
+
+TimetableKit
+
+### 4. Live URL
+
+https://timetablekit.vercel.app/
+
+### 5. GitHub link
+
+https://github.com/ndycode/timetablekit
+
+### 6. Role
+
+Project owner.
+
+### 7. Project
+
+TimetableKit is a privacy-first open-source TypeScript toolkit and Vercel-hosted playground that converts timetable text, images, and PDFs into validated calendar events with human correction and JSON, CSV, and iCalendar exports.
+
+### 8. What distinguishes the project
+
+TimetableKit keeps the default parse and review path local and in memory. It combines deterministic parsing, field-level confidence, source evidence, conflict detection, bounded OCR and PDF adapters, correction, and standards-compatible exports in a framework-independent package. The hosted playground works without an account or AI key. Optional remote recovery is disabled until the user gives consent, and the public repository includes synthetic fixture and privacy tests.
+
+### 9. Anything else
+
+The public repository includes an MIT license, Code of Conduct, security and contribution guidance, a fixture-driven test suite, a public roadmap, and ten scoped maintainer issues. The pre-release production deployment and exact preview at https://timetablekit-c0v9prgnt-ndycode.vercel.app/ are live. A focused MySched adapter pull request is open as an integration proposal. It does not claim production adoption. The npm package archive installs cleanly in a fresh consumer, but publication is waiting for npm authentication on the release machine. Evidence and exact limits are recorded in the repository claims ledger.
+
+### 10. Is the project fully open source and will it remain so?
+
+Yes. TimetableKit is released under the MIT License and the project will keep the public toolkit, documentation, fixtures, and tests open source.
+
+### 11. Is the project hosted on or intended to be hosted on Vercel and will it remain there?
+
+Yes. The public playground, documentation, serverless validation route, and preview deployments are hosted on Vercel.
+
+### 12. Vercel Team ID
+
+team_5xidpACRcych6R88RSuvQ8qK
+
+### 13. Code of Conduct
+
+Yes. I agree to Vercel's Code of Conduct. The repository also includes a project Code of Conduct.
+
+### 14. Program terms
+
+Review the current program terms and accept them only in the live form as the applicant. This draft does not submit the application.
 
 ## Project name
 
@@ -12,11 +72,11 @@ TimetableKit
 
 ## Project URL
 
-Record the verified production Vercel URL here after deployment.
+https://timetablekit.vercel.app/
 
 ## GitHub repository
 
-Record the verified public repository URL here after publication.
+https://github.com/ndycode/timetablekit
 
 ## Role
 

@@ -45,7 +45,7 @@ function scheduleColumns(
 }
 
 function csvSafe(value: string): string {
-  const guarded = /^[=+\-@]/u.test(value) ? `'${value}` : value;
+  const guarded = /^[\t ]*[=+\-@]/u.test(value) ? `'${value}` : value;
   return /[",\r\n]/u.test(guarded)
     ? `"${guarded.replace(/"/g, '""')}"`
     : guarded;
