@@ -14,7 +14,7 @@ Verified 2026-09-01. The checklist records the release surfaces without claiming
 | Main branch protection                                                     | Pass          | `Foundation checks` required; force pushes and deletions disabled                       |
 | Hosted GitHub Actions                                                      | Blocked       | Dispatch returned HTTP 422: `Actions has been disabled for this user`                   |
 | Vercel GitHub connection                                                   | Pass          | Vercel project connected to `ndycode/timetablekit`                                      |
-| Production deployment                                                      | Pass          | https://timetablekit.vercel.app/ (`dpl_EzinWRAaunh9SRtpdQNVDwHb5Ym4`)                   |
+| Production deployment                                                      | Pass          | https://timetablekit.vercel.app/ (latest GitHub-connected deployment)                   |
 | Preview deployment                                                         | Pass          | https://timetablekit-p18qr1s71-ndycode.vercel.app/ (`dpl_4655tEFzJ3uHFQ1r9mCdpCrjc4pQ`) |
 | Live route, export, accessibility, and Lighthouse checks                   | Pass          | `docs/quality-report.md`                                                                |
 | npm package publication                                                    | Pass          | https://www.npmjs.com/package/@ndycode/timetablekit (`0.1.0`)                           |
