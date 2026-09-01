@@ -42,10 +42,19 @@ export type TesseractWorkerFactory = (
   options: TesseractWorkerFactoryOptions,
 ) => Promise<TesseractWorker>;
 
+export type TesseractWorkerPaths = {
+  readonly corePath?: string;
+  readonly langPath?: string;
+  readonly workerPath?: string;
+};
+
 /** Configuration for the browser OCR provider. */
 export type TesseractProviderOptions = {
   readonly languages?: string;
   readonly createWorker?: TesseractWorkerFactory;
+  readonly corePath?: string;
+  readonly langPath?: string;
+  readonly workerPath?: string;
 };
 
 /** Creates a lazy Tesseract.js OCR provider. */
@@ -53,7 +62,16 @@ export function createTesseractProvider(
   options: TesseractProviderOptions = {},
 ): OcrProvider {
   const languages = options.languages ?? "eng";
-  const createWorker = options.createWorker ?? createWorkerWithTesseract;
+  const workerPaths: TesseractWorkerPaths = {
+    ...(options.corePath === undefined ? {} : { corePath: options.corePath }),
+    ...(options.langPath === undefined ? {} : { langPath: options.langPath }),
+    ...(options.workerPath === undefined
+      ? {}
+      : { workerPath: options.workerPath }),
+  };
+  const createWorker =
+    options.createWorker ??
+    ((workerOptions) => createWorkerWithTesseract(workerOptions, workerPaths));
 
   return {
     id: TESSERACT_PROVIDER_ID,
@@ -278,6 +296,7 @@ function reportTesseractProgress(
 
 async function createWorkerWithTesseract(
   options: TesseractWorkerFactoryOptions,
+  workerPaths: TesseractWorkerPaths,
 ): Promise<TesseractWorker> {
   let tesseract: typeof import("tesseract.js");
   try {
@@ -290,6 +309,7 @@ async function createWorkerWithTesseract(
     );
   }
   const worker = await tesseract.createWorker(options.languages, 1, {
+    ...workerPaths,
     logger: (message) => {
       options.logger({ progress: message.progress, status: message.status });
     },

@@ -117,6 +117,7 @@ export type WarningCode =
   | "FILE_TOO_LARGE"
   | "TOO_MANY_PAGES"
   | "NO_TEXT_FOUND"
+  | "NO_EVENTS_FOUND"
   | "LOW_CONFIDENCE"
   | "UNKNOWN_DAY_LABEL"
   | "UNKNOWN_LOCALE"

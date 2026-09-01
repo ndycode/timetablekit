@@ -53,6 +53,12 @@ importers:
       '@ndycode/timetablekit-provider-tesseract':
         specifier: workspace:*
         version: link:../../packages/provider-tesseract
+      '@tesseract.js-data/eng':
+        specifier: 1.0.0
+        version: 1.0.0
+      geist:
+        specifier: 1.7.2
+        version: 1.7.2(next@16.3.4(@playwright/test@1.62.1)(@types/node@24.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
       next:
         specifier: 16.3.4
         version: 16.3.4(@playwright/test@1.62.1)(@types/node@24.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -76,11 +82,23 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/agent:
+    dependencies:
+      '@ndycode/timetablekit':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
+
   packages/cli:
     dependencies:
       '@ndycode/timetablekit':
         specifier: workspace:*
         version: link:../core
+      '@ndycode/timetablekit-agent':
+        specifier: workspace:*
+        version: link:../agent
 
   packages/core:
     dependencies:
@@ -599,6 +617,9 @@ packages:
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
 
+  '@tesseract.js-data/eng@1.0.0':
+    resolution: {integrity: sha512-mbTumm6KQPUHyzTPQaF3ObXYnx0SqqfV2nabqFVQBwD6Kl7PhGSLSzOlfFTWy0P3BjghaSKA2W9GB19Jk+ZcTg==}
+
   '@turbo/darwin-64@2.10.12':
     resolution: {integrity: sha512-9nKgKoF6ZOUsM+or0OtNf+TTJSfGvDNP7ZFv/ZGWVwOSCkumyctQiTeHwB4UNljHTnC41AqylgbunLDHoccNrA==}
     cpu: [x64]
@@ -778,6 +799,11 @@ packages:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  geist@1.7.2:
+    resolution: {integrity: sha512-Gu5lDFa3pLRyoBlBPf0QIFHVdWAnpco7fS1bJm41jyLPFoguBgiubseUN2oLXMgqZ7uxAxDoXcHMhCY/fOTTgg==}
+    peerDependencies:
+      next: '>=13.2.0'
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -1503,6 +1529,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@tesseract.js-data/eng@1.0.0': {}
+
   '@turbo/darwin-64@2.10.12':
     optional: true
 
@@ -1661,6 +1689,10 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  geist@1.7.2(next@16.3.4(@playwright/test@1.62.1)(@types/node@24.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)):
+    dependencies:
+      next: 16.3.4(@playwright/test@1.62.1)(@types/node@24.10.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
 
   has-flag@4.0.0: {}
 

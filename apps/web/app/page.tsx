@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { VERIFIED_GITHUB_URL } from "../components/site-header";
+import { ArrowRightIcon, ArrowUpRightIcon } from "../components/icons";
+import { TimetableDemo } from "../components/timetable-demo";
 
 const sampleEvents = [
   { time: "09:00", title: "Algorithms", detail: "CS101 · Room 204" },
@@ -9,17 +11,18 @@ const sampleEvents = [
 
 export default function HomePage() {
   return (
-    <main className="landing">
+    <main id="main-content" className="landing">
       <section className="hero" aria-labelledby="home-title">
         <div className="hero-copy">
-          <h1 id="home-title">Turn timetables into calendar events.</h1>
+          <h1 id="home-title">Turn schedules into calendar events.</h1>
           <p>
-            TimetableKit converts timetable text, images, and PDFs into
-            validated events you can review and export, locally and privately.
+            Paste a schedule or choose a text, image, or PDF file. TimetableKit
+            turns it into calendar events you can check and download in your
+            browser.
           </p>
           <div className="hero-actions">
             <Link className="button" href="/playground">
-              Try a sample <span aria-hidden="true">→</span>
+              Try it <ArrowRightIcon />
             </Link>
             <a
               className="button-secondary"
@@ -27,32 +30,32 @@ export default function HomePage() {
               target="_blank"
               rel="noreferrer"
             >
-              View GitHub <span aria-hidden="true">↗</span>
+              See the code <ArrowUpRightIcon />
             </a>
           </div>
           <p className="privacy-note">
-            <strong>Local by default.</strong> No account. No API key. No
-            timetable content leaves this page unless you opt in to recovery.
+            <strong>Runs in your browser by default.</strong> No account or API
+            key. Your schedule stays in this browser unless you turn on AI help.
           </p>
         </div>
 
         <div
           className="transform-frame"
-          aria-label="Example timetable transformation"
+          aria-label="Example schedule turned into calendar events"
         >
           <div className="transform-frame-header">
-            <span>Input · timetable.txt</span>
-            <span aria-hidden="true">→</span>
-            <span>Output · validated events</span>
+            <span>Input file</span>
+            <ArrowRightIcon />
+            <span>Calendar events</span>
           </div>
           <div className="transform-grid">
             <div className="sample-input">
-              <div className="sample-label">Fictional campus week</div>
+              <div className="sample-label">Sample week</div>
               <pre>{`Mon 09:00-11:00 CS101 Algorithms
 Mon 10:30-12:00 MATH201 Discrete Math
 Mon 14:00-15:30 CS205 Databases
 
-Timezone: Asia/Manila`}</pre>
+Time zone: Asia/Manila`}</pre>
             </div>
             <div className="sample-output">
               <div className="agenda-date">Monday · 12 May 2025</div>
@@ -87,32 +90,40 @@ Timezone: Asia/Manila`}</pre>
         </div>
       </section>
 
-      <section className="workflow-band" aria-label="TimetableKit workflow">
+      <section className="workflow-band" aria-label="How TimetableKit works">
         <div className="workflow-step">
           <span className="workflow-number">01</span>
           <div>
-            <h2>Import</h2>
-            <p>Bring in timetables from text, images, or PDFs.</p>
+            <h2>Add</h2>
+            <p>Add a schedule from text, an image, or a PDF.</p>
           </div>
         </div>
         <div className="workflow-step">
           <span className="workflow-number">02</span>
           <div>
-            <h2>Review</h2>
-            <p>Validate and edit parsed events in a clean preview.</p>
+            <h2>Check</h2>
+            <p>Check and edit the events.</p>
           </div>
         </div>
         <div className="workflow-step">
           <span className="workflow-number">03</span>
           <div>
-            <h2>Export</h2>
-            <p>Download JSON, CSV, or iCalendar after correction.</p>
+            <h2>Download</h2>
+            <p>Download JSON, CSV, or iCalendar.</p>
           </div>
         </div>
       </section>
 
+      <section className="demo-section" aria-labelledby="demo-title">
+        <div className="demo-section-heading">
+          <h2 id="demo-title">See how it works</h2>
+          <span>sample input · stays here</span>
+        </div>
+        <TimetableDemo />
+      </section>
+
       <section className="formats-band" aria-labelledby="formats-title">
-        <h2 id="formats-title">Supported formats</h2>
+        <h2 id="formats-title">Files you can use</h2>
         <ul className="format-list">
           <li>Text · .txt</li>
           <li>CSV · .csv</li>
@@ -125,10 +136,10 @@ Timezone: Asia/Manila`}</pre>
 
       <section className="sdk-band" aria-labelledby="sdk-title">
         <div className="sdk-copy">
-          <h2 id="sdk-title">TypeScript SDK</h2>
-          <p>Small, typed, and framework-independent.</p>
+          <h2 id="sdk-title">Use it in TypeScript</h2>
+          <p>A small package for your app.</p>
           <Link href="/docs">
-            Read the API docs <span aria-hidden="true">→</span>
+            Read the guide <ArrowRightIcon />
           </Link>
         </div>
         <pre className="sdk-code">
@@ -152,45 +163,44 @@ Timezone: Asia/Manila`}</pre>
 
       <section className="privacy-band" aria-labelledby="privacy-title">
         <h2 id="privacy-title">
-          Privacy by design.
+          Your data stays here.
           <br />
-          Local by default.
+          No account needed.
         </h2>
         <div>
           <p>
-            Parsing happens in the browser for the default path. Files stay in
-            memory for the current task. Optional AI recovery is off until you
-            turn it on and agree that remote provider terms apply.
+            The app reads schedules in your browser. Files stay in memory while
+            you work. AI help is off until you turn it on and agree to the
+            outside service&apos;s terms.
           </p>
           <Link href="/privacy">
-            Read the privacy model <span aria-hidden="true">→</span>
+            See how privacy works <ArrowRightIcon />
           </Link>
         </div>
       </section>
 
       <section className="roadmap-band" aria-labelledby="roadmap-title">
         <div>
-          <h2 id="roadmap-title">Roadmap</h2>
+          <h2 id="roadmap-title">What comes next</h2>
           <p className="privacy-note">
-            A small, fixture-driven toolkit that grows through verified parser
-            behavior.
+            We add small, tested steps to make schedule imports easier.
           </p>
           <Link href="/roadmap">
-            See what is next <span aria-hidden="true">→</span>
+            See the plan <ArrowRightIcon />
           </Link>
         </div>
         <ul className="roadmap-list">
           <li>
-            <strong>Now</strong>Text and CSV parsing
+            <strong>Now</strong>Read text and CSV schedules
           </li>
           <li>
-            <strong>Now</strong>Correction and exports
+            <strong>Now</strong>Fix events and download them
           </li>
           <li>
-            <strong>Next</strong>More locales
+            <strong>Next</strong>Support more languages
           </li>
           <li>
-            <strong>Next</strong>Provider adapters
+            <strong>Next</strong>Add more file readers
           </li>
         </ul>
       </section>

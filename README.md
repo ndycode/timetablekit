@@ -23,6 +23,10 @@ The package accepts text and CSV directly. The PDF.js and Tesseract adapters add
 
 The companion CLI workspace package is `@ndycode/timetablekit-cli` and exposes the `timetablekit` command. Run `timetablekit parse schedule.txt --format ics --output timetable.ics` after building or installing it.
 
+The optional `@ndycode/timetablekit-agent` package exposes the same parser as a
+JSON-only tool contract. It includes capability discovery, structured errors,
+bounded binary input, and a JSONL process transport through `timetablekit agent`.
+
 ## Public surfaces
 
 - [Production playground](https://timetablekit.vercel.app/)
@@ -59,6 +63,7 @@ npm install @ndycode/timetablekit
 ## Repository map
 
 - [`packages/core`](packages/core) owns schemas, parsing, validation, conflicts, confidence, and exporters.
+- [`packages/agent`](packages/agent) owns the framework-neutral agent tool contract and JSONL transport.
 - [`packages/react`](packages/react) owns reusable correction and preview components.
 - [`apps/web`](apps/web) is the public playground and documentation site.
 - [`fixtures`](fixtures) contains synthetic, public regression inputs.

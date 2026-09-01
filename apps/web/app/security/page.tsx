@@ -2,49 +2,44 @@ export const metadata = { title: "Security" };
 
 export default function SecurityPage() {
   return (
-    <main className="page-shell">
+    <main id="main-content" className="page-shell">
       <div className="page-intro">
         <h1>Security</h1>
-        <p>
-          Bounded input, explicit providers, and a clear path for vulnerability
-          reports.
-        </p>
+        <p>The app limits what it reads and how outside services work.</p>
       </div>
       <article className="doc-content">
         <section>
-          <h2>Browser boundary</h2>
+          <h2>What the browser accepts</h2>
           <p>
-            TimetableKit accepts only local text and selected files. It rejects
-            remote URLs, unsupported types, mismatched MIME and extension pairs,
-            and files over the configured limit. Uploaded bytes are not
-            persisted.
+            TimetableKit accepts only local text and files you select. It
+            rejects URLs, unsupported types, files whose names and types do not
+            match, and files over the size limit. It does not save uploaded
+            bytes.
           </p>
         </section>
         <section>
-          <h2>Web headers</h2>
+          <h2>Browser protections</h2>
           <p>
-            The web app sends a restrictive content security policy,
-            Referrer-Policy, Permissions-Policy, X-Content-Type-Options, and
-            frame protections. The health route exposes status only and no
-            environment values.
+            The app uses browser rules to limit scripts, referrers, permissions,
+            framing, and file types. The health check returns status only. It
+            does not expose server settings.
           </p>
         </section>
         <section>
-          <h2>Provider rules</h2>
+          <h2>Rules for file readers</h2>
           <p>
-            OCR, PDF, and remote recovery providers are separate from the core
-            parser. They must respect cancellation, resource limits, bounded
-            output, and structured errors. Remote recovery requires explicit
-            consent.
+            Image, PDF, and remote AI readers stay separate from the main
+            parser. Each reader must stop when asked, follow size limits, limit
+            its output, and return clear errors. Remote AI needs your consent.
           </p>
         </section>
         <section>
-          <h2>Report a vulnerability</h2>
+          <h2>Report a security problem</h2>
           <p>
-            Do not open a public issue with credentials, private schedules,
-            exploit details, or personal data. Use the private maintainer
-            contact in the repository <code>SECURITY.md</code> and include a
-            redacted reproduction with the affected version or commit.
+            Do not post credentials, private schedules, attack details, or
+            personal data in a public issue. Use the private maintainer contact
+            in <code>SECURITY.md</code>. Include an example with private details
+            removed and the affected version or commit.
           </p>
         </section>
       </article>

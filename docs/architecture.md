@@ -1,20 +1,21 @@
 # Architecture
 
-TimetableKit is a pnpm workspace with a framework-independent core. The web application, React helpers, command-line interface, and provider adapters depend on the core package rather than the other way around.
+TimetableKit is a pnpm workspace with a framework-independent core. The web application, React helpers, command-line interface, agent contract, and provider adapters depend on the core package rather than the other way around.
 
 ## Workspace boundaries
 
 ```text
 apps/web          Vercel-hosted playground and documentation site
 packages/core     schemas, parsing, normalization, validation, conflicts, exports
+packages/agent    JSON-only agent tool contract, capabilities, and JSONL transport
 packages/react    optional React correction and preview components
 packages/cli      optional command-line interface
-packages/providers provider adapters such as local OCR or optional remote recovery
+packages/provider-* provider adapters such as local OCR or optional remote recovery
 fixtures          synthetic or redistributable parser inputs and golden outputs
 examples           small consumer examples kept outside the core package
 ```
 
-The core package owns the stable domain contract. Provider and UI packages add capabilities at the boundary and do not leak browser, filesystem, OCR, PDF, or network dependencies into the core package.
+The core package owns the stable domain contract. Provider, UI, and agent packages add capabilities at the boundary and do not leak browser, filesystem, OCR, PDF, network, or model SDK dependencies into the core package.
 
 ## Data flow
 
@@ -27,6 +28,10 @@ The core package owns the stable domain contract. Provider and UI packages add c
 7. JSON, CSV, or iCalendar output is generated from the corrected normalized data.
 
 Image OCR, scanned-PDF OCR, and remote recovery are provider boundaries. They must be optional and must not be required for the deterministic text path.
+
+The agent package is a transport boundary. It converts JSON requests, including
+bounded base64 binary inputs, into core inputs and converts parser failures into
+stable structured data. It does not fetch URLs or choose a model.
 
 ## Privacy boundary
 

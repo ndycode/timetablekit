@@ -100,7 +100,7 @@ export async function POST(request: Request): Promise<Response> {
   if (request.signal.aborted) return new Response(null, { status: 499 });
   if (activeRequests >= MAX_ACTIVE_REQUESTS) {
     return Response.json(
-      { error: "The parser is busy. Try again shortly." },
+      { error: "The app is busy. Try again soon." },
       {
         status: 429,
         headers: { "Retry-After": "1", "Cache-Control": "no-store" },
@@ -132,7 +132,7 @@ export async function POST(request: Request): Promise<Response> {
       Number(contentLength) > MAX_REQUEST_BYTES
     ) {
       return Response.json(
-        { error: "The remote request is too large." },
+        { error: "That request is too large." },
         { status: 413 },
       );
     }
@@ -140,14 +140,14 @@ export async function POST(request: Request): Promise<Response> {
     const payload: unknown = JSON.parse(new TextDecoder().decode(requestBody));
     if (!isRecord(payload) || typeof payload["text"] !== "string") {
       return Response.json(
-        { error: "Send a JSON object with a text string." },
+        { error: "Send a JSON object with a text field." },
         { status: 400 },
       );
     }
     const text = payload["text"];
     if (new TextEncoder().encode(text).byteLength > MAX_REMOTE_TEXT_BYTES) {
       return Response.json(
-        { error: "The remote text request is too large." },
+        { error: "That text is too large." },
         { status: 413 },
       );
     }
@@ -157,7 +157,7 @@ export async function POST(request: Request): Promise<Response> {
       payload["kind"] !== "csv"
     ) {
       return Response.json(
-        { error: "The kind must be text or csv." },
+        { error: "The kind must be text or CSV." },
         { status: 400 },
       );
     }
@@ -176,7 +176,7 @@ export async function POST(request: Request): Promise<Response> {
     const serialized = toJSON(result);
     if (new TextEncoder().encode(serialized).byteLength > MAX_RESPONSE_BYTES) {
       return Response.json(
-        { error: "The parser response is too large." },
+        { error: "The result is too large." },
         { status: 413 },
       );
     }
@@ -187,20 +187,20 @@ export async function POST(request: Request): Promise<Response> {
     if (clientDisconnected) return new Response(null, { status: 499 });
     if (error instanceof RequestBodyTooLargeError) {
       return Response.json(
-        { error: "The remote request is too large." },
+        { error: "That request is too large." },
         { status: 413 },
       );
     }
     if (timedOut) {
       return Response.json(
-        { error: "The parser request timed out." },
+        { error: "The request took too long." },
         { status: 504 },
       );
     }
     const message =
       error instanceof Error
         ? error.message
-        : "The timetable could not be parsed.";
+        : "We could not read the schedule.";
     return Response.json({ error: message }, { status: 400 });
   } finally {
     clearTimeout(timeout);

@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",
-    "test": "vitest run --config ../../vitest.config.ts packages/react/tests/corrections.test.ts"
+    "test": "vitest run packages/react/tests --config ../../vitest.config.ts"
   },
   "dependencies": {
     "@ndycode/timetablekit": "workspace:*"

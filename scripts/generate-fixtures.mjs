@@ -303,6 +303,8 @@ export const fixtureDefinitions = [
     "text",
     "Schedule Overview\nThis line has no timetable signal",
     [],
+    standardOptions(),
+    { warningCodes: ["NO_EVENTS_FOUND"] },
   ),
   fixture(
     "text-unknown-day",
@@ -310,7 +312,7 @@ export const fixtureDefinitions = [
     "Mystery Block; Funday; 09:00-10:00",
     [],
     standardOptions(),
-    { warningCodes: ["UNKNOWN_DAY_LABEL"] },
+    { warningCodes: ["NO_EVENTS_FOUND", "UNKNOWN_DAY_LABEL"] },
   ),
   fixture(
     "text-missing-end",
@@ -318,7 +320,7 @@ export const fixtureDefinitions = [
     "Incomplete Entry; Wednesday; 9",
     [],
     standardOptions(),
-    { warningCodes: ["AMBIGUOUS_TIME", "MISSING_END_TIME"] },
+    { warningCodes: ["AMBIGUOUS_TIME", "MISSING_END_TIME", "NO_EVENTS_FOUND"] },
   ),
   fixture(
     "text-missing-title",
@@ -326,7 +328,7 @@ export const fixtureDefinitions = [
     "Monday; 09:00-10:00",
     [],
     standardOptions(),
-    { warningCodes: ["MISSING_TITLE"] },
+    { warningCodes: ["MISSING_TITLE", "NO_EVENTS_FOUND"] },
   ),
   fixture(
     "text-invalid-time",
@@ -334,10 +336,10 @@ export const fixtureDefinitions = [
     "Broken Block; Monday; 25:00-26:00",
     [],
     standardOptions(),
-    { warningCodes: ["INVALID_TIME_RANGE"] },
+    { warningCodes: ["INVALID_TIME_RANGE", "NO_EVENTS_FOUND"] },
   ),
   fixture("text-no-start", "text", "No Start; Monday", [], standardOptions(), {
-    warningCodes: ["MISSING_START_TIME"],
+    warningCodes: ["MISSING_START_TIME", "NO_EVENTS_FOUND"],
   }),
   fixture(
     "text-outside-term",
@@ -439,7 +441,13 @@ export const fixtureDefinitions = [
     "title,days,start,end\nMissing Schedule,,09:00,10:00\nMissing End,Monday,09:00,",
     [],
     standardOptions(),
-    { warningCodes: ["MISSING_END_TIME", "UNKNOWN_DAY_LABEL"] },
+    {
+      warningCodes: [
+        "MISSING_END_TIME",
+        "NO_EVENTS_FOUND",
+        "UNKNOWN_DAY_LABEL",
+      ],
+    },
   ),
   fixture(
     "csv-unrecognized-header",
@@ -447,7 +455,7 @@ export const fixtureDefinitions = [
     "name,when\nUnusable Row,Monday",
     [],
     standardOptions(),
-    { warningCodes: ["UNRECOGNIZED_CSV"] },
+    { warningCodes: ["NO_EVENTS_FOUND", "UNRECOGNIZED_CSV"] },
   ),
   fixture(
     "csv-unterminated",
@@ -455,7 +463,7 @@ export const fixtureDefinitions = [
     'title,days,start,end\n"Broken,Monday,09:00,10:00',
     [],
     standardOptions(),
-    { warningCodes: ["UNRECOGNIZED_CSV"] },
+    { warningCodes: ["NO_EVENTS_FOUND", "UNRECOGNIZED_CSV"] },
   ),
   fixture(
     "csv-duplicate",

@@ -5,7 +5,8 @@ export default defineConfig({
   testMatch: "**/*.e2e.ts",
   reporter: "list",
   webServer: {
-    command: "pnpm --filter web exec next dev --hostname 127.0.0.1 --port 3417",
+    command:
+      "pnpm --filter web exec node ../../scripts/prepare-ocr-assets.mjs && pnpm --filter web exec next dev --hostname 127.0.0.1 --port 3417",
     url: "http://127.0.0.1:3417",
     reuseExistingServer: true,
     timeout: 120_000,

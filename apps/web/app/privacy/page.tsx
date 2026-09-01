@@ -2,54 +2,50 @@ export const metadata = { title: "Privacy" };
 
 export default function PrivacyPage() {
   return (
-    <main className="page-shell">
+    <main id="main-content" className="page-shell">
       <div className="page-intro">
-        <h1>Privacy model</h1>
-        <p>
-          The default path keeps timetable content in the browser for the
-          duration of the task.
-        </p>
+        <h1>Privacy</h1>
+        <p>Your schedule stays in this browser while you work.</p>
       </div>
       <article className="doc-content">
         <section>
-          <h2>Local by default</h2>
+          <h2>Your schedule stays here</h2>
           <p>
-            The playground does not require an account or API key. A selected
-            file and pasted text remain in memory while you parse, correct, and
-            export. The app does not use localStorage, analytics, raw query
-            parameters, or timetable-content logging.
+            The demo needs no account or API key. Selected files and pasted text
+            stay in memory while you read, fix, and export them. The app does
+            not save data in the browser, track you, read data from the URL, or
+            log your schedule.
           </p>
         </section>
         <section>
-          <h2>Remote recovery is opt in</h2>
+          <h2>AI help is optional</h2>
           <p>
-            AI recovery is off by default. The control explains that enabling it
-            can send unresolved fields to a remote provider and that provider
-            terms apply. Nothing is sent when consent is missing.
+            AI help is off. If you turn it on, the app can send unclear fields
+            to an outside service. That service&apos;s terms apply. The app
+            sends nothing without your consent.
           </p>
         </section>
         <section>
-          <h2>Input boundaries</h2>
+          <h2>What the app accepts</h2>
           <ul>
-            <li>Remote URLs are not accepted.</li>
+            <li>You cannot use a URL.</li>
             <li>
-              Files are checked against supported MIME types, extensions, and a
-              2 MB size limit.
+              Files must have a supported type and matching name. Files must be
+              2 MB or smaller.
             </li>
+            <li>The app cleans file names before it downloads a file.</li>
             <li>
-              File names are sanitized before they are used in a local download.
-            </li>
-            <li>
-              Imported text is treated as data, not as executable instructions.
+              The app treats schedule text as data. It never runs the text as
+              code.
             </li>
           </ul>
         </section>
         <section>
-          <h2>Read the repository policy</h2>
+          <h2>Read the full privacy policy</h2>
           <p>
-            The full privacy boundary is documented in{" "}
-            <code>docs/privacy.md</code>. Provider retention terms can differ,
-            so review them before enabling remote recovery.
+            The full privacy rules are in <code>docs/privacy.md</code>. Outside
+            services may keep data for different lengths of time. Check their
+            terms before you turn on AI help.
           </p>
         </section>
       </article>
