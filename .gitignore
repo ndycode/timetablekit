@@ -23,3 +23,5 @@ application/screenshots/*.png
 application/screenshots/*.webm
 !application/screenshots/
 !application/screenshots/**
+.vercel
+.env*
