@@ -35,6 +35,7 @@ deletions disabled, and conversation resolution required.
 
 ## Live deployment checks
 
+- The Vercel project is connected to `https://github.com/ndycode/timetablekit.git`; `vercel git connect` returned `Connected`.
 - Production deployment `dpl_EzinWRAaunh9SRtpdQNVDwHb5Ym4` is READY at https://timetablekit.vercel.app/.
 - Preview deployment `dpl_4655tEFzJ3uHFQ1r9mCdpCrjc4pQ` is READY at https://timetablekit-p18qr1s71-ndycode.vercel.app/.
 - Both direct deployments were created from the fixed implementation checkout at commit `fd742d2aaf6ee91a855fdfc60cd355247786499e`.

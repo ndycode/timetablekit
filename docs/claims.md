@@ -18,6 +18,8 @@ Claims are recorded before they are used in public copy or an application. A mai
 | npm publication        | "The package archive passes a clean consumer install, but the public npm package is not published from this machine."                                                                                                                                              | `npm whoami` and `npm publish --access public --provenance` both returned `ENEEDAUTH`                                | 2026-09-01        | Yes, as a blocker               | Do not create an npm URL until `npm view @ndycode/timetablekit` succeeds.                                                                                           |
 | GitHub release         | "TimetableKit v0.1.0 is released at `https://github.com/ndycode/timetablekit/releases/tag/v0.1.0`."                                                                                                                                                                | [GitHub release](https://github.com/ndycode/timetablekit/releases/tag/v0.1.0)                                        | 2026-09-01        | Yes                             | Annotated tag `v0.1.0` points to merge commit `e3aeafc3ebf4e1d3ab9082446b3b42eda1f20b23`.                                                                           |
 
+| Vercel Git connection | "The TimetableKit Vercel project is connected to the original GitHub repository." | `vercel git connect https://github.com/ndycode/timetablekit.git --yes` returned `Connected` | 2026-09-01 | Yes | Project settings use the monorepo root, Node 24.x, frozen-lockfile install, and `pnpm --filter web build`. |
+
 ## Rules
 
 - Keep exact wording separate from interpretation.
