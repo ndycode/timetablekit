@@ -26,6 +26,13 @@ commit is `e3aeafc3ebf4e1d3ab9082446b3b42eda1f20b23`.
 
 The full command output was observed in the local validation run. The Turbo warning that `web#test` has no declared output files was non-failing.
 
+Hosted GitHub Actions could not be started. `gh workflow run ci.yml --repo
+ndycode/timetablekit --ref main` returned HTTP 422 with `Actions has been
+disabled for this user`. The repository workflow files remain present, and the
+local Node 24 gate above is the available equivalent. The `main` branch is
+protected with the `Foundation checks` status required, force pushes and
+deletions disabled, and conversation resolution required.
+
 ## Live deployment checks
 
 - Production deployment `dpl_EzinWRAaunh9SRtpdQNVDwHb5Ym4` is READY at https://timetablekit.vercel.app/.

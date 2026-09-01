@@ -15,6 +15,7 @@ This file records implementation and release evidence. External URLs and metrics
 - [x] Initial architecture, privacy, export, testing, and claims documentation.
 - [x] Safe local link and secret checks.
 - [x] GitHub workflow and issue-template scaffolding.
+- [x] `main` branch protection with the `Foundation checks` required status and force-push protection.
 
 ## Product and release surfaces
 
@@ -25,6 +26,7 @@ This file records implementation and release evidence. External URLs and metrics
 - [ ] Published npm package. `npm whoami` and `npm publish` returned `ENEEDAUTH` on 2026-09-01.
 - [x] GitHub release tag and release. `v0.1.0` points to merge commit `e3aeafc3ebf4e1d3ab9082446b3b42eda1f20b23`.
 - [x] Local production build, browser E2E, accessibility, security, and fixture evidence.
+- [ ] Hosted GitHub Actions run. Dispatch returned HTTP 422 because Actions are disabled for this user.
 - [x] Focused MySched adapter PR opened at https://github.com/ndycode/mysched/pull/1553 with isolated tests.
 - [ ] MySched integration merge or production adoption. The open PR remains a separate external gate.
 - [x] Vercel application answers and evidence package prepared. Submission remains a maintainer action.
