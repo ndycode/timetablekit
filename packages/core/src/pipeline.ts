@@ -479,6 +479,19 @@ export function createTimetableParser(
       let validation = validateAndConflicts(events, options, warnings);
       events = validation.events;
       replaceAll(warnings, validation.warnings);
+      if (
+        events.length === 0 &&
+        !warnings.some((warning) => warning.code === "NO_TEXT_FOUND")
+      ) {
+        warnings.push(
+          makeWarning({
+            code: "NO_EVENTS_FOUND",
+            severity: "warning",
+            message: "No timetable events were recognized from this input.",
+            details: { source: input.kind },
+          }),
+        );
+      }
       reports.push(
         stageReport(
           "validate",

@@ -50,8 +50,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm validate
       - run: pnpm --filter @ndycode/timetablekit pack
+      - run: pnpm --filter @ndycode/timetablekit-agent pack
       - name: Publish package
         run: pnpm --filter @ndycode/timetablekit publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish agent package
+        run: pnpm --filter @ndycode/timetablekit-agent publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Create GitHub release

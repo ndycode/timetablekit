@@ -270,7 +270,7 @@ export async function fileToTimetableInput(
   if (file.size > MAX_INPUT_BYTES) {
     return {
       ok: false,
-      message: "That file is larger than the 2 MB browser limit.",
+      message: "That file is over the 2 MB limit.",
     };
   }
   const extension = extensionFor(file.name);
@@ -278,14 +278,14 @@ export async function fileToTimetableInput(
   if (rule === undefined) {
     return {
       ok: false,
-      message: "Use a TXT, CSV, PNG, JPEG, WebP, or PDF file.",
+      message: "Choose a TXT, CSV, image, or PDF file.",
     };
   }
   const mimeType = file.type.toLocaleLowerCase();
   if (!rule.mimeTypes.includes(mimeType)) {
     return {
       ok: false,
-      message: "The file extension and MIME type do not match.",
+      message: "The file type does not match its name.",
     };
   }
   const filename = safeFileName(file.name);
@@ -308,7 +308,7 @@ export async function fileToTimetableInput(
       imageMime !== "image/jpeg" &&
       imageMime !== "image/webp"
     ) {
-      return { ok: false, message: "That image MIME type is not supported." };
+      return { ok: false, message: "That image type is not supported." };
     }
     return {
       ok: true,

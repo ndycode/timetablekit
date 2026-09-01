@@ -22,18 +22,23 @@ async function downloadText(
   expect(Buffer.concat(chunks).toString("utf8")).toContain(marker);
 }
 
+async function openReadyPlayground(page: Page): Promise<void> {
+  await page.goto("/playground");
+  await expect(page.getByTestId("parse-status")).toHaveText("Found 6 events.");
+}
+
 test("sample flow supports review, correction, and ICS export", async ({
   page,
 }) => {
-  await page.goto("/playground");
+  await openReadyPlayground(page);
   await expect(
-    page.getByRole("heading", { name: "Review your schedule." }),
+    page.getByRole("heading", { name: "Check your schedule." }),
   ).toBeVisible();
-  await expect(page.getByText("Parsed 6 events.")).toBeVisible();
-  await expect(page.getByText("Warnings and conflicts")).toBeVisible();
-  await expect(page.getByText("SCHEDULE CONFLICT").first()).toBeVisible();
+  await expect(page.getByText("Found 6 events.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Issues" })).toBeVisible();
+  await expect(page.getByText("Time conflict").first()).toBeVisible();
 
-  const titleInput = page.locator(".event-table tbody tr input").first();
+  const titleInput = page.getByTestId(/event-title-/).first();
   await titleInput.fill("Edited fictional class");
   await expect(page.locator(".json-inspector pre")).toContainText(
     "Edited fictional class",
@@ -54,13 +59,13 @@ test("sample flow supports review, correction, and ICS export", async ({
 test("paste parsing stays local and requires no account", async ({ page }) => {
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
-  await page.goto("/playground");
+  await openReadyPlayground(page);
   await page.getByRole("tab", { name: "Paste text" }).click();
   await page
-    .getByLabel("Timetable text")
+    .getByLabel("Schedule text")
     .fill("Thu 18:00-19:30 ART201 Studio Practice | Room 8");
-  await page.getByRole("button", { name: "Parse locally" }).click();
-  await expect(page.getByText("Parsed 1 event.")).toBeVisible();
+  await page.getByRole("button", { name: "Read schedule" }).click();
+  await expect(page.getByText("Found 1 event.")).toBeVisible();
   expect(requests.some((url) => url.includes("/api/parse"))).toBe(false);
   expect(await page.evaluate(() => window.localStorage.length)).toBe(0);
 });
@@ -68,27 +73,88 @@ test("paste parsing stays local and requires no account", async ({ page }) => {
 test("correction changes recompute conflicts and expose AI consent state", async ({
   page,
 }) => {
-  await page.goto("/playground");
+  await openReadyPlayground(page);
   await page.getByRole("tab", { name: "Paste text" }).click();
   await page
-    .getByLabel("Timetable text")
+    .getByLabel("Schedule text")
     .fill("Alpha; Monday; 09:00-10:00\nBeta; Monday; 09:30-10:30");
-  await page.getByRole("button", { name: "Parse locally" }).click();
-  await expect(page.getByText("Parsed 2 events.")).toBeVisible();
-  await expect(page.getByText("SCHEDULE CONFLICT").first()).toBeVisible();
+  await page.getByRole("button", { name: "Read schedule" }).click();
+  await expect(page.getByText("Found 2 events.")).toBeVisible();
+  await expect(page.getByText("Time conflict").first()).toBeVisible();
   await page
-    .locator(".event-table tbody tr")
+    .getByTestId(/event-endTime-/)
     .first()
-    .locator("input")
-    .nth(2)
     .fill("09:15");
-  await expect(page.getByText("SCHEDULE CONFLICT")).toHaveCount(0);
+  await expect(page.getByText("Time conflict")).toHaveCount(0);
 
-  await page.getByLabel("Timetable text").fill("Sketching; Monday; 9-10");
-  await page.getByRole("checkbox", { name: /Optional AI recovery/ }).check();
-  await page.getByRole("button", { name: "Parse locally" }).click();
-  await expect(page.getByText("AI PROVIDER UNAVAILABLE")).toBeVisible();
-  await expect(page.getByText("AMBIGUOUS TIME")).toBeVisible();
+  await page.getByLabel("Schedule text").fill("Sketching; Monday; 9-10");
+  await page.getByRole("checkbox", { name: /Use optional AI help/ }).check();
+  await page.getByRole("button", { name: "Read schedule" }).click();
+  await expect(page.getByText("AI help unavailable")).toBeVisible();
+  await expect(page.getByText("Unclear time")).toBeVisible();
+});
+
+test("file input, exact dates, multiple weekdays, and reset stay observable", async ({
+  page,
+}) => {
+  await openReadyPlayground(page);
+  await page.getByRole("tab", { name: "Choose file" }).click();
+  await page.getByLabel(/Choose a TXT, CSV, image, or PDF file/).setInputFiles({
+    name: "uploaded.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Workshop; Thursday; 13:00-14:00 | Room 4"),
+  });
+  await expect(
+    page.getByTestId("upload-panel").getByText("Selected uploaded.txt."),
+  ).toBeVisible();
+  await page.getByTestId("read-schedule").click();
+  await expect(page.getByTestId("parse-status")).toHaveText("Found 1 event.");
+
+  await page.getByRole("tab", { name: "Paste text" }).click();
+  await page
+    .getByLabel("Schedule text")
+    .fill("Project Review; 2026-09-14; 10:00-11:00; Room Juniper");
+  await page.getByTestId("read-schedule").click();
+  await expect(page.getByTestId("parse-status")).toHaveText("Found 1 event.");
+  await expect(page.getByTestId("playground-preview")).toContainText(
+    "2026-09-14",
+  );
+
+  await page
+    .getByLabel("Schedule text")
+    .fill(
+      "Studio Practice; Monday, Wednesday, Friday; 08:30-09:45; Room Indigo",
+    );
+  await page.getByTestId("read-schedule").click();
+  await expect(page.getByTestId("playground-preview")).toContainText("Monday");
+  await expect(page.getByTestId("playground-preview")).toContainText(
+    "Wednesday",
+  );
+  await expect(page.getByTestId("playground-preview")).toContainText("Friday");
+
+  await page.getByTestId("start-over").click();
+  await expect(page.getByTestId("source-tab-sample")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByTestId("parse-status")).toHaveText("Found 6 events.");
+});
+
+test("OCR runtime assets stay on the app origin", async ({ page }) => {
+  const documentResponse = await page.goto("/playground");
+  expect(documentResponse).not.toBeNull();
+  const contentSecurityPolicy =
+    documentResponse?.headers()["content-security-policy"] ?? "";
+  expect(contentSecurityPolicy).not.toContain("cdn.jsdelivr.net");
+
+  for (const asset of [
+    "/tesseract/worker.min.js",
+    "/tesseract/core/tesseract-core-relaxedsimd-lstm.wasm.js",
+    "/tesseract/lang/4.0.0_best_int/eng.traineddata.gz",
+  ]) {
+    const response = await page.request.get(asset);
+    expect(response, `${asset} response`).toBeOK();
+  }
 });
 
 test("API validation, upload boundaries, and mobile keyboard flow work", async ({
@@ -115,22 +181,22 @@ test("API validation, upload boundaries, and mobile keyboard flow work", async (
   });
   expect(oversizedEnvelope.status()).toBe(413);
 
-  await page.getByRole("link", { name: "Try a sample" }).click();
-  await page.getByRole("tab", { name: "Upload" }).click();
+  await page.getByRole("link", { name: "Try it" }).last().click();
+  await page.getByRole("tab", { name: "Choose file" }).click();
   await page.locator("#timetable-file").setInputFiles({
     name: "wrong.gif",
     mimeType: "image/gif",
     buffer: Buffer.from("not-an-image"),
   });
-  await expect(
-    page.getByText("Use a TXT, CSV, PNG, JPEG, WebP, or PDF file."),
-  ).toBeVisible();
+  await expect(page.getByTestId("parse-error")).toHaveText(
+    "Choose a TXT, CSV, image, or PDF file.",
+  );
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/docs");
-  await page.getByRole("link", { name: "Quick start" }).focus();
-  await expect(page.getByRole("link", { name: "Quick start" })).toBeFocused();
-  await page.getByRole("link", { name: "Quick start" }).press("Enter");
+  await page.getByRole("link", { name: "Start here" }).focus();
+  await expect(page.getByRole("link", { name: "Start here" })).toBeFocused();
+  await page.getByRole("link", { name: "Start here" }).press("Enter");
   await expect(page).toHaveURL(/\/docs#quickstart$/);
   expect(
     await page.evaluate(
@@ -142,6 +208,7 @@ test("API validation, upload boundaries, and mobile keyboard flow work", async (
 test("landing page and playground have no automated accessibility violations", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   for (const path of ["/", "/playground", "/docs", "/privacy", "/security"]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();

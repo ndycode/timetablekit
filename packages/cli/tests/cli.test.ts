@@ -143,4 +143,44 @@ describe("timetablekit CLI", () => {
     expect(captured.output.stdout).toBe("");
     expect(captured.output.stderr).toContain("Remote URLs are not accepted");
   });
+
+  it("runs the JSONL agent protocol with machine-readable responses", async () => {
+    const captured = capture(process.cwd());
+    const input = [
+      JSON.stringify({ id: "capabilities", op: "capabilities" }),
+      JSON.stringify({
+        id: "parse",
+        op: "parse",
+        request: {
+          schemaVersion: "1",
+          input: { kind: "text", text: "CLI Agent Monday 09:00-10:00" },
+        },
+      }),
+    ].join("\n");
+
+    const exitCode = await runCli(["agent"], {
+      ...captured.io,
+      stdin: (async function* () {
+        yield input;
+      })(),
+    });
+
+    expect(exitCode).toBe(0);
+    expect(captured.output.stderr).toBe("");
+    const responses = captured.output.stdout
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(responses).toHaveLength(2);
+    expect(responses[0]).toMatchObject({
+      id: "capabilities",
+      ok: true,
+      result: { tools: [{ name: "timetablekit.parse" }] },
+    });
+    expect(responses[1]).toMatchObject({
+      id: "parse",
+      ok: true,
+      result: { events: [{ title: "CLI Agent" }] },
+    });
+  });
 });

@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "node scripts/lint.mjs",
+    "copy:check": "node scripts/check-ui-copy.mjs",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:coverage": "pnpm --filter @ndycode/timetablekit test:coverage",

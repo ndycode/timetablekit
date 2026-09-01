@@ -4,6 +4,6 @@
   "timezone": "Asia/Manila",
   "locale": "en-PH",
   "events": [],
-  "warningCodes": ["MISSING_START_TIME"],
+  "warningCodes": ["MISSING_START_TIME", "NO_EVENTS_FOUND"],
   "conflicts": []
 }

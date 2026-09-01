@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import { SiteFooter, SiteHeader } from "../components/site-header";
 import { siteUrl } from "../lib/site-url";
 import "./globals.css";
@@ -10,18 +12,18 @@ export const metadata: Metadata = {
     template: "%s · TimetableKit",
   },
   description:
-    "Turn timetable text, images, and PDFs into validated calendar events through a privacy-first TypeScript toolkit.",
+    "Turn schedule text, images, and PDFs into calendar events in your browser.",
   icons: { icon: "/icon.svg" },
   openGraph: {
     title: "TimetableKit",
-    description: "Turn timetables into calendar events, locally and privately.",
+    description: "Turn schedules into calendar events in your browser.",
     type: "website",
     images: [
       {
         url: "/opengraph.svg",
         width: 1200,
         height: 630,
-        alt: "TimetableKit timetable parser",
+        alt: "TimetableKit schedule reader",
       },
     ],
   },
@@ -31,7 +33,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${GeistSans.variable} ${GeistMono.variable}`}
+    >
       <body>
         <SiteHeader />
         {children}

@@ -8,6 +8,6 @@
   "timezone": "Asia/Manila",
   "locale": "en-PH",
   "events": [],
-  "warningCodes": [],
+  "warningCodes": ["NO_EVENTS_FOUND"],
   "conflicts": []
 }

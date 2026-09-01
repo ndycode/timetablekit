@@ -16,6 +16,7 @@ import {
   toICS,
   toJSON,
 } from "@ndycode/timetablekit";
+import { runTimetableAgentProtocol } from "@ndycode/timetablekit-agent";
 import type {
   IsoDate,
   ParseOptions,
@@ -52,6 +53,7 @@ export type CliOptions = {
 
 export type CliCommand =
   | { readonly kind: "help"; readonly text: string }
+  | { readonly kind: "agent" }
   | { readonly kind: "parse"; readonly options: CliOptions };
 
 export type CliInputStream = AsyncIterable<Uint8Array | string>;
@@ -71,7 +73,11 @@ export class CliError extends Error {
   }
 }
 
-const HELP_TEXT = `Usage: timetablekit [parse] <input.txt|input.csv> [options]
+const HELP_TEXT = `Usage: timetablekit <command> [arguments]
+
+Commands:
+  parse [path]            Parse a local text or CSV file. Use - for stdin.
+  agent                   Read JSONL agent requests from stdin.
 
 Parse a local text or CSV timetable and write a normalized export.
 
@@ -86,6 +92,7 @@ Options:
   -h, --help              Show this help.
 
 Only local paths and stdin (-) are accepted. Remote URLs are not fetched.
+Agent mode accepts JSONL only and does not read paths or fetch URLs.
 `;
 
 type OptionValue = {
@@ -230,6 +237,15 @@ function termOption(
 }
 
 export function parseArguments(argv: readonly string[]): CliCommand {
+  if (argv[0] === "agent") {
+    if (argv.length === 1) return { kind: "agent" };
+    if (argv.length === 2 && argv[1] === "--help") {
+      return { kind: "help", text: HELP_TEXT };
+    }
+    throw new CliError(
+      "The agent command reads JSONL from stdin and accepts no options.",
+    );
+  }
   let inputPath: string | undefined;
   let timezone = "UTC";
   let locale = "en-PH";
@@ -551,6 +567,13 @@ async function executeParse(
   await writeOutput(serializeResult(result, options.format), options, io);
 }
 
+async function executeAgent(io: ResolvedCliIO): Promise<void> {
+  await runTimetableAgentProtocol({
+    input: io.stdin,
+    output: io.stdout,
+  });
+}
+
 function errorMessage(error: unknown): string {
   if (
     error instanceof CliError ||
@@ -572,6 +595,9 @@ export async function runCli(
     switch (command.kind) {
       case "help":
         output.stdout(command.text);
+        return 0;
+      case "agent":
+        await executeAgent(output);
         return 0;
       case "parse":
         await executeParse(command.options, output);

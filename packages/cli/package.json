@@ -25,6 +25,7 @@
     "test": "vitest run tests/cli.test.ts --config ../../vitest.config.ts"
   },
   "dependencies": {
-    "@ndycode/timetablekit": "workspace:*"
+    "@ndycode/timetablekit": "workspace:*",
+    "@ndycode/timetablekit-agent": "workspace:*"
   }
 }

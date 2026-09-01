@@ -25,3 +25,6 @@ application/screenshots/*.webm
 !application/screenshots/**
 .vercel
 .env*
+.playwright-cli/
+output/playwright/
+apps/web/public/tesseract/

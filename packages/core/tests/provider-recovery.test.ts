@@ -501,6 +501,15 @@ describe("pipeline provider and recovery paths", () => {
       "skipped",
       "completed",
     ]);
+
+    const unrecognized = await parseTimetable(
+      { kind: "text", text: "This is not a timetable." },
+      options,
+    );
+    expect(unrecognized.events).toEqual([]);
+    expect(unrecognized.warnings.map((warning) => warning.code)).toContain(
+      "NO_EVENTS_FOUND",
+    );
   });
 
   it("handles provider selection, custom artifacts, failures, and invalid output", async () => {
