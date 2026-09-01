@@ -87,6 +87,15 @@ describe("TimetableKit agent tool", () => {
       ok: false,
       error: { code: "INPUT_TOO_LARGE", retryable: false },
     });
+    await expect(
+      createTimetableAgentTool({ maxInputLines: 1 }).invoke({
+        schemaVersion: "1",
+        input: { kind: "text", text: "first\rsecond" },
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: { code: "INPUT_TOO_LARGE", retryable: false },
+    });
   });
 
   it("exposes schemas and handles capabilities and parse requests over JSONL", async () => {

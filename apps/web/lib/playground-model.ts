@@ -201,6 +201,12 @@ const VALIDATION_WARNING_CODES: ReadonlySet<WarningCode> = new Set([
   "OUTSIDE_TERM_RANGE",
 ]);
 
+function warningIsFromValidation(warning: ParseWarning): boolean {
+  return (
+    warning.source === undefined && VALIDATION_WARNING_CODES.has(warning.code)
+  );
+}
+
 export function createInitialPlaygroundState(): PlaygroundState {
   return {
     source: { kind: "sample" },
@@ -417,7 +423,7 @@ function recalculateResult(
   const preservedWarnings = result.warnings.filter(
     (warning) =>
       warning.code !== "SCHEDULE_CONFLICT" &&
-      !VALIDATION_WARNING_CODES.has(warning.code) &&
+      !warningIsFromValidation(warning) &&
       !warningIsForCorrection(warning, correction),
   );
   const validationWarnings = validateTimetable(events, {

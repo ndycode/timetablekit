@@ -87,6 +87,42 @@ describe("playground model", () => {
     ).toBe(false);
   });
 
+  it("preserves source-row warnings for rejected candidates after edits", async () => {
+    const result = await parseTimetable(
+      {
+        kind: "text",
+        text: "Alpha; Monday; 09:00-10:00\n; Monday; 10:00-11:00",
+      },
+      parseOptions,
+    );
+    const event = result.events[0];
+    expect(event).toBeDefined();
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "MISSING_TITLE",
+          source: expect.anything(),
+        }),
+      ]),
+    );
+    if (event === undefined) return;
+
+    const corrected = applyEventCorrection(result, {
+      eventId: event.id,
+      field: "title",
+      value: "Updated Alpha",
+    });
+
+    expect(corrected.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "MISSING_TITLE",
+          source: expect.anything(),
+        }),
+      ]),
+    );
+  });
+
   it("shows exact dates, multiple weekdays, and unscheduled events in preview groups", async () => {
     const exact = await parseTimetable(
       {

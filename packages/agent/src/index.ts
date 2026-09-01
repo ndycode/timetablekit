@@ -337,8 +337,14 @@ function inputByteLength(input: ReturnType<typeof decodeInput>): number {
 function inputLineCount(input: ReturnType<typeof decodeInput>): number {
   if (input.kind !== "text" && input.kind !== "csv") return 0;
   let count = 1;
-  for (const character of input.text) {
-    if (character === "\n") count += 1;
+  for (let index = 0; index < input.text.length; index += 1) {
+    const character = input.text[index];
+    if (character === "\r") {
+      count += 1;
+      if (input.text[index + 1] === "\n") index += 1;
+    } else if (character === "\n") {
+      count += 1;
+    }
   }
   return count;
 }
