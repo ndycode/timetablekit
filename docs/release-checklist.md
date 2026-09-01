@@ -2,18 +2,18 @@
 
 Verified 2026-09-01. The checklist records the release surfaces without claiming an npm publication or a merged MySched integration.
 
-| Gate                                                                       | Status        | Evidence                                                              |
-| -------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------- |
-| Original public repository                                                 | Pass          | https://github.com/ndycode/timetablekit                               |
-| MIT license and Code of Conduct                                            | Pass          | Repository root files                                                 |
-| Contribution, security, privacy, governance, support, and application docs | Pass          | Repository root, `docs/`, and `application/`                          |
-| Local validation                                                           | Pass          | `pnpm validate`, recorded in `docs/quality-report.md`                 |
-| Core coverage                                                              | Pass          | 92.02% line coverage and 87.57% branch coverage                       |
-| Fixture validation                                                         | Pass          | 63 manifests, 63 inputs, and 63 expected outputs                      |
-| Browser matrix                                                             | Pass          | 21 E2E cases across Chromium, Firefox, and WebKit                     |
-| Production deployment                                                      | Pass          | https://timetablekit.vercel.app/ (`dpl_5TivqjGfmiNPjgk7q4LQfDJeihCK`) |
-| Preview deployment                                                         | Pass          | https://timetablekit-c0v9prgnt-ndycode.vercel.app/                    |
-| Live route, export, accessibility, and Lighthouse checks                   | Pass          | `docs/quality-report.md`                                              |
-| npm package publication                                                    | Blocked       | npm authentication returned `ENEEDAUTH`                               |
-| GitHub release                                                             | Pass          | https://github.com/ndycode/timetablekit/releases/tag/v0.1.0           |
-| MySched integration                                                        | Proposal open | https://github.com/ndycode/mysched/pull/1553                          |
+| Gate                                                                       | Status        | Evidence                                                                                |
+| -------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------- |
+| Original public repository                                                 | Pass          | https://github.com/ndycode/timetablekit                                                 |
+| MIT license and Code of Conduct                                            | Pass          | Repository root files                                                                   |
+| Contribution, security, privacy, governance, support, and application docs | Pass          | Repository root, `docs/`, and `application/`                                            |
+| Local validation                                                           | Pass          | `pnpm validate`, recorded in `docs/quality-report.md`                                   |
+| Core coverage                                                              | Pass          | 92.10% line coverage and 87.62% branch coverage                                         |
+| Fixture validation                                                         | Pass          | 63 manifests, 63 inputs, and 63 expected outputs                                        |
+| Browser matrix                                                             | Pass          | 21 E2E cases across Chromium, Firefox, and WebKit                                       |
+| Production deployment                                                      | Pass          | https://timetablekit.vercel.app/ (`dpl_EzinWRAaunh9SRtpdQNVDwHb5Ym4`)                   |
+| Preview deployment                                                         | Pass          | https://timetablekit-p18qr1s71-ndycode.vercel.app/ (`dpl_4655tEFzJ3uHFQ1r9mCdpCrjc4pQ`) |
+| Live route, export, accessibility, and Lighthouse checks                   | Pass          | `docs/quality-report.md`                                                                |
+| npm package publication                                                    | Blocked       | npm authentication returned `ENEEDAUTH`                                                 |
+| GitHub release                                                             | Pass          | https://github.com/ndycode/timetablekit/releases/tag/v0.1.0                             |
+| MySched integration                                                        | Proposal open | https://github.com/ndycode/mysched/pull/1553                                            |
