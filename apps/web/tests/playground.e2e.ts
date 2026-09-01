@@ -144,3 +144,18 @@ test("landing page and playground have no automated accessibility violations", a
     expect(results.violations, `${path} accessibility violations`).toEqual([]);
   }
 });
+
+test("robots and sitemap use public URLs", async ({ page }) => {
+  const sitemap = await page.request.get("/sitemap.xml");
+  expect(sitemap).toBeOK();
+  const sitemapText = await sitemap.text();
+  expect(sitemapText).not.toContain("localhost");
+  expect(sitemapText).toContain("https://timetablekit.vercel.app/");
+
+  const robots = await page.request.get("/robots.txt");
+  expect(robots).toBeOK();
+  const robotsText = await robots.text();
+  expect(robotsText).toContain(
+    "Sitemap: https://timetablekit.vercel.app/sitemap.xml",
+  );
+});
