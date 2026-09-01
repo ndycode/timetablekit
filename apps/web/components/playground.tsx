@@ -107,7 +107,7 @@ function warningForConflictLimit(): ParseWarning {
   return {
     code: "CONFLICT_LIMIT",
     severity: "warning",
-    message: `Conflict output was limited to ${DEFAULT_MAX_CONFLICTS} entries.`,
+    message: "Conflict detection was limited by resource bounds.",
     details: { limit: DEFAULT_MAX_CONFLICTS },
   };
 }

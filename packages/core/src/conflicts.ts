@@ -18,6 +18,7 @@ type Occurrence =
   | { readonly key: string; readonly kind: "date"; readonly date: string };
 
 export const DEFAULT_MAX_CONFLICTS = 1_000;
+const DEFAULT_MAX_CONFLICT_PAIRS = 1_000_000;
 
 export type ConflictDetectionResult = {
   readonly conflicts: readonly ScheduleConflict[];
@@ -224,7 +225,11 @@ function conflictFor(
 
 export function detectConflictsBounded(
   events: readonly TimetableEvent[],
-  context: { readonly term?: TermRange; readonly maxConflicts?: number } = {},
+  context: {
+    readonly term?: TermRange;
+    readonly maxConflicts?: number;
+    readonly maxPairs?: number;
+  } = {},
 ): ConflictDetectionResult {
   const maxConflicts =
     context.maxConflicts === undefined ||
@@ -232,10 +237,17 @@ export function detectConflictsBounded(
     context.maxConflicts < 0
       ? DEFAULT_MAX_CONFLICTS
       : context.maxConflicts;
+  const maxPairs =
+    context.maxPairs === undefined ||
+    !Number.isSafeInteger(context.maxPairs) ||
+    context.maxPairs < 0
+      ? DEFAULT_MAX_CONFLICT_PAIRS
+      : context.maxPairs;
   const ordered = [...events].sort((left, right) =>
     left.id.localeCompare(right.id),
   );
   const conflicts: ScheduleConflict[] = [];
+  let pairsChecked = 0;
   let truncated = false;
   outer: for (let leftIndex = 0; leftIndex < ordered.length; leftIndex += 1) {
     const left = ordered[leftIndex];
@@ -245,6 +257,11 @@ export function detectConflictsBounded(
       rightIndex < ordered.length;
       rightIndex += 1
     ) {
+      if (pairsChecked >= maxPairs) {
+        truncated = true;
+        break outer;
+      }
+      pairsChecked += 1;
       const right = ordered[rightIndex];
       if (right === undefined || left.timezone !== right.timezone) continue;
       const overlapRange = overlap(left, right);
@@ -272,5 +289,6 @@ export function detectConflicts(
   return detectConflictsBounded(events, {
     ...context,
     maxConflicts: Number.MAX_SAFE_INTEGER,
+    maxPairs: Number.MAX_SAFE_INTEGER,
   }).conflicts;
 }

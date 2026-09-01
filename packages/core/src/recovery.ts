@@ -1,11 +1,32 @@
 import { parseTime } from "./parser/time.js";
 import type {
+  EventField,
   EventSchedule,
   FieldValue,
   RecoveryPatch,
   RecoveryResponse,
   TimetableEvent,
 } from "./schema/types.js";
+
+const EVENT_FIELDS = [
+  "title",
+  "code",
+  "eventType",
+  "schedule",
+  "startTime",
+  "endTime",
+  "timezone",
+  "location",
+  "instructor",
+  "notes",
+] as const satisfies readonly EventField[];
+
+function isEventField(value: unknown): value is EventField {
+  return (
+    typeof value === "string" &&
+    (EVENT_FIELDS as readonly string[]).includes(value)
+  );
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -38,7 +59,7 @@ function isPatch(value: unknown): value is RecoveryPatch {
   }
   return (
     typeof value["eventId"] === "string" &&
-    typeof value["field"] === "string" &&
+    isEventField(value["field"]) &&
     typeof value["confidence"] === "number" &&
     value["confidence"] >= 0 &&
     value["confidence"] <= 1 &&
@@ -182,6 +203,7 @@ function applyPatch(
 export type RecoveryApplyResult = {
   readonly events: readonly TimetableEvent[];
   readonly applied: number;
+  readonly appliedPatches: readonly RecoveryPatch[];
   readonly invalid: number;
 };
 
@@ -190,6 +212,7 @@ export function applyRecoveryPatches(
   response: RecoveryResponse,
 ): RecoveryApplyResult {
   const byId = new Map(events.map((event) => [event.id, event]));
+  const appliedPatches: RecoveryPatch[] = [];
   let applied = 0;
   let invalid = 0;
   for (const patch of response.patches) {
@@ -199,6 +222,7 @@ export function applyRecoveryPatches(
       invalid += 1;
     } else {
       byId.set(updated.id, updated);
+      appliedPatches.push(patch);
       applied += 1;
     }
   }
@@ -207,6 +231,7 @@ export function applyRecoveryPatches(
       left.id.localeCompare(right.id),
     ),
     applied,
+    appliedPatches,
     invalid,
   };
 }

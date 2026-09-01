@@ -110,6 +110,10 @@ test("API validation, upload boundaries, and mobile keyboard flow work", async (
     data: { text: "x".repeat(200_001) },
   });
   expect(oversized.status()).toBe(413);
+  const oversizedEnvelope = await page.request.post("/api/parse", {
+    data: { text: "ok", metadata: "x".repeat(260_000) },
+  });
+  expect(oversizedEnvelope.status()).toBe(413);
 
   await page.getByRole("link", { name: "Try a sample" }).click();
   await page.getByRole("tab", { name: "Upload" }).click();

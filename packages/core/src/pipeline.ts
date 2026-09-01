@@ -293,7 +293,7 @@ function conflictLimitWarning(): ParseWarning {
   return makeWarning({
     code: "CONFLICT_LIMIT",
     severity: "warning",
-    message: `Conflict output was limited to ${DEFAULT_MAX_CONFLICTS} entries.`,
+    message: "Conflict detection was limited by resource bounds.",
     details: { limit: DEFAULT_MAX_CONFLICTS },
   });
 }
@@ -503,11 +503,20 @@ export function createTimetableParser(
             }),
           );
         } else {
+          const requestedUnresolved = unresolved.slice(
+            0,
+            recoveryOptions.maxFields ?? 8,
+          );
+          const requestedFields = new Set(
+            requestedUnresolved.map(
+              (field) => `${field.eventId}:${field.field}`,
+            ),
+          );
           const request: RecoveryRequest = {
             schemaVersion: "1.0",
             locale: options.locale,
             timezone: options.timezone,
-            unresolved: unresolved.slice(0, recoveryOptions.maxFields ?? 8),
+            unresolved: requestedUnresolved,
           };
           try {
             const context = createProviderContext(signal, limits, (progress) =>
@@ -532,8 +541,16 @@ export function createTimetableParser(
                 }),
               );
             } else {
-              const applied = applyRecoveryPatches(events, response);
-              if (applied.invalid > 0)
+              const allowedPatches = response.patches.filter((patch) =>
+                requestedFields.has(`${patch.eventId}:${patch.field}`),
+              );
+              const applied = applyRecoveryPatches(events, {
+                patches: allowedPatches,
+              });
+              if (
+                applied.invalid > 0 ||
+                allowedPatches.length !== response.patches.length
+              )
                 warnings.push(
                   makeWarning({
                     code: "AI_OUTPUT_INVALID",
@@ -545,7 +562,7 @@ export function createTimetableParser(
               aiRecoveryUsed = true;
               replaceAll(
                 warnings,
-                removePatchedWarnings(warnings, response.patches),
+                removePatchedWarnings(warnings, applied.appliedPatches),
               );
               validation = validateAndConflicts(events, options, warnings);
               events = validation.events;

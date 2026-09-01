@@ -1,6 +1,6 @@
 # Vercel Open Source Program application answers
 
-Status: prepared, not submitted. Verified 2026-09-01. The public repository and both Vercel URLs below are independently verified. npm publication is blocked by local npm authentication. The GitHub release link is added after the final tag exists.
+Status: prepared, not submitted. Verified 2026-09-01. The public repository and the exact candidate Vercel preview below are independently verified. The production URL remains live on the pre-release deployment. npm publication and the GitHub release are pending their external gates.
 
 ## Applicant-owned fields
 
@@ -44,7 +44,7 @@ TimetableKit keeps the default parse and review path local and in memory. It com
 
 ### 9. Anything else
 
-The public repository includes an MIT license, Code of Conduct, security and contribution guidance, a fixture-driven test suite, a public roadmap, and ten scoped maintainer issues. The production and preview deployments are live. A focused MySched adapter pull request is open as an integration proposal. It does not claim production adoption. The npm package archive installs cleanly in a fresh consumer, but publication is waiting for npm authentication on the release machine. Evidence and exact limits are recorded in the repository claims ledger.
+The public repository includes an MIT license, Code of Conduct, security and contribution guidance, a fixture-driven test suite, a public roadmap, and ten scoped maintainer issues. The pre-release production deployment and exact candidate preview are live. A focused MySched adapter pull request is open as an integration proposal. It does not claim production adoption. The npm package archive installs cleanly in a fresh consumer, but publication is waiting for npm authentication on the release machine. Evidence and exact limits are recorded in the repository claims ledger.
 
 ### 10. Is the project fully open source and will it remain so?
 
@@ -60,7 +60,7 @@ team_5xidpACRcych6R88RSuvQ8qK
 
 ### 13. Code of Conduct
 
-Yes. The repository includes a project Code of Conduct.
+Yes. I agree to Vercel's Code of Conduct. The repository also includes a project Code of Conduct.
 
 ### 14. Program terms
 

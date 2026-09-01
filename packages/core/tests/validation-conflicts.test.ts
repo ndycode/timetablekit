@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { detectConflicts, parseTimetable, validateTimetable } from "../src";
+import {
+  detectConflicts,
+  detectConflictsBounded,
+  parseTimetable,
+  validateTimetable,
+} from "../src";
 import type { EventSchedule, TimetableEvent } from "../src";
 
 function event(
@@ -110,6 +115,22 @@ describe("schedule conflicts", () => {
     );
 
     expect(detectConflicts(events)).toHaveLength(1_035);
+  });
+
+  it("bounds pair work separately from conflict output", () => {
+    const events = [
+      event("evt-a", { kind: "weekly", weekdays: ["MO"] }, "09:00", "10:00"),
+      event("evt-b", { kind: "weekly", weekdays: ["MO"] }, "09:00", "10:00"),
+      event("evt-c", { kind: "weekly", weekdays: ["MO"] }, "09:00", "10:00"),
+    ];
+
+    const result = detectConflictsBounded(events, {
+      maxConflicts: Number.MAX_SAFE_INTEGER,
+      maxPairs: 1,
+    });
+
+    expect(result.conflicts).toHaveLength(1);
+    expect(result.truncated).toBe(true);
   });
 
   it("skips an impossible long weekly term without enumerating it", () => {

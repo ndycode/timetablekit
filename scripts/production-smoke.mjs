@@ -25,6 +25,7 @@ if (typeof rawBaseUrl !== "string" || rawBaseUrl.length === 0) {
       "permissions-policy",
       "x-content-type-options",
       "x-frame-options",
+      "strict-transport-security",
     ];
     for (const header of requiredHeaders) {
       if (home.headers.get(header) === null) {

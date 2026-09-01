@@ -286,6 +286,13 @@ describe("recovery boundary", () => {
         patches: [{ eventId: "x", field: "title", value: 4, confidence: 0.5 }],
       }),
     ).toBe(false);
+    expect(
+      isRecoveryResponse({
+        patches: [
+          { eventId: "x", field: "unknown", value: "x", confidence: 0.5 },
+        ],
+      }),
+    ).toBe(false);
     expect(isRecoveryResponse({ patches: "not-an-array" })).toBe(false);
     expect(isRecoveryResponse({ patches: [null] })).toBe(false);
   });
@@ -617,6 +624,12 @@ describe("pipeline provider and recovery paths", () => {
         return {
           patches: [
             { eventId, field: "startTime", value: "09:00", confidence: 0.9 },
+            {
+              eventId,
+              field: "title",
+              value: "Should not apply",
+              confidence: 0.9,
+            },
           ],
         };
       },
@@ -626,7 +639,7 @@ describe("pipeline provider and recovery paths", () => {
     }).parse(input, recoveryBase);
     expect(requestField).toBe("startTime");
     expect(recovered).toMatchObject({
-      events: [{ startTime: "09:00" }],
+      events: [{ title: "Recoverable Entry", startTime: "09:00" }],
       parse: {
         aiRecoveryUsed: true,
         providersUsed: ["deterministic", "recovery"],

@@ -1,6 +1,6 @@
 # Quality report
 
-Evidence snapshot recorded on 2026-09-01 for release-readiness source commit `07c94716f5a3785507b135f02acfbf85b5697d7a`.
+Evidence snapshot recorded on 2026-09-01 for release-readiness source commit `258932deb305c8c16b30f90123d8c6862cf7a5dc`.
 
 ## Local validation
 
@@ -9,10 +9,10 @@ Evidence snapshot recorded on 2026-09-01 for release-readiness source commit `07
 - Formatting check passed.
 - Lint passed. No forbidden type escapes or credential-like source text were found.
 - Typecheck passed for 7 of 7 workspace tasks.
-- Core and provider test matrix passed with 15 files and 112 tests in each provider run.
-- CLI tests passed with 1 file and 3 tests.
+- Core and provider test matrix passed with 15 files and 117 tests in each provider run.
+- CLI tests passed with 1 file and 5 tests.
 - React tests passed with 1 file and 3 tests.
-- Core coverage passed with 91.06% statements, 87.04% branches, 93.35% functions, and 91.18% lines.
+- Core coverage passed with 91.85% statements, 87.43% branches, 96.85% functions, and 91.90% lines.
 - Fixture validation passed with 63 manifests, 63 inputs, and 63 expected outputs.
 - Build passed with 7 of 7 workspace tasks.
 - Browser E2E passed with 18 tests across Chromium, Firefox, and WebKit.
@@ -24,17 +24,17 @@ The full command output was observed in the local validation run. The Turbo warn
 
 ## Live deployment checks
 
-- Production deployment `dpl_8jCw11g7sH8JdMFdLFpjPLm33eqj` was READY for commit `d5b4b10fb47fb10e22ab2392dcaa1dcd8688f5b4` at https://timetablekit.vercel.app/.
-- Release-readiness preview deployment `dpl_3Gc9CpqJk16q4YMK9Pfb9mgNrJVW` was READY for commit `07c94716f5a3785507b135f02acfbf85b5697d7a` at https://timetablekit-6b9eoz98f-ndycode.vercel.app/.
-- Production smoke passed for the production URL and the current release-readiness preview URL. The smoke checked security headers, health, synthetic parsing, and the main routes.
+- Production deployment `dpl_8jCw11g7sH8JdMFdLFpjPLm33eqj` was READY for pre-release commit `d5b4b10fb47fb10e22ab2392dcaa1dcd8688f5b4` at https://timetablekit.vercel.app/.
+- Release-readiness preview deployment `dpl_BH3twdUbCKs4woBsxuCe8GWuDv5C` was READY for candidate commit `258932deb305c8c16b30f90123d8c6862cf7a5dc` at https://timetablekit-hr1me4mdj-ndycode.vercel.app/.
+- Production smoke passed for the pre-release production URL and the exact candidate preview URL. The smoke checked security headers, health, synthetic parsing, and the main routes.
 - The live browser audit returned HTTP 200 for `/`, `/playground`, `/docs`, `/privacy`, `/security`, `/roadmap`, `/code-of-conduct`, and `/sitemap.xml`.
 - Axe returned 0 violations on `/`, `/playground`, `/docs`, `/privacy`, and `/security`.
-- Live export checks on the current preview produced valid JSON, CSV, and iCalendar downloads. Observed sizes were 32,939 bytes, 795 bytes, and 1,820 bytes.
+- Live export checks on the exact candidate preview produced valid JSON, CSV, and iCalendar downloads. Observed sizes were 32,935 bytes, 791 bytes, and 1,816 bytes.
 - The live browser audit observed 0 console errors and 0 failed requests.
-- The production Lighthouse run passed with performance 98, accessibility 100, best practices 100, SEO 100, and agentic browsing 100. The run timestamp was `2026-09-01T03:02:12.994Z`.
-- The current preview Lighthouse run returned performance 97, accessibility 100, best practices 100, SEO 63, and agentic browsing 100 at `2026-09-01T03:33:59.916Z`. The lower preview SEO score is expected because Vercel preview deployments are marked noindex; production is the SEO gate.
+- The previous production Lighthouse run passed with performance 98, accessibility 100, best practices 100, and SEO 100. The run timestamp was `2026-09-01T03:02:12.994Z`. Refresh this after the release deploy.
+- The exact candidate preview Lighthouse run returned performance 98, accessibility 100, best practices 100, and SEO 63 at `2026-09-01T04:23:59.217Z`. The lower preview SEO score is expected because Vercel preview deployments are marked noindex; production is the SEO gate.
 - The metadata runtime audit confirmed that the current preview sitemap uses `https://timetablekit.vercel.app/` and contains no `localhost` URL. Robots points to the same public sitemap.
-- Vercel runtime error inspection found no runtime errors in the selected one-hour window.
+- Vercel runtime error inspection found no runtime errors in the selected one-hour window for the prior preview. Refresh this after the release deploy.
 
 The browser audit and screenshots used only the fictional sample schedule. No personal timetable, account data, or private schedule was used.
 
