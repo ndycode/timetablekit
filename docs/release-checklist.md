@@ -1,6 +1,6 @@
 # Release checklist
 
-Verified 2026-09-01. The checklist records the release surfaces without claiming an npm publication or a merged MySched integration.
+Verified 2026-09-01. The checklist records the release surfaces without claiming a merged MySched integration.
 
 | Gate                                                                       | Status        | Evidence                                                                                |
 | -------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------- |
@@ -17,6 +17,6 @@ Verified 2026-09-01. The checklist records the release surfaces without claiming
 | Production deployment                                                      | Pass          | https://timetablekit.vercel.app/ (`dpl_EzinWRAaunh9SRtpdQNVDwHb5Ym4`)                   |
 | Preview deployment                                                         | Pass          | https://timetablekit-p18qr1s71-ndycode.vercel.app/ (`dpl_4655tEFzJ3uHFQ1r9mCdpCrjc4pQ`) |
 | Live route, export, accessibility, and Lighthouse checks                   | Pass          | `docs/quality-report.md`                                                                |
-| npm package publication                                                    | Blocked       | npm authentication returned `ENEEDAUTH`                                                 |
+| npm package publication                                                    | Pass          | https://www.npmjs.com/package/@ndycode/timetablekit (`0.1.0`)                           |
 | GitHub release                                                             | Pass          | https://github.com/ndycode/timetablekit/releases/tag/v0.1.0                             |
 | MySched integration                                                        | Proposal open | https://github.com/ndycode/mysched/pull/1553                                            |

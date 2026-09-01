@@ -23,7 +23,7 @@ This file records implementation and release evidence. External URLs and metrics
 - [x] OCR, PDF, provider, CLI, React, and web implementation.
 - [x] Public synthetic fixtures and golden outputs.
 - [x] Original public GitHub repository and Vercel production and preview deployments verified on 2026-09-01. The fixed implementation deployment source is commit `fd742d2aaf6ee91a855fdfc60cd355247786499e`.
-- [ ] Published npm package. `npm whoami` and `npm publish` returned `ENEEDAUTH` on 2026-09-01.
+- [x] Published npm package. `@ndycode/timetablekit@0.1.0` is publicly listed and passed a clean-cache consumer install.
 - [x] GitHub release tag and release. `v0.1.0` points to merge commit `e3aeafc3ebf4e1d3ab9082446b3b42eda1f20b23`.
 - [x] Local production build, browser E2E, accessibility, security, and fixture evidence.
 - [ ] Hosted GitHub Actions run. Dispatch returned HTTP 422 because Actions are disabled for this user.

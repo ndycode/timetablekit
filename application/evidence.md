@@ -1,6 +1,6 @@
 # Application evidence map
 
-Status: prepared, not submitted. Verified 2026-09-01. External facts below use exact URLs or commands. npm publication remains pending because the available npm session is unauthenticated.
+Status: prepared, not submitted. Verified 2026-09-01. External facts below use exact URLs or commands. The npm package is now published. The MySched integration remains an open proposal.
 
 | Criterion           | Evidence                                                                                                                                                                                                                                                                                                 | Status                                                                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -16,7 +16,7 @@ Status: prepared, not submitted. Verified 2026-09-01. External facts below use e
 | Community           | [Contribution](https://github.com/ndycode/timetablekit/blob/main/CONTRIBUTING.md), governance, support, security, issue templates, Discussions, and [roadmap issues](https://github.com/ndycode/timetablekit/issues)                                                                                     | Pass, verified 2026-09-01                                                   |
 | Developer ecosystem | SDK, CLI, fixtures, exporters, provider documentation, and [API docs](https://timetablekit.vercel.app/docs)                                                                                                                                                                                              | Pass, verified 2026-09-01                                                   |
 | MySched integration | [Focused adapter PR](https://github.com/ndycode/mysched/pull/1553) with isolated tests                                                                                                                                                                                                                   | Pass as open proposal, not adoption                                         |
-| Published package   | Clean package archive install passed; public npm publication was attempted and returned `ENEEDAUTH`                                                                                                                                                                                                      | Blocked by npm authentication                                               |
+| Published package   | [npm package](https://www.npmjs.com/package/@ndycode/timetablekit) version 0.1.0 and clean-cache consumer install with synthetic parse and three exports                                                                                                                                                 | Pass, verified 2026-09-01                                                   |
 
 ## Internal readiness score
 

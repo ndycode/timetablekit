@@ -1,6 +1,6 @@
 # Vercel Open Source Program application answers
 
-Status: prepared, not submitted. Verified 2026-09-01. The public repository, v0.1.0 release, production deployment, and exact fixed-build Vercel preview below are independently verified. npm publication remains blocked by the unavailable npm authentication session. This draft is not submitted.
+Status: prepared, not submitted. Verified 2026-09-01. The public repository, v0.1.0 release, published npm package, production deployment, and exact fixed-build Vercel preview below are independently verified. The MySched integration remains an open proposal. This draft is not submitted.
 
 ## Applicant-owned fields
 
@@ -44,7 +44,7 @@ TimetableKit keeps the default parse and review path local and in memory. It com
 
 ### 9. Anything else
 
-The public repository includes an MIT license, Code of Conduct, security and contribution guidance, a fixture-driven test suite, a public roadmap, and ten scoped maintainer issues. TimetableKit v0.1.0 is released at https://github.com/ndycode/timetablekit/releases/tag/v0.1.0. The fixed main build is deployed at https://timetablekit.vercel.app/, with the exact preview at https://timetablekit-p18qr1s71-ndycode.vercel.app/. A focused MySched adapter pull request is open as an integration proposal. It does not claim production adoption. The npm package archive installs cleanly in a fresh consumer, but publication is waiting for npm authentication on the release machine. Evidence and exact limits are recorded in the repository claims ledger.
+The public repository includes an MIT license, Code of Conduct, security and contribution guidance, a fixture-driven test suite, a public roadmap, and ten scoped maintainer issues. TimetableKit v0.1.0 is released at https://github.com/ndycode/timetablekit/releases/tag/v0.1.0 and published at https://www.npmjs.com/package/@ndycode/timetablekit. The fixed main build is deployed at https://timetablekit.vercel.app/, with the exact preview at https://timetablekit-p18qr1s71-ndycode.vercel.app/. A focused MySched adapter pull request is open as an integration proposal. It does not claim production adoption. The published package installs cleanly in a fresh consumer. Evidence and exact limits are recorded in the repository claims ledger.
 
 ### 10. Is the project fully open source and will it remain so?
 

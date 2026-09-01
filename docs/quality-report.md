@@ -54,5 +54,6 @@ The browser audit and screenshots used only the fictional sample schedule. No pe
 ## Package and integration checks
 
 - The packed `@ndycode/timetablekit` archive installed into a clean temporary consumer and parsed one synthetic event. The same consumer generated JSON, CSV, and weekly iCalendar output.
-- npm publication was attempted with `npm publish --access public --provenance` and returned `ENEEDAUTH`. No npm package URL exists until an authenticated maintainer publishes it.
+- `npm publish --access public --provenance` was rejected because this local environment has no supported provenance provider. The public publish then completed with `npm publish --access public` after browser verification.
+- [The npm package](https://www.npmjs.com/package/@ndycode/timetablekit) is listed in the public npm search index as `@ndycode/timetablekit@0.1.0`, and `npm access get status` reports `public`. A clean-cache consumer installed it, parsed one synthetic event, and generated JSON, CSV, and iCalendar output.
 - The isolated MySched integration branch passed 28 ImportPipeline tests and 32 MySchedObservability tests. The focused proposal is open at https://github.com/ndycode/mysched/pull/1553 and is not merged.

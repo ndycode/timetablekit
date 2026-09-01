@@ -29,6 +29,7 @@ The companion CLI workspace package is `@ndycode/timetablekit-cli` and exposes t
 - [Preview deployment](https://timetablekit-p18qr1s71-ndycode.vercel.app/)
 - [GitHub repository](https://github.com/ndycode/timetablekit)
 - [GitHub release v0.1.0](https://github.com/ndycode/timetablekit/releases/tag/v0.1.0)
+- [npm package](https://www.npmjs.com/package/@ndycode/timetablekit)
 
 ## Try the playground
 
@@ -49,9 +50,11 @@ pnpm install
 pnpm build
 ```
 
-The public npm package is not published yet because the available release
-environment has no npm authentication. Do not use an npm install command until
-the package appears in the npm registry.
+Install the published package with:
+
+```sh
+npm install @ndycode/timetablekit
+```
 
 ## Repository map
 
