@@ -1,6 +1,6 @@
 # Quality report
 
-Evidence snapshot recorded on 2026-09-01 for release-readiness source commit `91346fc632f1ea3824aa9182ff93a0415e44e4fd`.
+Evidence snapshot recorded on 2026-09-01 for release-readiness source commit `14ac97541d62c20ffd6b4fb22429ab11b00c337e`.
 
 ## Local validation
 
@@ -25,7 +25,7 @@ The full command output was observed in the local validation run. The Turbo warn
 ## Live deployment checks
 
 - Production deployment `dpl_8jCw11g7sH8JdMFdLFpjPLm33eqj` was READY for pre-release commit `d5b4b10fb47fb10e22ab2392dcaa1dcd8688f5b4` at https://timetablekit.vercel.app/.
-- Release-readiness preview deployment `dpl_5zJVdr6VBjaYV6zwHBhfhWt8M41T` was READY for candidate source commit `91346fc632f1ea3824aa9182ff93a0415e44e4fd` at https://timetablekit-jegmvyspn-ndycode.vercel.app/.
+- Release-readiness preview deployment `dpl_6BvWcPQrYFbL4TWx7GNjgRd3d3o4` was READY for candidate source commit `14ac97541d62c20ffd6b4fb22429ab11b00c337e` at https://timetablekit-namatvf0x-ndycode.vercel.app/.
 - Production smoke passed for the pre-release production URL and the exact candidate preview URL. The smoke checked security headers, health, synthetic parsing, and the main routes.
 - The live browser audit returned HTTP 200 for `/`, `/playground`, `/docs`, `/privacy`, `/security`, `/roadmap`, `/code-of-conduct`, and `/sitemap.xml`.
 - Axe returned 0 violations on `/`, `/playground`, `/docs`, `/privacy`, and `/security`.
