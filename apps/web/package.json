@@ -5,8 +5,8 @@
   "description": "TimetableKit public playground and documentation site.",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm --filter @ndycode/timetablekit build && pnpm --filter @ndycode/timetablekit-provider-tesseract build && pnpm --filter @ndycode/timetablekit-provider-pdfjs build && next build",
-    "typecheck": "pnpm --filter @ndycode/timetablekit build && pnpm --filter @ndycode/timetablekit-provider-tesseract build && pnpm --filter @ndycode/timetablekit-provider-pdfjs build && tsc --noEmit",
+    "build": "corepack pnpm --filter @ndycode/timetablekit build && corepack pnpm --filter @ndycode/timetablekit-provider-tesseract build && corepack pnpm --filter @ndycode/timetablekit-provider-pdfjs build && next build",
+    "typecheck": "corepack pnpm --filter @ndycode/timetablekit build && corepack pnpm --filter @ndycode/timetablekit-provider-tesseract build && corepack pnpm --filter @ndycode/timetablekit-provider-pdfjs build && tsc --noEmit",
     "lint": "pnpm --dir ../.. lint",
     "test": "pnpm exec playwright test --config ../../playwright.config.ts"
   },
