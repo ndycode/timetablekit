@@ -146,6 +146,11 @@ test("landing page and playground have no automated accessibility violations", a
 });
 
 test("robots and sitemap use public URLs", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.locator('meta[property="og:image"]').getAttribute("content"),
+  ).resolves.toBe("https://timetablekit.vercel.app/opengraph.svg");
+
   const sitemap = await page.request.get("/sitemap.xml");
   expect(sitemap).toBeOK();
   const sitemapText = await sitemap.text();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectConflicts, validateTimetable } from "../src";
+import { detectConflicts, parseTimetable, validateTimetable } from "../src";
 import type { EventSchedule, TimetableEvent } from "../src";
 
 function event(
@@ -64,6 +64,41 @@ describe("timetable validation", () => {
 });
 
 describe("schedule conflicts", () => {
+  it("bounds conflict output for large overlapping inputs", async () => {
+    const letters = (value: number): string => {
+      let result = "";
+      let current = value;
+      do {
+        result = String.fromCharCode(65 + (current % 26)) + result;
+        current = Math.floor(current / 26) - 1;
+      } while (current >= 0);
+      return result;
+    };
+    const text = [
+      "title,day,start,end",
+      ...Array.from(
+        { length: 1_000 },
+        (_, index) => `Topic ${letters(index)} Section,Monday,09:00,10:00`,
+      ),
+    ].join("\n");
+
+    const result = await parseTimetable(
+      { kind: "csv", text },
+      { locale: "en-PH", timezone: "UTC" },
+    );
+
+    expect(result.events).toHaveLength(1_000);
+    expect(result.conflicts).toHaveLength(1_000);
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "CONFLICT_LIMIT",
+          details: { limit: 1_000 },
+        }),
+      ]),
+    );
+  });
+
   it("sorts event ids and reports a shared weekly overlap", () => {
     const first = event(
       "evt-a",

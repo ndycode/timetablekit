@@ -79,7 +79,8 @@ Options:
   --timezone <iana>       Timezone for the parsed events. Default: UTC.
   --locale <id>           Parser locale. Default: en-PH.
   --format <format>       Output format: json, csv, or ics. Default: json.
-  --out <path>            Write to a local file instead of stdout. Use - for stdout.
+  --output <path>         Write to a local file instead of stdout. Use - for stdout.
+                          --out is accepted as an alias.
   --term-start <date>     ISO start date for weekly ICS recurrence.
   --term-end <date>       ISO end date for weekly ICS recurrence.
   -h, --help              Show this help.
@@ -278,7 +279,8 @@ export function parseArguments(argv: readonly string[]): CliCommand {
           index = selected.index;
           break;
         }
-        case "--out": {
+        case "--out":
+        case "--output": {
           const selected = optionValue(argv, index, name, inline);
           if (selected.value === "-") {
             output = { kind: "stdout" };

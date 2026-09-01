@@ -17,6 +17,13 @@ type Occurrence =
     }
   | { readonly key: string; readonly kind: "date"; readonly date: string };
 
+export const DEFAULT_MAX_CONFLICTS = 1_000;
+
+export type ConflictDetectionResult = {
+  readonly conflicts: readonly ScheduleConflict[];
+  readonly truncated: boolean;
+};
+
 function scheduleHasWeekday(
   schedule: EventSchedule,
   weekday: Weekday,
@@ -180,15 +187,22 @@ function conflictFor(
   };
 }
 
-export function detectConflicts(
+export function detectConflictsBounded(
   events: readonly TimetableEvent[],
-  context: { readonly term?: TermRange } = {},
-): readonly ScheduleConflict[] {
+  context: { readonly term?: TermRange; readonly maxConflicts?: number } = {},
+): ConflictDetectionResult {
+  const maxConflicts =
+    context.maxConflicts === undefined ||
+    !Number.isSafeInteger(context.maxConflicts) ||
+    context.maxConflicts < 0
+      ? DEFAULT_MAX_CONFLICTS
+      : context.maxConflicts;
   const ordered = [...events].sort((left, right) =>
     left.id.localeCompare(right.id),
   );
   const conflicts: ScheduleConflict[] = [];
-  for (let leftIndex = 0; leftIndex < ordered.length; leftIndex += 1) {
+  let truncated = false;
+  outer: for (let leftIndex = 0; leftIndex < ordered.length; leftIndex += 1) {
     const left = ordered[leftIndex];
     if (left === undefined) continue;
     for (
@@ -202,9 +216,23 @@ export function detectConflicts(
       if (overlapRange === undefined) continue;
       const occurrences = sharedOccurrences(left, right, context.term);
       for (const occurrence of occurrences) {
+        if (conflicts.length >= maxConflicts) {
+          truncated = true;
+          break outer;
+        }
         conflicts.push(conflictFor(left, right, occurrence, overlapRange));
       }
     }
   }
-  return conflicts.sort((left, right) => left.id.localeCompare(right.id));
+  return {
+    conflicts: conflicts.sort((left, right) => left.id.localeCompare(right.id)),
+    truncated,
+  };
+}
+
+export function detectConflicts(
+  events: readonly TimetableEvent[],
+  context: { readonly term?: TermRange; readonly maxConflicts?: number } = {},
+): readonly ScheduleConflict[] {
+  return detectConflictsBounded(events, context).conflicts;
 }

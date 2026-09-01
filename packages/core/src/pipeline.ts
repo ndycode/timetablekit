@@ -1,4 +1,4 @@
-import { detectConflicts } from "./conflicts.js";
+import { DEFAULT_MAX_CONFLICTS, detectConflictsBounded } from "./conflicts.js";
 import { TimetableError, ProviderError } from "./errors.js";
 import { createLocaleRegistry, EN_PH_LOCALE } from "./locale/registry.js";
 import { normalizeCandidates } from "./normalization.js";
@@ -57,6 +57,15 @@ const STAGES: readonly ParseStage[] = [
   "recovery",
   "finalize",
 ];
+
+function appendAll<T>(target: T[], values: readonly T[]): void {
+  for (const value of values) target.push(value);
+}
+
+function replaceAll<T>(target: T[], values: readonly T[]): void {
+  target.length = 0;
+  appendAll(target, values);
+}
 
 function abortIfNeeded(signal: AbortSignal): void {
   if (signal.aborted) {
@@ -268,7 +277,7 @@ function unresolvedFields(
 }
 
 function conflictWarnings(
-  conflicts: ReturnType<typeof detectConflicts>,
+  conflicts: ReturnType<typeof detectConflictsBounded>["conflicts"],
 ): readonly ParseWarning[] {
   return conflicts.map((conflict) =>
     makeWarning({
@@ -278,6 +287,15 @@ function conflictWarnings(
       details: { conflictId: conflict.id },
     }),
   );
+}
+
+function conflictLimitWarning(): ParseWarning {
+  return makeWarning({
+    code: "CONFLICT_LIMIT",
+    severity: "warning",
+    message: `Conflict output was limited to ${DEFAULT_MAX_CONFLICTS} entries.`,
+    details: { limit: DEFAULT_MAX_CONFLICTS },
+  });
 }
 
 function confidence(events: readonly TimetableEvent[]): number {
@@ -416,7 +434,7 @@ export function createTimetableParser(
         input.kind === "csv"
           ? parseCsvCandidates(input.text, locale, input.delimiter)
           : parseDocument(artifact.document, locale);
-      warnings.push(...parsed.warnings);
+      appendAll(warnings, parsed.warnings);
       reports.push(
         stageReport("normalize", "completed", parseAt, parsed.warnings.length),
       );
@@ -431,7 +449,7 @@ export function createTimetableParser(
         options.term,
         options.timezone,
       );
-      warnings.push(...normalized.warnings);
+      appendAll(warnings, normalized.warnings);
       reports.push(
         stageReport(
           "deduplicate",
@@ -443,7 +461,7 @@ export function createTimetableParser(
       let events = normalized.events;
       let validation = validateAndConflicts(events, options, warnings);
       events = validation.events;
-      warnings.splice(0, warnings.length, ...validation.warnings);
+      replaceAll(warnings, validation.warnings);
       reports.push(
         stageReport(
           "validate",
@@ -525,14 +543,13 @@ export function createTimetableParser(
                 );
               events = applied.events;
               aiRecoveryUsed = true;
-              warnings.splice(
-                0,
-                warnings.length,
-                ...removePatchedWarnings(warnings, response.patches),
+              replaceAll(
+                warnings,
+                removePatchedWarnings(warnings, response.patches),
               );
               validation = validateAndConflicts(events, options, warnings);
               events = validation.events;
-              warnings.splice(0, warnings.length, ...validation.warnings);
+              replaceAll(warnings, validation.warnings);
             }
           } catch (error) {
             if (
@@ -604,22 +621,30 @@ function validateAndConflicts(
   readonly events: readonly TimetableEvent[];
   readonly warnings: ParseWarning[];
   readonly validationWarnings: readonly ParseWarning[];
-  readonly conflicts: ReturnType<typeof detectConflicts>;
+  readonly conflicts: ReturnType<typeof detectConflictsBounded>["conflicts"];
 } {
   const validationWarnings = validateTimetable(events, {
     timezone: options.timezone,
     ...(options.term === undefined ? {} : { term: options.term }),
   });
-  const conflicts = detectConflicts(
+  const detected = detectConflictsBounded(
     events,
-    options.term === undefined ? {} : { term: options.term },
+    options.term === undefined
+      ? { maxConflicts: DEFAULT_MAX_CONFLICTS }
+      : { term: options.term, maxConflicts: DEFAULT_MAX_CONFLICTS },
   );
   const warnings = [
     ...existing.filter((warning) => warning.code !== "SCHEDULE_CONFLICT"),
     ...validationWarnings,
-    ...conflictWarnings(conflicts),
+    ...conflictWarnings(detected.conflicts),
   ];
-  return { events, warnings, validationWarnings, conflicts };
+  if (detected.truncated) warnings.push(conflictLimitWarning());
+  return {
+    events,
+    warnings,
+    validationWarnings,
+    conflicts: detected.conflicts,
+  };
 }
 
 function compareWarnings(left: ParseWarning, right: ParseWarning): number {

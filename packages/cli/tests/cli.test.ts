@@ -112,4 +112,22 @@ describe("timetablekit CLI", () => {
       );
     }
   });
+
+  it("accepts the documented --output alias", async () => {
+    const directory = await temporaryDirectory();
+    const inputPath = join(directory, "alias.txt");
+    const outputPath = join(directory, "alias.json");
+    await writeFile(inputPath, "Alias Check Monday 09:00-10:00", "utf8");
+    const captured = capture(directory);
+
+    const exitCode = await runCli(
+      [inputPath, "--format", "json", "--output", outputPath],
+      captured.io,
+    );
+
+    expect(exitCode).toBe(0);
+    expect(captured.output.stdout).toBe("");
+    expect(captured.output.stderr).toBe("");
+    await expect(readFile(outputPath, "utf8")).resolves.toContain('"events"');
+  });
 });
