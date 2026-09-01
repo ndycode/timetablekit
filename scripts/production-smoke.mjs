@@ -32,7 +32,7 @@ if (typeof rawBaseUrl !== "string" || rawBaseUrl.length === 0) {
         throw new Error(`Missing security header: ${header}`);
       }
     }
-    if (!homeText.includes("Turn timetables into calendar events.")) {
+    if (!homeText.includes("Turn schedules into calendar events.")) {
       throw new Error("The landing page marker is missing.");
     }
 
