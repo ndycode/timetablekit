@@ -1,4 +1,9 @@
-export { detectConflicts } from "./conflicts.js";
+export {
+  DEFAULT_MAX_CONFLICTS,
+  detectConflicts,
+  detectConflictsBounded,
+} from "./conflicts.js";
+export type { ConflictDetectionResult } from "./conflicts.js";
 export {
   ProviderError,
   SchemaValidationError,

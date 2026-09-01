@@ -634,7 +634,11 @@ function validateAndConflicts(
       : { term: options.term, maxConflicts: DEFAULT_MAX_CONFLICTS },
   );
   const warnings = [
-    ...existing.filter((warning) => warning.code !== "SCHEDULE_CONFLICT"),
+    ...existing.filter(
+      (warning) =>
+        warning.code !== "SCHEDULE_CONFLICT" &&
+        warning.code !== "CONFLICT_LIMIT",
+    ),
     ...validationWarnings,
     ...conflictWarnings(detected.conflicts),
   ];

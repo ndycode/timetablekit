@@ -1,8 +1,9 @@
 "use client";
 
 import {
+  DEFAULT_MAX_CONFLICTS,
   createTimetableParser,
-  detectConflicts,
+  detectConflictsBounded,
   parseTimetable,
   toCSV,
   toICS,
@@ -102,21 +103,32 @@ function warningForConflict(conflictId: string): ParseWarning {
   };
 }
 
+function warningForConflictLimit(): ParseWarning {
+  return {
+    code: "CONFLICT_LIMIT",
+    severity: "warning",
+    message: `Conflict output was limited to ${DEFAULT_MAX_CONFLICTS} entries.`,
+    details: { limit: DEFAULT_MAX_CONFLICTS },
+  };
+}
+
 function mergeValidation(
   result: TimetableParseResult,
   events: readonly TimetableEvent[],
 ): TimetableParseResult {
   const warnings = result.warnings.filter(
-    (warning) => warning.code !== "SCHEDULE_CONFLICT",
+    (warning) =>
+      warning.code !== "SCHEDULE_CONFLICT" && warning.code !== "CONFLICT_LIMIT",
   );
   const validationWarnings = validateTimetable(events, {
     timezone: result.timezone,
     ...(result.term === undefined ? {} : { term: result.term }),
   });
-  const conflicts = detectConflicts(
+  const detected = detectConflictsBounded(
     events,
     result.term === undefined ? {} : { term: result.term },
   );
+  const conflicts = detected.conflicts;
   return {
     ...result,
     events,
@@ -124,6 +136,7 @@ function mergeValidation(
       ...warnings,
       ...validationWarnings,
       ...conflicts.map((conflict) => warningForConflict(conflict.id)),
+      ...(detected.truncated ? [warningForConflictLimit()] : []),
     ],
     conflicts,
     parse: {
