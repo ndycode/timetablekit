@@ -21,10 +21,14 @@ This file records implementation and release evidence. External URLs and metrics
 - [x] Parser, schemas, validation, conflict detection, confidence, and exporters.
 - [x] OCR, PDF, provider, CLI, React, and web implementation.
 - [x] Public synthetic fixtures and golden outputs.
-- [ ] Published npm package, GitHub repository publication, release, and Vercel deployment. External verification remains.
+- [x] Original public GitHub repository and Vercel production and preview deployments verified on 2026-09-01.
+- [ ] Published npm package. `npm whoami` and `npm publish` returned `ENEEDAUTH` on 2026-09-01.
+- [ ] GitHub release tag. Create and verify after the release-readiness PR merges.
 - [x] Local production build, browser E2E, accessibility, security, and fixture evidence.
-- [ ] MySched integration merge or production adoption. The focused PR remains a separate external gate.
+- [x] Focused MySched adapter PR opened at https://github.com/ndycode/mysched/pull/1553 with isolated tests.
+- [ ] MySched integration merge or production adoption. The open PR remains a separate external gate.
 - [x] Vercel application answers and evidence package prepared. Submission remains a maintainer action.
+- [x] Ten genuine maintainer roadmap issues, Discussions, and contribution labels enabled.
 
 ## Vercel program context
 

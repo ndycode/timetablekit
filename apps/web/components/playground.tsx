@@ -564,6 +564,10 @@ export default function Playground() {
                 {busy && (
                   <div
                     className="progress-track"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={progress}
                     aria-label={`Parsing ${progress}%`}
                   >
                     <span style={{ width: `${progress}%` }} />
