@@ -4,6 +4,7 @@ import type { ParseOptions } from "@ndycode/timetablekit";
 export const dynamic = "force-dynamic";
 
 const MAX_REMOTE_TEXT_BYTES = 200_000;
+const MAX_REQUEST_BYTES = 256_000;
 const MAX_ACTIVE_REQUESTS = 4;
 let activeRequests = 0;
 
@@ -39,7 +40,14 @@ export async function POST(request: Request): Promise<Response> {
   }
   activeRequests += 1;
   try {
-    const payload: unknown = await request.json();
+    const requestBody = await request.arrayBuffer();
+    if (requestBody.byteLength > MAX_REQUEST_BYTES) {
+      return Response.json(
+        { error: "The remote request is too large." },
+        { status: 413 },
+      );
+    }
+    const payload: unknown = JSON.parse(new TextDecoder().decode(requestBody));
     if (!isRecord(payload) || typeof payload["text"] !== "string") {
       return Response.json(
         { error: "Send a JSON object with a text string." },

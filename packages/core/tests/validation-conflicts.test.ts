@@ -99,6 +99,40 @@ describe("schedule conflicts", () => {
     );
   });
 
+  it("keeps the unbounded public helper complete", () => {
+    const events = Array.from({ length: 46 }, (_, index) =>
+      event(
+        `evt-${String(index).padStart(2, "0")}`,
+        { kind: "weekly", weekdays: ["MO"] },
+        "09:00",
+        "10:00",
+      ),
+    );
+
+    expect(detectConflicts(events)).toHaveLength(1_035);
+  });
+
+  it("skips an impossible long weekly term without enumerating it", () => {
+    const monday = event(
+      "evt-monday",
+      { kind: "weekly", weekdays: ["MO"] },
+      "09:00",
+      "10:00",
+    );
+    const tuesday = event(
+      "evt-tuesday",
+      { kind: "weekly", weekdays: ["TU"] },
+      "09:00",
+      "10:00",
+    );
+
+    expect(
+      detectConflicts([monday, tuesday], {
+        term: { startsOn: "2026-01-01", endsOn: "9999-12-31" },
+      }),
+    ).toEqual([]);
+  });
+
   it("sorts event ids and reports a shared weekly overlap", () => {
     const first = event(
       "evt-a",

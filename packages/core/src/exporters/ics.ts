@@ -19,6 +19,8 @@ type IcsOptions = {
   readonly weeklyStartsOn?: IsoDate;
 };
 
+const ICS_TIMESTAMP = /^\d{8}T\d{6}Z$/u;
+
 function escapeIcs(value: string): string {
   return value
     .replace(/\\/g, "\\\\")
@@ -250,6 +252,11 @@ export function toICS(
       "The result timezone is not valid.",
     );
   const dtstamp = options.dtstamp ?? "19700101T000000Z";
+  if (!ICS_TIMESTAMP.test(dtstamp))
+    throw new TimetableError(
+      "EXPORT_INVALID_RESULT",
+      "The iCalendar timestamp is not valid.",
+    );
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",

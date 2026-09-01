@@ -130,4 +130,17 @@ describe("timetablekit CLI", () => {
     expect(captured.output.stderr).toBe("");
     await expect(readFile(outputPath, "utf8")).resolves.toContain('"events"');
   });
+
+  it("rejects UNC input paths before filesystem access", async () => {
+    const captured = capture(process.cwd());
+
+    const exitCode = await runCli(
+      ["\\\\server\\share\\schedule.txt"],
+      captured.io,
+    );
+
+    expect(exitCode).toBe(1);
+    expect(captured.output.stdout).toBe("");
+    expect(captured.output.stderr).toContain("Remote URLs are not accepted");
+  });
 });

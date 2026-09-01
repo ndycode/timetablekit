@@ -101,5 +101,10 @@ describe("ICS export edge cases", () => {
       name: "TimetableError",
       code: "EXPORT_INVALID_RESULT",
     });
+    expect(
+      errorCode(() =>
+        toICS(result, { dtstamp: "20260901T000000Z\r\nX-Bad: yes" }),
+      ),
+    ).toBe("EXPORT_INVALID_RESULT");
   });
 });

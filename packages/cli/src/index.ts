@@ -118,7 +118,11 @@ function resolvedIO(io: CliIO): ResolvedCliIO {
 }
 
 function isRemotePath(value: string): boolean {
-  return value.startsWith("//") || /^(?:https?|ftp):\/\//iu.test(value);
+  return (
+    value.startsWith("//") ||
+    value.startsWith("\\\\") ||
+    /^(?:https?|ftp):\/\//iu.test(value)
+  );
 }
 
 function assertLocalPath(value: string, label: string): void {
