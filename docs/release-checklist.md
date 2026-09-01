@@ -12,7 +12,7 @@ Verified 2026-09-01. The checklist records the release surfaces without claiming
 | Fixture validation                                                         | Pass          | 63 manifests, 63 inputs, and 63 expected outputs      |
 | Browser matrix                                                             | Pass          | 15 E2E cases across Chromium, Firefox, and WebKit     |
 | Production deployment                                                      | Pass          | https://timetablekit.vercel.app/                      |
-| Preview deployment                                                         | Pass          | https://timetablekit-fnbtfo1ex-ndycode.vercel.app/    |
+| Preview deployment                                                         | Pass          | https://timetablekit-6b9eoz98f-ndycode.vercel.app/    |
 | Live route, export, accessibility, and Lighthouse checks                   | Pass          | `docs/quality-report.md`                              |
 | npm package publication                                                    | Blocked       | npm authentication returned `ENEEDAUTH`               |
 | GitHub release                                                             | Pending       | Create `v0.1.0` after the release PR merges           |
