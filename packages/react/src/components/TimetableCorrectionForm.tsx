@@ -1,9 +1,10 @@
-import type { ChangeEvent } from "react";
-import type {
-  EventSchedule,
-  ParseWarning,
-  TimetableEvent,
-  TimetableParseResult,
+import { useEffect, useState, type ChangeEvent } from "react";
+import {
+  SchemaValidationError,
+  type EventSchedule,
+  type ParseWarning,
+  type TimetableEvent,
+  type TimetableParseResult,
 } from "@ndycode/timetablekit";
 import {
   applyEventCorrection,
@@ -35,6 +36,7 @@ type TextCorrectionFieldProps = {
   readonly type?: "text" | "time";
   readonly multiline?: boolean;
   readonly placeholder?: string;
+  readonly required?: boolean;
   readonly onValueChange: (value: string) => void;
 };
 
@@ -63,8 +65,11 @@ function TextCorrectionField({
   type = "text",
   multiline = false,
   placeholder,
+  required = false,
   onValueChange,
 }: TextCorrectionFieldProps) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
   const warningId = warningIdFor(id);
   const describedBy = warning === undefined ? undefined : warningId;
   return (
@@ -73,25 +78,29 @@ function TextCorrectionField({
       {multiline ? (
         <textarea
           id={id}
-          value={value}
+          value={draft}
           placeholder={placeholder}
+          required={required}
           aria-describedby={describedBy}
           aria-invalid={warning !== undefined}
           onChange={(change: ChangeEvent<HTMLTextAreaElement>) =>
-            onValueChange(change.currentTarget.value)
+            setDraft(change.currentTarget.value)
           }
+          onBlur={() => onValueChange(draft)}
         />
       ) : (
         <input
           id={id}
           type={type}
-          value={value}
+          value={draft}
           placeholder={placeholder}
+          required={required}
           aria-describedby={describedBy}
           aria-invalid={warning !== undefined}
           onChange={(change: ChangeEvent<HTMLInputElement>) =>
-            onValueChange(change.currentTarget.value)
+            setDraft(change.currentTarget.value)
           }
+          onBlur={() => onValueChange(draft)}
         />
       )}
       {warning === undefined ? null : (
@@ -147,6 +156,7 @@ function ScheduleCorrectionField({
         label="Dates (YYYY-MM-DD, comma separated)"
         value={schedule.exactDates.join(", ")}
         warning={warning}
+        required
         onValueChange={(value) =>
           onScheduleChange({ ...schedule, exactDates: parseDateList(value) })
         }
@@ -224,6 +234,7 @@ function EventFieldControl({
           label={FIELD_LABELS[field]}
           value={event.title}
           warning={warning}
+          required
           onValueChange={(value) =>
             onCorrection({ eventId: event.id, field: "title", value })
           }
@@ -275,6 +286,7 @@ function EventFieldControl({
           value={event.startTime}
           warning={warning}
           type="time"
+          required
           onValueChange={(value) =>
             onCorrection({ eventId: event.id, field: "startTime", value })
           }
@@ -288,6 +300,7 @@ function EventFieldControl({
           value={event.endTime}
           warning={warning}
           type="time"
+          required
           onValueChange={(value) =>
             onCorrection({ eventId: event.id, field: "endTime", value })
           }
@@ -300,6 +313,7 @@ function EventFieldControl({
           label={FIELD_LABELS[field]}
           value={event.timezone}
           warning={warning}
+          required
           onValueChange={(value) =>
             onCorrection({ eventId: event.id, field: "timezone", value })
           }
@@ -363,9 +377,14 @@ export function TimetableCorrectionForm({
   className,
 }: TimetableCorrectionFormProps) {
   const handleCorrection = (correction: EventCorrection): void => {
-    const nextResult = applyEventCorrection(result, correction);
-    if (nextResult !== result) {
-      onChange(nextResult);
+    try {
+      const nextResult = applyEventCorrection(result, correction);
+      if (nextResult !== result) {
+        onChange(nextResult);
+      }
+    } catch (error) {
+      if (error instanceof SchemaValidationError) return;
+      throw error;
     }
   };
   return (

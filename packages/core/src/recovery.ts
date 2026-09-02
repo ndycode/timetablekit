@@ -1,6 +1,11 @@
 import { parseTime } from "./parser/time.js";
+import { utf8ByteLength } from "./parser/text.js";
+import {
+  RecoveryResponseSchema,
+  recoveryPatchSchema,
+  scheduleSchema,
+} from "./schema/runtime.js";
 import type {
-  EventField,
   EventSchedule,
   FieldValue,
   RecoveryPatch,
@@ -8,115 +13,131 @@ import type {
   TimetableEvent,
 } from "./schema/types.js";
 
-const EVENT_FIELDS = [
-  "title",
-  "code",
-  "eventType",
-  "schedule",
-  "startTime",
-  "endTime",
-  "timezone",
-  "location",
-  "instructor",
-  "notes",
-] as const satisfies readonly EventField[];
-
-function isEventField(value: unknown): value is EventField {
-  return (
-    typeof value === "string" &&
-    (EVENT_FIELDS as readonly string[]).includes(value)
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function isSchedule(value: unknown): value is EventSchedule {
-  if (!isRecord(value)) {
-    return false;
+  return scheduleSchema.safeParse(value).success;
+}
+
+export function isRecoveryResponse(value: unknown): value is RecoveryResponse {
+  return RecoveryResponseSchema.safeParse(value).success;
+}
+
+export function recoveryResponseByteLength(
+  response: RecoveryResponse,
+): number | undefined {
+  try {
+    const serialized = JSON.stringify(response);
+    return serialized === undefined ? undefined : utf8ByteLength(serialized);
+  } catch {
+    return undefined;
   }
-  if (value["kind"] === "weekly") {
-    const weekdays = value["weekdays"];
+}
+
+function sameSchedule(left: EventSchedule, right: EventSchedule): boolean {
+  if (left.kind !== right.kind) return false;
+  if (left.kind === "weekly" && right.kind === "weekly") {
     return (
-      Array.isArray(weekdays) &&
-      weekdays.every((day) => typeof day === "string")
+      left.weekdays.length === right.weekdays.length &&
+      left.weekdays.every((day, index) => day === right.weekdays[index]) &&
+      left.startsOn === right.startsOn &&
+      left.endsOn === right.endsOn
     );
   }
-  if (value["kind"] === "exact") {
-    const exactDates = value["exactDates"];
+  if (left.kind === "exact" && right.kind === "exact") {
     return (
-      Array.isArray(exactDates) &&
-      exactDates.every((date) => typeof date === "string")
+      left.exactDates.length === right.exactDates.length &&
+      left.exactDates.every((date, index) => date === right.exactDates[index])
     );
   }
   return false;
 }
 
-function isPatch(value: unknown): value is RecoveryPatch {
-  if (!isRecord(value)) {
-    return false;
+function sameFieldValue(
+  left: TimetableEvent,
+  right: TimetableEvent,
+  field: RecoveryPatch["field"],
+): boolean {
+  switch (field) {
+    case "title":
+      return left.title === right.title;
+    case "code":
+      return left.code === right.code;
+    case "eventType":
+      return left.eventType === right.eventType;
+    case "schedule":
+      return sameSchedule(left.schedule, right.schedule);
+    case "startTime":
+      return left.startTime === right.startTime;
+    case "endTime":
+      return left.endTime === right.endTime;
+    case "timezone":
+      return left.timezone === right.timezone;
+    case "location":
+      return left.location === right.location;
+    case "instructor":
+      return left.instructor === right.instructor;
+    case "notes":
+      return left.notes === right.notes;
   }
-  return (
-    typeof value["eventId"] === "string" &&
-    isEventField(value["field"]) &&
-    typeof value["confidence"] === "number" &&
-    value["confidence"] >= 0 &&
-    value["confidence"] <= 1 &&
-    (typeof value["value"] === "string" ||
-      isSchedule(value["value"]) ||
-      Array.isArray(value["value"]))
-  );
-}
-
-export function isRecoveryResponse(value: unknown): value is RecoveryResponse {
-  return (
-    isRecord(value) &&
-    Array.isArray(value["patches"]) &&
-    value["patches"].every(isPatch)
-  );
 }
 
 function withFieldConfidence(
-  event: TimetableEvent,
+  original: TimetableEvent,
+  candidate: TimetableEvent,
   field: RecoveryPatch["field"],
   confidence: number,
-): TimetableEvent {
+): TimetableEvent | null {
+  const currentFieldConfidence = original.fieldConfidence[field];
+  const nextFieldConfidence = Math.max(currentFieldConfidence ?? 0, confidence);
+  const fieldConfidenceChanged =
+    currentFieldConfidence === undefined
+      ? confidence > original.confidence
+      : nextFieldConfidence !== currentFieldConfidence;
+  const nextEventConfidence = Math.max(original.confidence, confidence);
+  const eventConfidenceChanged = nextEventConfidence !== original.confidence;
+  const valueChanged = !sameFieldValue(original, candidate, field);
+  if (!valueChanged && !fieldConfidenceChanged && !eventConfidenceChanged) {
+    return null;
+  }
   return {
-    ...event,
-    confidence: Math.max(event.confidence, confidence),
-    fieldConfidence: { ...event.fieldConfidence, [field]: confidence },
+    ...candidate,
+    confidence: nextEventConfidence,
+    fieldConfidence: fieldConfidenceChanged
+      ? { ...original.fieldConfidence, [field]: nextFieldConfidence }
+      : original.fieldConfidence,
   };
 }
 
 function applyPatch(
   event: TimetableEvent,
   patch: RecoveryPatch,
-): TimetableEvent | undefined {
+): TimetableEvent | null | undefined {
   const value: FieldValue = patch.value;
   switch (patch.field) {
     case "title":
       return typeof value === "string" && value.trim().length > 0
         ? withFieldConfidence(
+            event,
             { ...event, title: value.trim() },
             patch.field,
             patch.confidence,
           )
         : undefined;
     case "code":
-      return typeof value === "string"
+      return typeof value === "string" && value.trim().length > 0
         ? withFieldConfidence(
-            { ...event, ...(value.length === 0 ? {} : { code: value.trim() }) },
+            event,
+            { ...event, code: value.trim() },
             patch.field,
             patch.confidence,
           )
         : undefined;
     case "eventType":
-      return typeof value === "string"
+      return typeof value === "string" && value.trim().length > 0
         ? withFieldConfidence(
+            event,
             {
               ...event,
-              ...(value.length === 0 ? {} : { eventType: value.trim() }),
+              eventType: value.trim(),
             },
             patch.field,
             patch.confidence,
@@ -125,6 +146,7 @@ function applyPatch(
     case "schedule":
       return isSchedule(value)
         ? withFieldConfidence(
+            event,
             { ...event, schedule: value },
             patch.field,
             patch.confidence,
@@ -135,6 +157,7 @@ function applyPatch(
       const parsed = parseTime(value);
       return parsed.kind === "ok"
         ? withFieldConfidence(
+            event,
             { ...event, startTime: parsed.time },
             patch.field,
             patch.confidence,
@@ -146,6 +169,7 @@ function applyPatch(
       const parsed = parseTime(value);
       return parsed.kind === "ok"
         ? withFieldConfidence(
+            event,
             { ...event, endTime: parsed.time },
             patch.field,
             patch.confidence,
@@ -155,49 +179,50 @@ function applyPatch(
     case "timezone":
       return typeof value === "string" && value.length > 0
         ? withFieldConfidence(
+            event,
             { ...event, timezone: value },
             patch.field,
             patch.confidence,
           )
         : undefined;
     case "location":
-      return typeof value === "string"
+      return typeof value === "string" && value.trim().length > 0
         ? withFieldConfidence(
+            event,
             {
               ...event,
-              ...(value.length === 0 ? {} : { location: value.trim() }),
+              location: value.trim(),
             },
             patch.field,
             patch.confidence,
           )
         : undefined;
     case "instructor":
-      return typeof value === "string"
+      return typeof value === "string" && value.trim().length > 0
         ? withFieldConfidence(
+            event,
             {
               ...event,
-              ...(value.length === 0 ? {} : { instructor: value.trim() }),
+              instructor: value.trim(),
             },
             patch.field,
             patch.confidence,
           )
         : undefined;
     case "notes":
-      return typeof value === "string"
+      return typeof value === "string" && value.trim().length > 0
         ? withFieldConfidence(
+            event,
             {
               ...event,
-              ...(value.length === 0 ? {} : { notes: value.trim() }),
+              notes: value.trim(),
             },
             patch.field,
             patch.confidence,
           )
         : undefined;
-    default: {
-      const exhaustive: never = patch.field;
-      return exhaustive;
-    }
   }
+  return undefined;
 }
 
 export type RecoveryApplyResult = {
@@ -211,15 +236,54 @@ export function applyRecoveryPatches(
   events: readonly TimetableEvent[],
   response: RecoveryResponse,
 ): RecoveryApplyResult {
+  let rawPatches: readonly unknown[];
+  const validated = RecoveryResponseSchema.safeParse(response);
+  if (validated.success) {
+    rawPatches = validated.data.patches;
+  } else {
+    try {
+      if (
+        typeof response !== "object" ||
+        response === null ||
+        !Array.isArray(response.patches)
+      ) {
+        throw new Error();
+      }
+      rawPatches = response.patches;
+    } catch {
+      return {
+        events,
+        applied: 0,
+        appliedPatches: [],
+        invalid: 1,
+      };
+    }
+  }
+  if (rawPatches.length > 32) {
+    return {
+      events,
+      applied: 0,
+      appliedPatches: [],
+      invalid: 1,
+    };
+  }
   const byId = new Map(events.map((event) => [event.id, event]));
   const appliedPatches: RecoveryPatch[] = [];
   let applied = 0;
   let invalid = 0;
-  for (const patch of response.patches) {
+  for (const rawPatch of rawPatches) {
+    const parsedPatch = recoveryPatchSchema.safeParse(rawPatch);
+    if (!parsedPatch.success) {
+      invalid += 1;
+      continue;
+    }
+    const patch = parsedPatch.data;
     const event = byId.get(patch.eventId);
     const updated = event === undefined ? undefined : applyPatch(event, patch);
     if (updated === undefined) {
       invalid += 1;
+    } else if (updated === null) {
+      continue;
     } else {
       byId.set(updated.id, updated);
       appliedPatches.push(patch);

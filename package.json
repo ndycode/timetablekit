@@ -14,6 +14,11 @@
     "dev": "turbo run dev --parallel",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "packages:check": "node scripts/public-packages.mjs check",
+    "packages:test": "node --test scripts/public-packages.test.mjs",
+    "packages:pack": "node scripts/public-packages.mjs pack --dry-run",
+    "packages:pack:release": "node scripts/public-packages.mjs pack",
+    "packages:publish": "node scripts/public-packages.mjs publish",
     "lint": "node scripts/lint.mjs",
     "copy:check": "node scripts/check-ui-copy.mjs",
     "typecheck": "turbo run typecheck",
@@ -28,8 +33,8 @@
     "security:check": "node scripts/check-secrets.mjs",
     "fixtures:validate": "node scripts/validate-fixtures.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
-    "dependencies:check": "pnpm audit --audit-level=high && pnpm licenses list",
-    "validate": "pnpm format:check && pnpm lint && pnpm copy:check && pnpm typecheck && pnpm test && pnpm test:coverage && pnpm test:web-boundary && pnpm fixtures:validate && pnpm build && pnpm e2e && pnpm validate:links && pnpm security:check && pnpm dependencies:check"
+    "dependencies:check": "pnpm audit --audit-level=high && node scripts/check-licenses.mjs",
+    "validate": "pnpm format:check && pnpm packages:check && pnpm packages:test && pnpm lint && pnpm copy:check && pnpm typecheck && pnpm test && pnpm test:coverage && pnpm test:web-boundary && pnpm fixtures:validate && pnpm build && pnpm e2e && pnpm validate:links && pnpm security:check && pnpm dependencies:check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

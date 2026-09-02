@@ -38,8 +38,10 @@ export default function PrivacyPage() {
               and type before reading.
             </li>
             <li>
-              The agent contract accepts text and CSV directly, plus bounded
-              base64 for binary input. Remote URLs are not accepted or fetched.
+              The default agent tool accepts text and CSV. A host can accept
+              bounded base64 image or PDF input only when it injects a suitable
+              parser and declares the supported input kinds. Remote URLs are not
+              accepted or fetched.
             </li>
             <li>
               Exports use fixed names: <code>timetable.json</code>,{" "}

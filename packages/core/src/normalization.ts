@@ -33,6 +33,16 @@ function normalizedValue(value: string): string {
   return value.normalize("NFKC").replace(/\s+/g, " ").trim();
 }
 
+function canonicalExactDates(values: readonly string[]): readonly string[] {
+  return [...new Set(values)].sort((left, right) => left.localeCompare(right));
+}
+
+function canonicalSchedule(schedule: EventSchedule): EventSchedule {
+  return schedule.kind === "exact"
+    ? { kind: "exact", exactDates: canonicalExactDates(schedule.exactDates) }
+    : schedule;
+}
+
 function scheduleKey(schedule: EventSchedule): string {
   switch (schedule.kind) {
     case "weekly":
@@ -43,7 +53,9 @@ function scheduleKey(schedule: EventSchedule): string {
         schedule.endsOn ?? "",
       ].join(",");
     case "exact":
-      return [schedule.kind, ...schedule.exactDates].join(",");
+      return [schedule.kind, ...canonicalExactDates(schedule.exactDates)].join(
+        ",",
+      );
     default: {
       const exhaustive: never = schedule;
       return exhaustive;
@@ -55,7 +67,10 @@ function withTerm(
   schedule: EventSchedule,
   term: TermRange | undefined,
 ): EventSchedule {
-  if (schedule.kind === "exact" || term === undefined) {
+  if (schedule.kind === "exact") {
+    return canonicalSchedule(schedule);
+  }
+  if (term === undefined) {
     return schedule;
   }
   return {

@@ -22,27 +22,39 @@ const response = await tool.invoke({
 console.log(serializeTimetableAgentResponse(response));
 ```
 
-The contract supports text, CSV, PNG, JPEG, WebP, and PDF input. Binary input
-uses bounded base64 because agent tool calls are JSON. The default parser
-handles text and CSV. A host must inject a parser with PDF or OCR providers for
-binary parsing. Remote URLs are not accepted or fetched. The default path
-remains deterministic and local.
+The default contract supports text and CSV input. Binary input uses bounded
+base64 because agent tool calls are JSON. A host must inject a parser and
+declare its supported `inputKinds` before binary input is advertised or
+accepted. An injected parser with no declaration advertises no input kinds.
+Remote URLs are not accepted or fetched. The default path remains deterministic
+and local.
 
-`getTimetableAgentCapabilities()` returns the tool name and JSON Schema input
-and output definitions. `runTimetableAgentProtocol()` provides a small JSONL
-transport for shell agents and process supervisors. Each JSONL request has an
-`id` and an `op` of `capabilities` or `parse`.
+`getTimetableAgentCapabilities()` returns the frozen default capability
+snapshot. A tool also exposes its own frozen `capabilities` and matching
+`definition`. Capabilities include effective input, request, response, line,
+image, PDF, timeout, and output limits, plus whether the host allows remote
+recovery and its consent requirement. Provider health is checked during each
+invocation. `runTimetableAgentProtocol()` provides a small JSONL transport for
+shell agents and process supervisors. `maxProtocolLineBytes` counts total wire
+bytes, including LF for a terminated line. An EOF line without LF may use all
+limit bytes.
 
-Remote recovery is disabled by default. A host must set
-`allowRemoteRecovery: true` when constructing the tool, inject a recovery
-provider, and still require the request's explicit recovery flags.
+The success response is `{ ok: true, result, assessment }`. `result` remains
+the core `TimetableParseResult` with schema version `1.0`. `assessment` is
+`{ status: "usable" | "unusable", reasons }`, derived by the core assessment
+rule. Agents should branch on this typed field. They do not need to reimplement
+warning prose rules. Event IDs and content are deterministic for the same
+input and configuration. Timing metadata such as duration can vary.
 
 Errors use a stable `{ code, message, retryable, details? }` shape. Request,
 input, output, provider, and parser failures are returned as data instead of
 being thrown across the agent boundary. Raw input is never logged by this
-package.
+package. JSONL request IDs are optional. Missing and explicit `null` IDs are
+returned as `null`; accepted IDs are bounded strings or safe integers. Invalid
+IDs return a null ID with `INVALID_REQUEST`. String IDs can contain up to 256
+UTF-8 bytes.
 
-`ok: true` means the parser completed and returned a schema-valid result. It
-does not mean that the result is usable. Hosts must inspect `result.warnings`
-and treat zero events or any warning with `severity: "error"` as an unusable
-parse before taking action.
+Remote recovery is disabled by default. A host must set
+`allowRemoteRecovery: true` when constructing the tool, inject a recovery
+provider, and still require the request's explicit recovery flags. A request
+cannot grant recovery permission when the tool's capabilities do not allow it.

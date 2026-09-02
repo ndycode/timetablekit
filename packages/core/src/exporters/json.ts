@@ -1,4 +1,4 @@
-import { TimetableParseResultSchema } from "../schema/runtime.js";
+import { parseExportResult } from "../schema/runtime.js";
 import type { TimetableParseResult } from "../schema/types.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -23,7 +23,7 @@ export function toJSON(
   result: TimetableParseResult,
   options: { readonly pretty?: boolean } = {},
 ): string {
-  const valid = TimetableParseResultSchema.parse(result);
+  const valid = parseExportResult(result);
   const serialized = JSON.stringify(
     sortedValue(valid),
     null,

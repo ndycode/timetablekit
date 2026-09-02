@@ -1,6 +1,8 @@
 import {
+  DEFAULT_RESOURCE_LIMITS,
   SchemaValidationError,
   TimetableError,
+  assessTimetableResult,
   createTimetableParser,
   resolveLimits,
   timetableParseResultSchema,
@@ -9,6 +11,7 @@ import type {
   ParseOptions,
   ParseProgress,
   ResourceLimits,
+  ResultAssessment,
   TimetableErrorCode,
   TimetableParser,
   TimetableParseResult,
@@ -17,65 +20,96 @@ import { z } from "zod";
 import { AGENT_ERROR_CODES } from "./error-codes.js";
 import type { AgentErrorCode } from "./error-codes.js";
 import {
+  createTimetableAgentInputJsonSchema,
   timetableAgentCapabilitiesJsonSchema,
   timetableAgentInputJsonSchema,
   timetableAgentOutputJsonSchema,
 } from "./json-schema.js";
+import type { AgentInputKind } from "./json-schema.js";
+
+export type { AgentInputKind } from "./json-schema.js";
+export type { TimetableAgentInputSchemaOptions } from "./json-schema.js";
 
 export const AGENT_PROTOCOL_VERSION = "1" as const;
 export const TIMETABLE_AGENT_TOOL_NAME = "timetablekit.parse" as const;
 export const DEFAULT_AGENT_REQUEST_BYTES = 3_000_000;
 export const MAX_AGENT_REQUEST_ID_BYTES = 256;
-export const DEFAULT_AGENT_MAX_INPUT_LINES = 100_000;
+export const DEFAULT_AGENT_MAX_INPUT_LINES = 5_000;
 export const MIN_AGENT_PROTOCOL_LINE_BYTES = 256;
+
+const AGENT_PROTOCOL_ENVELOPE_BYTES = 2_048;
 
 export type JsonSchema = Readonly<Record<string, unknown>>;
 
-export const timetableAgentRequestSchema = z
+const AGENT_INPUT_KIND_ORDER: readonly AgentInputKind[] = [
+  "text",
+  "csv",
+  "image",
+  "pdf",
+];
+const DEFAULT_AGENT_INPUT_KINDS = ["text", "csv"] as const;
+
+function deepFreeze<T>(value: T): Readonly<T> {
+  if (typeof value !== "object" || value === null) return value;
+  for (const child of Object.values(value as object)) {
+    if (typeof child === "object" && child !== null) deepFreeze(child);
+  }
+  return Object.freeze(value);
+}
+
+const textInputSchema = z
+  .object({
+    kind: z.literal("text"),
+    text: z.string(),
+    filename: z.string().optional(),
+  })
+  .strict();
+
+const csvInputSchema = z
+  .object({
+    kind: z.literal("csv"),
+    text: z.string(),
+    delimiter: z.enum([",", ";", "\t"]).optional(),
+    filename: z.string().optional(),
+  })
+  .strict();
+
+const imageInputSchema = z
+  .object({
+    kind: z.literal("image"),
+    base64: z
+      .string()
+      .min(1)
+      .regex(
+        /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u,
+      ),
+    mimeType: z.enum(["image/png", "image/jpeg", "image/webp"]),
+    filename: z.string().optional(),
+  })
+  .strict();
+
+const pdfInputSchema = z
+  .object({
+    kind: z.literal("pdf"),
+    base64: z
+      .string()
+      .min(1)
+      .regex(
+        /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u,
+      ),
+    mimeType: z.literal("application/pdf"),
+    filename: z.string().optional(),
+  })
+  .strict();
+
+const baseTimetableAgentRequestSchema = z
   .object({
     schemaVersion: z.literal(AGENT_PROTOCOL_VERSION),
     input: z.discriminatedUnion("kind", [
-      z
-        .object({
-          kind: z.literal("text"),
-          text: z.string(),
-          filename: z.string().optional(),
-        })
-        .strict(),
-      z
-        .object({
-          kind: z.literal("csv"),
-          text: z.string(),
-          delimiter: z.enum([",", ";", "\t"]).optional(),
-          filename: z.string().optional(),
-        })
-        .strict(),
-      z
-        .object({
-          kind: z.literal("image"),
-          base64: z
-            .string()
-            .min(1)
-            .regex(
-              /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u,
-            ),
-          mimeType: z.enum(["image/png", "image/jpeg", "image/webp"]),
-          filename: z.string().optional(),
-        })
-        .strict(),
-      z
-        .object({
-          kind: z.literal("pdf"),
-          base64: z
-            .string()
-            .min(1)
-            .regex(
-              /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u,
-            ),
-          mimeType: z.literal("application/pdf"),
-          filename: z.string().optional(),
-        })
-        .strict(),
+      textInputSchema,
+      csvInputSchema,
+      imageInputSchema,
+      pdfInputSchema,
     ]),
     options: z
       .object({
@@ -103,8 +137,37 @@ export const timetableAgentRequestSchema = z
   })
   .strict();
 
-export type TimetableAgentRequest = z.infer<typeof timetableAgentRequestSchema>;
+export type TimetableAgentRequest = z.infer<
+  typeof baseTimetableAgentRequestSchema
+>;
 export type TimetableAgentInput = TimetableAgentRequest["input"];
+
+function createTimetableAgentRequestSchema(
+  inputKinds: readonly AgentInputKind[],
+  allowRemoteRecovery: boolean,
+): z.ZodType<TimetableAgentRequest> {
+  return baseTimetableAgentRequestSchema.superRefine((request, context) => {
+    if (!inputKinds.includes(request.input.kind)) {
+      context.addIssue({
+        code: "custom",
+        path: ["input", "kind"],
+        message: "The configured tool does not support this input kind.",
+      });
+    }
+    if (!allowRemoteRecovery && request.options?.recovery !== undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["options", "recovery"],
+        message: "Remote recovery is not enabled for this tool.",
+      });
+    }
+  });
+}
+
+export const timetableAgentRequestSchema = createTimetableAgentRequestSchema(
+  DEFAULT_AGENT_INPUT_KINDS,
+  false,
+);
 
 export type { AgentErrorCode } from "./error-codes.js";
 
@@ -120,7 +183,11 @@ export type TimetableAgentError = {
 };
 
 export type TimetableAgentResponse =
-  | { readonly ok: true; readonly result: TimetableParseResult }
+  | {
+      readonly ok: true;
+      readonly result: TimetableParseResult;
+      readonly assessment: ResultAssessment;
+    }
   | { readonly ok: false; readonly error: TimetableAgentError };
 
 export type TimetableAgentToolDefinition = {
@@ -130,23 +197,55 @@ export type TimetableAgentToolDefinition = {
   readonly outputSchema: JsonSchema;
 };
 
+export type TimetableAgentRecoveryCapabilities = {
+  readonly allowed: boolean;
+  readonly requiresConsent: true;
+};
+
 export type TimetableAgentCapabilities = {
   readonly protocolVersion: typeof AGENT_PROTOCOL_VERSION;
   readonly tools: readonly TimetableAgentToolDefinition[];
+  readonly inputKinds: readonly AgentInputKind[];
+  readonly maxInputBytes: number;
+  readonly maxOutputBytes: number;
+  readonly maxRequestBytes: number;
+  readonly maxResponseBytes: number;
+  readonly maxProtocolLineBytes: number;
+  readonly maxInputLines: number;
+  readonly timeoutMs: number;
+  readonly maxImagePixels: number;
+  readonly maxPdfPages: number;
+  readonly recovery: TimetableAgentRecoveryCapabilities;
 };
 
-export const timetableParseToolDefinition: TimetableAgentToolDefinition = {
-  name: TIMETABLE_AGENT_TOOL_NAME,
-  description:
-    "Parse a timetable into validated events, warnings, conflicts, confidence, and source metadata. Inputs are local text, CSV, or bounded base64 binary data. Binary parsing requires a host-injected provider. Remote recovery is disabled unless the host opts in. A successful invocation can still return zero events or error-severity warnings. Hosts must inspect warnings and treat either condition as unusable before acting. Remote URLs are not fetched.",
-  inputSchema: timetableAgentInputJsonSchema,
-  outputSchema: timetableAgentOutputJsonSchema,
-};
+export const timetableParseToolDefinition: TimetableAgentToolDefinition =
+  deepFreeze({
+    name: TIMETABLE_AGENT_TOOL_NAME,
+    description:
+      "Parse a timetable into validated events, warnings, conflicts, confidence, source metadata, and a typed usability assessment. Supported input kinds are text and csv. Remote recovery is not enabled unless the host explicitly allows it. Remote URLs are never fetched.",
+    inputSchema: timetableAgentInputJsonSchema,
+    outputSchema: timetableAgentOutputJsonSchema,
+  });
 
-export const timetableAgentCapabilities: TimetableAgentCapabilities = {
-  protocolVersion: AGENT_PROTOCOL_VERSION,
-  tools: [timetableParseToolDefinition],
-};
+export const timetableAgentCapabilities: TimetableAgentCapabilities =
+  deepFreeze({
+    protocolVersion: AGENT_PROTOCOL_VERSION,
+    tools: [timetableParseToolDefinition],
+    inputKinds: DEFAULT_AGENT_INPUT_KINDS,
+    maxInputBytes: DEFAULT_RESOURCE_LIMITS.maxInputBytes,
+    maxOutputBytes: DEFAULT_RESOURCE_LIMITS.maxOutputBytes,
+    maxRequestBytes: DEFAULT_AGENT_REQUEST_BYTES,
+    maxResponseBytes: DEFAULT_RESOURCE_LIMITS.maxOutputBytes,
+    maxProtocolLineBytes: defaultProtocolLineLimit(
+      DEFAULT_AGENT_REQUEST_BYTES,
+      DEFAULT_RESOURCE_LIMITS.maxOutputBytes,
+    ),
+    maxInputLines: DEFAULT_AGENT_MAX_INPUT_LINES,
+    timeoutMs: DEFAULT_RESOURCE_LIMITS.timeoutMs,
+    maxImagePixels: DEFAULT_RESOURCE_LIMITS.maxImagePixels,
+    maxPdfPages: DEFAULT_RESOURCE_LIMITS.maxPdfPages,
+    recovery: { allowed: false, requiresConsent: true },
+  });
 
 export function getTimetableAgentCapabilities(): TimetableAgentCapabilities {
   return timetableAgentCapabilities;
@@ -159,6 +258,7 @@ export type TimetableAgentInvocationContext = {
 
 export type TimetableAgentToolOptions = {
   readonly parser?: TimetableParser;
+  readonly inputKinds?: readonly AgentInputKind[];
   readonly limits?: Partial<ResourceLimits>;
   readonly maxRequestBytes?: number;
   readonly maxResponseBytes?: number;
@@ -167,6 +267,7 @@ export type TimetableAgentToolOptions = {
 };
 
 export type TimetableAgentTool = {
+  readonly capabilities: TimetableAgentCapabilities;
   readonly definition: TimetableAgentToolDefinition;
   invoke(
     request: unknown,
@@ -201,6 +302,35 @@ function defaultRequestLimit(limits: ResourceLimits): number {
   );
 }
 
+function defaultProtocolLineLimit(
+  maxRequestBytes: number,
+  maxResponseBytes: number,
+): number {
+  return Math.min(
+    Number.MAX_SAFE_INTEGER,
+    Math.max(maxRequestBytes, maxResponseBytes) + AGENT_PROTOCOL_ENVELOPE_BYTES,
+  );
+}
+
+function normalizedInputKinds(
+  options: TimetableAgentToolOptions,
+): readonly AgentInputKind[] {
+  const declared =
+    options.inputKinds ??
+    (options.parser === undefined ? DEFAULT_AGENT_INPUT_KINDS : []);
+  if (new Set(declared).size !== declared.length) {
+    throw new RangeError("Agent input kinds must not contain duplicates.");
+  }
+  for (const kind of declared) {
+    if (!AGENT_INPUT_KIND_ORDER.includes(kind)) {
+      throw new RangeError("Agent input kinds contain an unknown kind.");
+    }
+  }
+  return Object.freeze(
+    AGENT_INPUT_KIND_ORDER.filter((kind) => declared.includes(kind)),
+  );
+}
+
 function serializedByteLength(value: unknown): number | undefined {
   try {
     const serialized = JSON.stringify(value);
@@ -214,7 +344,7 @@ function serializedByteLength(value: unknown): number | undefined {
 
 function base64ByteLength(value: string): number | undefined {
   if (
-    value.length === 0 ||
+    value.length < 4 ||
     value.length % 4 !== 0 ||
     !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/u.test(
       value,
@@ -353,12 +483,11 @@ function parseOptions(
   request: TimetableAgentRequest,
   limits: ResourceLimits,
   context: TimetableAgentInvocationContext | undefined,
-  allowRemoteRecovery: boolean,
 ): ParseOptions {
   const supplied = request.options;
   const recovery = supplied?.recovery;
   const recoveryOptions =
-    recovery === undefined || !allowRemoteRecovery
+    recovery === undefined
       ? undefined
       : {
           enabled: recovery.enabled,
@@ -410,8 +539,9 @@ function isTimetableErrorLike(error: unknown): error is TimetableErrorLike {
   if (typeof error !== "object" || error === null || Array.isArray(error)) {
     return false;
   }
-  const code = (error as Record<string, unknown>)["code"];
-  const details = (error as Record<string, unknown>)["details"];
+  const record = error as Record<string, unknown>;
+  const code = record["code"];
+  const details = record["details"];
   return (
     typeof code === "string" &&
     TIMETABLE_ERROR_CODES.includes(code as TimetableErrorCode) &&
@@ -513,30 +643,167 @@ export function serializeTimetableAgentResponse(
   );
 }
 
-export const timetableAgentResponseSchema = z.union([
+const assessmentRuntimeSchema = z.discriminatedUnion("status", [
   z
-    .object({ ok: z.literal(true), result: timetableParseResultSchema })
+    .object({
+      status: z.literal("usable"),
+      reasons: z.array(z.never()).length(0),
+    })
     .strict(),
   z
     .object({
-      ok: z.literal(false),
-      error: z
-        .object({
-          code: z.enum(AGENT_ERROR_CODES),
-          message: z.string().min(1),
-          retryable: z.boolean(),
-          details: z
-            .record(z.string(), z.union([z.string(), z.number(), z.boolean()]))
-            .optional(),
-        })
-        .strict(),
+      status: z.literal("unusable"),
+      reasons: z
+        .array(z.enum(["NO_EVENTS", "ERROR_WARNINGS"]))
+        .min(1)
+        .max(2)
+        .refine((reasons) => new Set(reasons).size === reasons.length),
     })
     .strict(),
 ]);
 
+export const timetableAgentResponseSchema = z
+  .union([
+    z
+      .object({
+        ok: z.literal(true),
+        result: timetableParseResultSchema,
+        assessment: assessmentRuntimeSchema,
+      })
+      .strict(),
+    z
+      .object({
+        ok: z.literal(false),
+        error: z
+          .object({
+            code: z.enum(AGENT_ERROR_CODES),
+            message: z.string().min(1),
+            retryable: z.boolean(),
+            details: z
+              .record(
+                z.string(),
+                z.union([z.string(), z.number(), z.boolean()]),
+              )
+              .optional(),
+          })
+          .strict(),
+      })
+      .strict(),
+  ])
+  .superRefine((response, context) => {
+    if (!response.ok) return;
+    const expected = assessTimetableResult(response.result);
+    if (
+      response.assessment.status !== expected.status ||
+      response.assessment.reasons.length !== expected.reasons.length ||
+      response.assessment.reasons.some(
+        (reason, index) => reason !== expected.reasons[index],
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["assessment"],
+        message: "Assessment does not match the timetable result.",
+      });
+    }
+  });
+
+function descriptionFor(
+  inputKinds: readonly AgentInputKind[],
+  allowRemoteRecovery: boolean,
+): string {
+  const kinds = inputKinds.length === 0 ? "none" : inputKinds.join(", ");
+  const recovery = allowRemoteRecovery
+    ? "The host allows remote recovery only when the request sets enabled and consent to true. Provider health is checked during invocation."
+    : "Remote recovery is not enabled for this tool.";
+  return `Parse a timetable into validated events, warnings, conflicts, confidence, source metadata, and a typed usability assessment. Supported input kinds are ${kinds}. ${recovery} Remote URLs are never fetched.`;
+}
+
+function createDefinition(
+  inputKinds: readonly AgentInputKind[],
+  allowRemoteRecovery: boolean,
+): TimetableAgentToolDefinition {
+  const isDefault =
+    !allowRemoteRecovery &&
+    inputKinds.length === DEFAULT_AGENT_INPUT_KINDS.length &&
+    inputKinds.every(
+      (kind, index) => kind === DEFAULT_AGENT_INPUT_KINDS[index],
+    );
+  return isDefault
+    ? timetableParseToolDefinition
+    : deepFreeze({
+        name: TIMETABLE_AGENT_TOOL_NAME,
+        description: descriptionFor(inputKinds, allowRemoteRecovery),
+        inputSchema: createTimetableAgentInputJsonSchema({
+          inputKinds,
+          allowRemoteRecovery,
+        }),
+        outputSchema: timetableAgentOutputJsonSchema,
+      });
+}
+
+function createCapabilities(
+  definition: TimetableAgentToolDefinition,
+  inputKinds: readonly AgentInputKind[],
+  limits: ResourceLimits,
+  maxRequestBytes: number,
+  maxResponseBytes: number,
+  maxInputLines: number,
+  allowRemoteRecovery: boolean,
+): TimetableAgentCapabilities {
+  const isDefault =
+    definition === timetableParseToolDefinition &&
+    maxRequestBytes === DEFAULT_AGENT_REQUEST_BYTES &&
+    maxResponseBytes === limits.maxOutputBytes &&
+    maxInputLines === DEFAULT_AGENT_MAX_INPUT_LINES &&
+    limits.maxInputBytes === DEFAULT_RESOURCE_LIMITS.maxInputBytes &&
+    limits.maxOutputBytes === DEFAULT_RESOURCE_LIMITS.maxOutputBytes &&
+    limits.timeoutMs === DEFAULT_RESOURCE_LIMITS.timeoutMs &&
+    limits.maxImagePixels === DEFAULT_RESOURCE_LIMITS.maxImagePixels &&
+    limits.maxPdfPages === DEFAULT_RESOURCE_LIMITS.maxPdfPages &&
+    !allowRemoteRecovery;
+  return isDefault
+    ? timetableAgentCapabilities
+    : deepFreeze({
+        protocolVersion: AGENT_PROTOCOL_VERSION,
+        tools: [definition],
+        inputKinds,
+        maxInputBytes: limits.maxInputBytes,
+        maxOutputBytes: limits.maxOutputBytes,
+        maxRequestBytes,
+        maxResponseBytes,
+        maxProtocolLineBytes: defaultProtocolLineLimit(
+          maxRequestBytes,
+          maxResponseBytes,
+        ),
+        maxInputLines,
+        timeoutMs: limits.timeoutMs,
+        maxImagePixels: limits.maxImagePixels,
+        maxPdfPages: limits.maxPdfPages,
+        recovery: {
+          allowed: allowRemoteRecovery,
+          requiresConsent: true,
+        },
+      });
+}
+
 export function createTimetableAgentTool(
   options: TimetableAgentToolOptions = {},
 ): TimetableAgentTool {
+  if (options.allowRemoteRecovery === true && options.parser === undefined) {
+    throw new RangeError(
+      "Remote recovery requires a host-injected parser with a recovery provider.",
+    );
+  }
+  const inputKinds = normalizedInputKinds(options);
+  if (
+    options.parser === undefined &&
+    inputKinds.some((kind) => kind === "image" || kind === "pdf")
+  ) {
+    throw new RangeError(
+      "Binary input kinds require a host-injected parser with binary providers.",
+    );
+  }
   const parser = options.parser ?? createTimetableParser();
   const limits = resolveLimits(options.limits);
   const maxRequestBytes = positiveLimit(
@@ -552,9 +819,43 @@ export function createTimetableAgentTool(
     DEFAULT_AGENT_MAX_INPUT_LINES,
   );
   const allowRemoteRecovery = options.allowRemoteRecovery === true;
+  const definition =
+    options.parser === undefined &&
+    options.inputKinds === undefined &&
+    options.limits === undefined &&
+    options.maxRequestBytes === undefined &&
+    options.maxResponseBytes === undefined &&
+    options.maxInputLines === undefined &&
+    options.allowRemoteRecovery === undefined
+      ? timetableParseToolDefinition
+      : createDefinition(inputKinds, allowRemoteRecovery);
+  const capabilities =
+    definition === timetableParseToolDefinition &&
+    options.parser === undefined &&
+    options.inputKinds === undefined &&
+    options.limits === undefined &&
+    options.maxRequestBytes === undefined &&
+    options.maxResponseBytes === undefined &&
+    options.maxInputLines === undefined &&
+    options.allowRemoteRecovery === undefined
+      ? timetableAgentCapabilities
+      : createCapabilities(
+          definition,
+          inputKinds,
+          limits,
+          maxRequestBytes,
+          maxResponseBytes,
+          maxInputLines,
+          allowRemoteRecovery,
+        );
+  const requestSchema = createTimetableAgentRequestSchema(
+    inputKinds,
+    allowRemoteRecovery,
+  );
 
   return {
-    definition: timetableParseToolDefinition,
+    capabilities,
+    definition,
     async invoke(
       request: unknown,
       context?: TimetableAgentInvocationContext,
@@ -575,7 +876,7 @@ export function createTimetableAgentTool(
           { maxRequestBytes },
         );
       }
-      const parsed = timetableAgentRequestSchema.safeParse(request);
+      const parsed = requestSchema.safeParse(request);
       if (!parsed.success) {
         return failure(
           "INVALID_REQUEST",
@@ -602,9 +903,22 @@ export function createTimetableAgentTool(
         }
         const result = await parser.parse(
           input,
-          parseOptions(parsed.data, limits, context, allowRemoteRecovery),
+          parseOptions(parsed.data, limits, context),
         );
-        const response: TimetableAgentResponse = { ok: true, result };
+        const parsedResult = timetableParseResultSchema.safeParse(result);
+        if (!parsedResult.success) {
+          return failure(
+            "INTERNAL",
+            "The parser returned an invalid result.",
+            false,
+            { schema: "TimetableParseResult" },
+          );
+        }
+        const response: TimetableAgentResponse = {
+          ok: true,
+          result: parsedResult.data,
+          assessment: assessTimetableResult(parsedResult.data),
+        };
         if (!timetableAgentResponseSchema.safeParse(response).success) {
           return failure(
             "INTERNAL",
@@ -645,7 +959,14 @@ export type AgentProtocolResponse =
       readonly protocolVersion: typeof AGENT_PROTOCOL_VERSION;
       readonly id: AgentRequestId;
       readonly ok: true;
-      readonly result: TimetableParseResult | TimetableAgentCapabilities;
+      readonly result: TimetableAgentCapabilities;
+    }
+  | {
+      readonly protocolVersion: typeof AGENT_PROTOCOL_VERSION;
+      readonly id: AgentRequestId;
+      readonly ok: true;
+      readonly result: TimetableParseResult;
+      readonly assessment: ResultAssessment;
     }
   | {
       readonly protocolVersion: typeof AGENT_PROTOCOL_VERSION;
@@ -666,14 +987,17 @@ const agentRequestIdSchema = z
   .union([
     z
       .string()
-      .max(MAX_AGENT_REQUEST_ID_BYTES)
       .refine(
         (value) =>
           new TextEncoder().encode(value).byteLength <=
           MAX_AGENT_REQUEST_ID_BYTES,
         { message: "Request ID exceeds the byte limit." },
       ),
-    z.number().finite(),
+    z
+      .number()
+      .refine((value) => Number.isSafeInteger(value) && !Object.is(value, -0), {
+        message: "Request ID must be a safe integer.",
+      }),
     z.null(),
   ])
   .optional();
@@ -729,7 +1053,13 @@ function requestId(value: unknown): AgentRequestId {
   ) {
     return id;
   }
-  if (typeof id === "number" && Number.isFinite(id)) return id;
+  if (
+    typeof id === "number" &&
+    Number.isSafeInteger(id) &&
+    !Object.is(id, -0)
+  ) {
+    return id;
+  }
   return null;
 }
 
@@ -741,35 +1071,86 @@ function serializeProtocolResponse(response: AgentProtocolResponse): string {
   return serialized;
 }
 
+class ProtocolOutputError extends Error {
+  override readonly name = "ProtocolOutputError";
+
+  constructor(override readonly cause: unknown) {
+    super("The protocol output sink failed.");
+  }
+}
+
+function protocolLineByteLength(serialized: string): number {
+  return new TextEncoder().encode(`${serialized}\n`).byteLength;
+}
+
+function emitProtocolOutput(
+  io: TimetableAgentProtocolIO,
+  serialized: string,
+): void {
+  try {
+    io.output(`${serialized}\n`);
+  } catch (error) {
+    throw new ProtocolOutputError(error);
+  }
+}
+
+function validateMinimumProtocolLineBytes(): void {
+  const fallback = serializeProtocolResponse(
+    protocolFailure(
+      null,
+      "OUTPUT_TOO_LARGE",
+      "The protocol response exceeds the configured size limit.",
+    ),
+  );
+  if (protocolLineByteLength(fallback) > MIN_AGENT_PROTOCOL_LINE_BYTES) {
+    throw new RangeError(
+      "The minimum protocol line limit is too small for an error response.",
+    );
+  }
+}
+
+validateMinimumProtocolLineBytes();
+
 function writeProtocolResponse(
   io: TimetableAgentProtocolIO,
   response: AgentProtocolResponse,
   maxLineBytes: number,
 ): void {
   const serialized = serializeProtocolResponse(response);
-  if (new TextEncoder().encode(serialized).byteLength <= maxLineBytes) {
-    io.output(`${serialized}\n`);
+  if (protocolLineByteLength(serialized) <= maxLineBytes) {
+    emitProtocolOutput(io, serialized);
     return;
   }
-  const fallback = serializeProtocolResponse(
+  const fallback = protocolFailure(
+    response.id,
+    "OUTPUT_TOO_LARGE",
+    "The protocol response exceeds the configured size limit.",
+  );
+  const fallbackSerialized = serializeProtocolResponse(fallback);
+  if (protocolLineByteLength(fallbackSerialized) <= maxLineBytes) {
+    emitProtocolOutput(io, fallbackSerialized);
+    return;
+  }
+  const nullFallbackSerialized = serializeProtocolResponse(
     protocolFailure(
-      response.id,
+      null,
       "OUTPUT_TOO_LARGE",
       "The protocol response exceeds the configured size limit.",
     ),
   );
-  if (new TextEncoder().encode(fallback).byteLength > maxLineBytes) {
+  if (protocolLineByteLength(nullFallbackSerialized) > maxLineBytes) {
     throw new RangeError(
       "The protocol line limit is too small for an error response.",
     );
   }
-  io.output(`${fallback}\n`);
+  emitProtocolOutput(io, nullFallbackSerialized);
 }
 
 async function handleProtocolLine(
   line: string,
   io: TimetableAgentProtocolIO,
   tool: TimetableAgentTool,
+  capabilities: TimetableAgentCapabilities,
   maxLineBytes: number,
 ): Promise<void> {
   if (line.trim().length === 0) return;
@@ -801,7 +1182,7 @@ async function handleProtocolLine(
         protocolVersion: AGENT_PROTOCOL_VERSION,
         id,
         ok: true,
-        result: getTimetableAgentCapabilities(),
+        result: capabilities,
       },
       maxLineBytes,
     );
@@ -823,6 +1204,7 @@ async function handleProtocolLine(
           id,
           ok: true,
           result: result.result,
+          assessment: result.assessment,
         }
       : {
           protocolVersion: AGENT_PROTOCOL_VERSION,
@@ -838,6 +1220,7 @@ async function handleProtocolBytes(
   bytes: Uint8Array,
   io: TimetableAgentProtocolIO,
   tool: TimetableAgentTool,
+  capabilities: TimetableAgentCapabilities,
   maxLineBytes: number,
 ): Promise<void> {
   const lineBytes =
@@ -855,7 +1238,16 @@ async function handleProtocolBytes(
     );
     return;
   }
-  await handleProtocolLine(line, io, tool, maxLineBytes);
+  await handleProtocolLine(line, io, tool, capabilities, maxLineBytes);
+}
+
+function effectiveProtocolCapabilities(
+  capabilities: TimetableAgentCapabilities,
+  maxProtocolLineBytes: number,
+): TimetableAgentCapabilities {
+  return capabilities.maxProtocolLineBytes === maxProtocolLineBytes
+    ? capabilities
+    : deepFreeze({ ...capabilities, maxProtocolLineBytes });
 }
 
 export async function runTimetableAgentProtocol(
@@ -864,13 +1256,17 @@ export async function runTimetableAgentProtocol(
   const tool = io.tool ?? createTimetableAgentTool();
   const maxLineBytes = positiveLimit(
     io.maxLineBytes,
-    maxRequestLimitForProtocol(),
+    tool.capabilities.maxProtocolLineBytes,
   );
   if (maxLineBytes < MIN_AGENT_PROTOCOL_LINE_BYTES) {
     throw new RangeError(
       `The protocol line limit must be at least ${MIN_AGENT_PROTOCOL_LINE_BYTES} bytes.`,
     );
   }
+  const capabilities = effectiveProtocolCapabilities(
+    tool.capabilities,
+    maxLineBytes,
+  );
   const encoder = new TextEncoder();
   let lineBuffer: Uint8Array | undefined;
   let lineLength = 0;
@@ -906,8 +1302,11 @@ export async function runTimetableAgentProtocol(
     lineLength = required;
   };
 
-  const flushLine = async (): Promise<void> => {
+  const flushLine = async (terminated: boolean): Promise<void> => {
     try {
+      if (!oversized && terminated && lineLength >= maxLineBytes) {
+        oversized = true;
+      }
       if (oversized) {
         writeProtocolResponse(
           io,
@@ -922,9 +1321,17 @@ export async function runTimetableAgentProtocol(
           lineBuffer?.subarray(0, lineLength) ?? new Uint8Array(),
           io,
           tool,
+          capabilities,
           maxLineBytes,
         );
       }
+    } catch (error) {
+      if (error instanceof ProtocolOutputError) throw error;
+      writeProtocolResponse(
+        io,
+        protocolFailure(null, "INTERNAL", "The protocol line failed."),
+        maxLineBytes,
+      );
     } finally {
       resetLine();
     }
@@ -935,7 +1342,7 @@ export async function runTimetableAgentProtocol(
     for (let index = 0; index < chunk.length; index += 1) {
       if (chunk[index] !== 0x0a) continue;
       appendLinePart(chunk.subarray(start, index));
-      await flushLine();
+      await flushLine(true);
       start = index + 1;
     }
     appendLinePart(chunk.subarray(start));
@@ -947,8 +1354,9 @@ export async function runTimetableAgentProtocol(
         typeof chunk === "string" ? encoder.encode(chunk) : chunk,
       );
     }
-    if (oversized || lineLength > 0) await flushLine();
-  } catch {
+    if (oversized || lineLength > 0) await flushLine(false);
+  } catch (error) {
+    if (error instanceof ProtocolOutputError) throw error.cause;
     writeProtocolResponse(
       io,
       protocolFailure(
@@ -959,10 +1367,6 @@ export async function runTimetableAgentProtocol(
       maxLineBytes,
     );
   }
-}
-
-function maxRequestLimitForProtocol(): number {
-  return DEFAULT_AGENT_REQUEST_BYTES;
 }
 
 export {

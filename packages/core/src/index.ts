@@ -5,6 +5,7 @@ export {
 } from "./conflicts.js";
 export type { ConflictDetectionResult } from "./conflicts.js";
 export {
+  OptionsValidationError,
   ProviderError,
   SchemaValidationError,
   TimetableError,
@@ -12,11 +13,34 @@ export {
 export type { ProviderFailureCode, TimetableErrorCode } from "./errors.js";
 export { timetableResultJsonSchema } from "./schema/json-schema.js";
 export {
+  EventCorrectionSchema,
+  ExtractionArtifactSchema,
   FieldValueSchema,
+  ParseOptionsSchema,
+  RecoveryRequestSchema,
+  RecoveryResponseSchema,
+  ResourceLimitsOverridesSchema,
+  ResourceLimitsSchema,
   TimetableEventSchema,
   TimetableInputSchema,
   TimetableParseResultSchema,
+  extractionArtifactSchema,
   fieldValueSchema,
+  fieldEvidenceSchema,
+  eventCorrectionSchema,
+  parseOptionsSchema,
+  recoveryPatchSchema,
+  recoveryRequestSchema,
+  recoveryResponseSchema,
+  resourceLimitsOverridesSchema,
+  resourceLimitsSchema,
+  scheduleSchema,
+  sourceDescriptorSchema,
+  sourceLocationSchema,
+  textDocumentSchema,
+  textLineSchema,
+  textPageSchema,
+  termRangeSchema,
   timetableEventSchema,
   timetableInputSchema,
   timetableParseResultSchema,
@@ -43,10 +67,19 @@ export {
   resolveLimits,
 } from "./providers.js";
 export { createTimetableParser, parseTimetable } from "./pipeline.js";
+export {
+  applyEventCorrection,
+  assessTimetableResult,
+  warningForEventField,
+  warningsForEvent,
+  warningsForResult,
+} from "./result.js";
 export { validateTimetable } from "./validation.js";
 export type {
   ConflictCode,
+  EventCorrection,
   EventField,
+  EventFieldValueMap,
   EventId,
   EventSchedule,
   ExtractionArtifact,
@@ -72,6 +105,9 @@ export type {
   RecoveryRequest,
   RecoveryResponse,
   ResourceLimits,
+  ResourceLimitsOverrides,
+  ResultAssessment,
+  ResultAssessmentReason,
   ScheduleConflict,
   SchemaVersion,
   SourceDescriptor,

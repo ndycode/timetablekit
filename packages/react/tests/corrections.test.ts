@@ -1,4 +1,10 @@
 import { describe, expect, it } from "vitest";
+import {
+  applyEventCorrection as coreApplyEventCorrection,
+  warningForEventField as coreWarningForEventField,
+  warningsForEvent as coreWarningsForEvent,
+  warningsForResult as coreWarningsForResult,
+} from "@ndycode/timetablekit";
 import type {
   TimetableEvent,
   TimetableParseResult,
@@ -44,6 +50,14 @@ function resultWith(
 }
 
 describe("TimetableKit React corrections", () => {
+  it("re-exports core result helpers directly", async () => {
+    const react = await import("../src/index.js");
+    expect(react.applyEventCorrection).toBe(coreApplyEventCorrection);
+    expect(react.warningForEventField).toBe(coreWarningForEventField);
+    expect(react.warningsForEvent).toBe(coreWarningsForEvent);
+    expect(react.warningsForResult).toBe(coreWarningsForResult);
+  });
+
   it("updates a field and clears its resolved validation warning", () => {
     const invalidEvent = { ...event, title: "   " };
     const result = resultWith(invalidEvent, [

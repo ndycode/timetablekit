@@ -82,6 +82,21 @@ describe("timetablekit CLI", () => {
     expect(captured.output.stderr).toContain("invalid");
   });
 
+  it("rejects a result with no events using the shared assessment", async () => {
+    const directory = await temporaryDirectory();
+    const inputPath = join(directory, "empty.txt");
+    await writeFile(inputPath, "", "utf8");
+    const captured = capture(directory);
+
+    const exitCode = await runCli(["parse", inputPath], captured.io);
+
+    expect(exitCode).toBe(1);
+    expect(captured.output.stdout).toBe("");
+    expect(captured.output.stderr).toContain(
+      "No timetable events were recognized in the input.",
+    );
+  });
+
   it("selects JSON, CSV, and ICS output files", async () => {
     const directory = await temporaryDirectory();
     const inputPath = join(directory, "exam.csv");
@@ -175,12 +190,46 @@ describe("timetablekit CLI", () => {
     expect(responses[0]).toMatchObject({
       id: "capabilities",
       ok: true,
-      result: { tools: [{ name: "timetablekit.parse" }] },
+      result: {
+        inputKinds: ["text", "csv"],
+        recovery: { allowed: false },
+        tools: [{ name: "timetablekit.parse" }],
+      },
     });
     expect(responses[1]).toMatchObject({
       id: "parse",
       ok: true,
       result: { events: [{ title: "CLI Agent" }] },
+      assessment: { status: "usable", reasons: [] },
     });
+  });
+
+  it("parses CSV stdin when --input-kind csv is explicit", async () => {
+    const captured = capture(process.cwd());
+    const exitCode = await runCli(["parse", "-", "--input-kind", "csv"], {
+      ...captured.io,
+      stdin: (async function* () {
+        yield "title,date,start,end\nCSV Agent,2026-10-12,09:00,10:30\n";
+      })(),
+    });
+
+    expect(exitCode).toBe(0);
+    expect(captured.output.stderr).toBe("");
+    expect(JSON.parse(captured.output.stdout)).toMatchObject({
+      source: { kind: "csv" },
+      events: [{ title: "CSV Agent" }],
+    });
+  });
+
+  it("documents the stdin default and explicit input-kind override in help", async () => {
+    const captured = capture(process.cwd());
+    const exitCode = await runCli(["--help"], captured.io);
+
+    expect(exitCode).toBe(0);
+    expect(captured.output.stderr).toBe("");
+    expect(captured.output.stdout).toContain(
+      "--input-kind <kind>     Input kind: text or csv.",
+    );
+    expect(captured.output.stdout).toContain("stdin is text");
   });
 });

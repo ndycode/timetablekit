@@ -52,7 +52,7 @@ Yes. TimetableKit is released under the MIT License and the project will keep th
 
 ### 11. Is the project hosted on or intended to be hosted on Vercel and will it remain there?
 
-Yes. The public playground, documentation, serverless validation route, and preview deployments are hosted on Vercel.
+Yes. The public playground, documentation, versioned schema routes, and preview deployments are hosted on Vercel.
 
 ### 12. Vercel Team ID
 
@@ -108,11 +108,11 @@ TimetableKit is released under the MIT License. Its public repository includes a
 
 ## Why Vercel
 
-Vercel provides the public surface for the browser playground, documentation, serverless validation route, and preview deployments. Preview deployments make parser and UI changes reviewable in a real environment. The official Vercel Open Source Program page was checked on 2026-09-01 and states that the Summer cohort is open until September 13, 2026. It describes $3,600 in Vercel platform credits over 3 years for selected projects. This project does not claim selection.
+Vercel provides the public surface for the browser playground, documentation, versioned agent and result schemas, and preview deployments. Preview deployments make parser and UI changes reviewable in a real environment. The official Vercel Open Source Program page was checked on 2026-09-01 and states that the Summer cohort is open until September 13, 2026. It describes $3,600 in Vercel platform credits over 3 years for selected projects. This project does not claim selection.
 
 ## Credit use
 
-If selected, credits will be used only for the public TimetableKit project. Proposed uses are the Vercel-hosted playground, documentation, preview deployments, the bounded parse route, public examples, bandwidth, and privacy-safe aggregate observability. Credits will not be used for MySched production traffic, private commercial workloads, unrelated repositories, or provider charges outside the program.
+If selected, credits will be used only for the public TimetableKit project. Proposed uses are the Vercel-hosted playground, documentation, preview deployments, public schema routes, examples, bandwidth, and privacy-safe aggregate observability. Credits will not be used for MySched production traffic, private commercial workloads, unrelated repositories, or provider charges outside the program.
 
 ## Maintenance commitment
 

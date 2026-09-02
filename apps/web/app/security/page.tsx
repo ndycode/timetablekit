@@ -23,9 +23,10 @@ export default function SecurityPage() {
           <p>
             The agent package uses JSON requests and responses. It bounds
             request and response bytes, checks binary size before base64
-            decoding, bounds JSONL lines, and limits request IDs to 256 UTF-8
-            bytes. Malformed lines return structured errors and do not stop the
-            stream. Agent mode does not read paths or fetch URLs.
+            decoding, and bounds JSONL lines. A request ID can be null, a safe
+            integer, or a string of up to 256 UTF-8 bytes. Malformed lines
+            return structured errors and do not stop the stream. Agent mode does
+            not read paths or fetch URLs.
           </p>
         </section>
         <section>

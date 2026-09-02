@@ -27,6 +27,11 @@ The optional `@ndycode/timetablekit-agent` package exposes the same parser as a
 JSON-only tool contract. It includes capability discovery, structured errors,
 bounded binary input, and a JSONL process transport through `timetablekit agent`.
 
+The ordered package registry at
+[`config/public-packages.json`](config/public-packages.json) drives local
+metadata checks, dry-pack enumeration, and the release workflow. It does not
+assert npm publication or deployment status.
+
 ## Public surfaces
 
 - [Production playground](https://timetablekit.vercel.app/)
@@ -54,7 +59,7 @@ pnpm install
 pnpm build
 ```
 
-Install the published package with:
+Install from npm only after checking the publication status in [the claims record](docs/claims.md):
 
 ```sh
 npm install @ndycode/timetablekit
@@ -65,6 +70,9 @@ npm install @ndycode/timetablekit
 - [`packages/core`](packages/core) owns schemas, parsing, validation, conflicts, confidence, and exporters.
 - [`packages/agent`](packages/agent) owns the framework-neutral agent tool contract and JSONL transport.
 - [`packages/react`](packages/react) owns reusable correction and preview components.
+- [`packages/provider-pdfjs/README.md`](packages/provider-pdfjs/README.md) documents the bounded PDF.js extraction and OCR handoff provider.
+- [`packages/provider-tesseract/README.md`](packages/provider-tesseract/README.md) documents the lazy browser OCR provider.
+- [`packages/provider-vercel-ai/README.md`](packages/provider-vercel-ai/README.md) documents the consented structured recovery provider.
 - [`apps/web`](apps/web) is the public playground and documentation site.
 - [`fixtures`](fixtures) contains synthetic, public regression inputs.
 - [`docs`](docs) contains architecture, privacy, testing, and release notes.

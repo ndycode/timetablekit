@@ -40,6 +40,7 @@ test("sample flow supports review, correction, and ICS export", async ({
 
   const titleInput = page.getByTestId(/event-title-/).first();
   await titleInput.fill("Edited fictional class");
+  await titleInput.blur();
   await expect(page.locator(".json-inspector pre")).toContainText(
     "Edited fictional class",
   );
@@ -70,6 +71,48 @@ test("paste parsing stays local and requires no account", async ({ page }) => {
   expect(await page.evaluate(() => window.localStorage.length)).toBe(0);
 });
 
+test("source tabs support roving keyboard navigation", async ({ page }) => {
+  await openReadyPlayground(page);
+
+  const sampleTab = page.getByTestId("source-tab-sample");
+  const pasteTab = page.getByTestId("source-tab-paste");
+  const uploadTab = page.getByTestId("source-tab-upload");
+
+  await expect(sampleTab).toHaveAttribute("tabindex", "0");
+  await expect(pasteTab).toHaveAttribute("tabindex", "-1");
+  await expect(uploadTab).toHaveAttribute("tabindex", "-1");
+
+  await sampleTab.focus();
+  await sampleTab.press("ArrowRight");
+  await expect(pasteTab).toBeFocused();
+  await expect(pasteTab).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("source-panel-paste")).toBeVisible();
+
+  await pasteTab.press("ArrowRight");
+  await expect(uploadTab).toBeFocused();
+  await expect(uploadTab).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("source-panel-upload")).toBeVisible();
+
+  await uploadTab.press("ArrowRight");
+  await expect(sampleTab).toBeFocused();
+  await expect(sampleTab).toHaveAttribute("aria-selected", "true");
+
+  await sampleTab.press("ArrowLeft");
+  await expect(uploadTab).toBeFocused();
+  await expect(uploadTab).toHaveAttribute("aria-selected", "true");
+
+  await uploadTab.press("Home");
+  await expect(sampleTab).toBeFocused();
+  await expect(sampleTab).toHaveAttribute("aria-selected", "true");
+
+  await sampleTab.press("End");
+  await expect(uploadTab).toBeFocused();
+  await expect(uploadTab).toHaveAttribute("aria-selected", "true");
+  await expect(sampleTab).toHaveAttribute("tabindex", "-1");
+  await expect(pasteTab).toHaveAttribute("tabindex", "-1");
+  await expect(uploadTab).toHaveAttribute("tabindex", "0");
+});
+
 test("correction changes recompute conflicts and expose recovery state", async ({
   page,
 }) => {
@@ -85,6 +128,10 @@ test("correction changes recompute conflicts and expose recovery state", async (
     .getByTestId(/event-endTime-/)
     .first()
     .fill("09:15");
+  await page
+    .getByTestId(/event-endTime-/)
+    .first()
+    .blur();
   await expect(page.getByText("Time conflict")).toHaveCount(0);
 
   const recoveryDataRequests: string[] = [];
@@ -110,6 +157,28 @@ test("correction changes recompute conflicts and expose recovery state", async (
   await expect(page.getByText("Recovery unavailable")).toBeVisible();
   await expect(page.getByText("Unclear time")).toBeVisible();
   expect(recoveryDataRequests).toEqual([]);
+});
+
+test("incomplete corrections stay editable without crashing", async ({
+  page,
+}) => {
+  await openReadyPlayground(page);
+  const titleInput = page.getByTestId(/event-title-/).first();
+  const originalTitle = await titleInput.inputValue();
+
+  await titleInput.fill("");
+  await titleInput.blur();
+  await expect(titleInput).toHaveValue("");
+  await expect(page.getByTestId("playground-events")).toBeVisible();
+  await expect(page.locator(".json-inspector pre")).toContainText(
+    originalTitle,
+  );
+
+  await titleInput.fill("Committed correction");
+  await titleInput.blur();
+  await expect(page.locator(".json-inspector pre")).toContainText(
+    "Committed correction",
+  );
 });
 
 test("public copy names the shipped agent contract", async ({ page }) => {
@@ -307,6 +376,9 @@ test("a slower file read cannot replace a newer file selection", async ({
     mimeType: "text/plain",
     buffer: Buffer.from("Old file; Monday; 09:00-10:00"),
   });
+  await expect(page.getByTestId("read-schedule")).toBeDisabled();
+  await expect(page.getByTestId("stop-reading")).toBeEnabled();
+  await expect(page.getByTestId("parse-status")).toHaveText("Checking file.");
   await fileInput.setInputFiles({
     name: "new.txt",
     mimeType: "text/plain",
@@ -339,30 +411,8 @@ test("OCR runtime assets stay on the app origin", async ({ page }) => {
   }
 });
 
-test("API validation, upload boundaries, and mobile keyboard flow work", async ({
-  page,
-}) => {
+test("upload boundaries and mobile keyboard flow work", async ({ page }) => {
   await page.goto("/");
-  const parsed = await page.request.post("/api/parse", {
-    data: { kind: "text", text: "Endpoint Check; Tuesday; 10:00-11:00" },
-  });
-  expect(parsed.status()).toBe(200);
-  await expect(parsed).toBeOK();
-  await expect((await parsed.json()).events).toHaveLength(1);
-
-  const invalidKind = await page.request.post("/api/parse", {
-    data: { kind: "remote", text: "ignored" },
-  });
-  expect(invalidKind.status()).toBe(400);
-  const oversized = await page.request.post("/api/parse", {
-    data: { text: "x".repeat(200_001) },
-  });
-  expect(oversized.status()).toBe(413);
-  const oversizedEnvelope = await page.request.post("/api/parse", {
-    data: { text: "ok", metadata: "x".repeat(260_000) },
-  });
-  expect(oversizedEnvelope.status()).toBe(413);
-
   await page.getByRole("link", { name: "Try it" }).last().click();
   await page.getByRole("tab", { name: "Choose file" }).click();
   await page.locator("#timetable-file").setInputFiles({
@@ -446,4 +496,33 @@ test("the public JSON Schema endpoint serves the package schema", async ({
   expect(schemaBody.$defs.warning.properties.source).toEqual({
     $ref: "#/$defs/location",
   });
+});
+
+test("agent schema endpoints match package exports and parse route is gone", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const {
+    timetableAgentCapabilitiesJsonSchema,
+    timetableAgentInputJsonSchema,
+    timetableAgentOutputJsonSchema,
+  } = await import("@ndycode/timetablekit-agent");
+
+  const removedParseRoute = await page.request.get("/api/parse");
+  expect(removedParseRoute.status()).toBe(404);
+
+  for (const [path, expectedSchema] of [
+    ["/schema/agent-input.schema.json", timetableAgentInputJsonSchema],
+    ["/schema/agent-output.schema.json", timetableAgentOutputJsonSchema],
+    [
+      "/schema/agent-capabilities.schema.json",
+      timetableAgentCapabilitiesJsonSchema,
+    ],
+  ] as const) {
+    const schema = await page.request.get(path);
+    expect(schema).toBeOK();
+    expect(schema.headers()["cache-control"]).toContain("max-age=3600");
+    await expect(schema.json()).resolves.toEqual(expectedSchema);
+  }
 });

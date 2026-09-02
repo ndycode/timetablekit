@@ -62,6 +62,7 @@ export function usePlayground(): PlaygroundController {
   );
   const requestIdRef = useRef(0);
   const fileReadIdRef = useRef(0);
+  const fileReadActiveRef = useRef(false);
   const activeRequestRef = useRef<ActiveRequest | null>(null);
 
   const currentInput = useMemo(
@@ -171,14 +172,18 @@ export function usePlayground(): PlaygroundController {
 
   const stop = useCallback((): void => {
     const activeRequest = activeRequestRef.current;
-    if (activeRequest === null) return;
-    activeRequest.controller.abort();
+    const fileReadActive = fileReadActiveRef.current;
+    if (activeRequest === null && !fileReadActive) return;
+    if (fileReadActive) {
+      fileReadIdRef.current += 1;
+      fileReadActiveRef.current = false;
+    }
+    activeRequest?.controller.abort();
     activeRequestRef.current = null;
     dispatch({ type: "parse-stopped" });
   }, []);
 
   const reset = useCallback((): void => {
-    fileReadIdRef.current += 1;
     stop();
     const initialState = createInitialPlaygroundState();
     dispatch({ type: "reset" });
@@ -188,11 +193,14 @@ export function usePlayground(): PlaygroundController {
   const handleFile = useCallback(
     async (file: File | undefined): Promise<void> => {
       if (file === undefined) return;
-      const fileReadId = ++fileReadIdRef.current;
       stop();
+      const fileReadId = ++fileReadIdRef.current;
+      fileReadActiveRef.current = true;
+      dispatch({ type: "file-read-started" });
       try {
         const boundary = await fileToTimetableInput(file);
         if (fileReadIdRef.current !== fileReadId) return;
+        fileReadActiveRef.current = false;
         if (!boundary.ok) {
           dispatch({ type: "file-rejected", message: boundary.message });
           return;
@@ -204,6 +212,7 @@ export function usePlayground(): PlaygroundController {
         });
       } catch (caught) {
         if (fileReadIdRef.current !== fileReadId) return;
+        fileReadActiveRef.current = false;
         dispatch({
           type: "file-rejected",
           message: parseErrorMessage(caught),
@@ -215,7 +224,6 @@ export function usePlayground(): PlaygroundController {
 
   const selectTab = useCallback(
     (tab: PlaygroundTab): void => {
-      fileReadIdRef.current += 1;
       stop();
       dispatch({ type: "tab-changed", tab });
     },
@@ -223,7 +231,6 @@ export function usePlayground(): PlaygroundController {
   );
   const setPasteText = useCallback(
     (text: string): void => {
-      fileReadIdRef.current += 1;
       stop();
       dispatch({ type: "paste-text-changed", text });
     },

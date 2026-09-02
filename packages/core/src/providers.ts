@@ -1,6 +1,15 @@
-import { ProviderError, TimetableError } from "./errors.js";
+import {
+  OptionsValidationError,
+  ProviderError,
+  TimetableError,
+} from "./errors.js";
 import { sanitizeFilename, utf8ByteLength } from "./parser/text.js";
-import { TimetableInputSchema } from "./schema/runtime.js";
+import {
+  ExtractionArtifactSchema,
+  ResourceLimitsOverridesSchema,
+  ResourceLimitsSchema,
+  TimetableInputSchema,
+} from "./schema/runtime.js";
 import type {
   ExtractionArtifact,
   ExtractionProvider,
@@ -8,6 +17,8 @@ import type {
   ParseStage,
   ProviderContext,
   ResourceLimits,
+  ResourceLimitsOverrides,
+  SourceKind,
   SourceDescriptor,
   TextLine,
   TextPage,
@@ -23,23 +34,31 @@ export const DEFAULT_RESOURCE_LIMITS: ResourceLimits = {
 };
 
 export function resolveLimits(
-  overrides: Partial<ResourceLimits> | undefined,
+  overrides: ResourceLimitsOverrides | undefined,
 ): ResourceLimits {
+  const parsed = ResourceLimitsOverridesSchema.safeParse(
+    overrides === undefined ? {} : overrides,
+  );
+  if (!parsed.success) {
+    throw new OptionsValidationError("ResourceLimits");
+  }
+  const values = parsed.data;
   return {
     maxInputBytes:
-      overrides?.maxInputBytes ?? DEFAULT_RESOURCE_LIMITS.maxInputBytes,
+      values.maxInputBytes ?? DEFAULT_RESOURCE_LIMITS.maxInputBytes,
     maxImagePixels:
-      overrides?.maxImagePixels ?? DEFAULT_RESOURCE_LIMITS.maxImagePixels,
-    maxPdfPages: overrides?.maxPdfPages ?? DEFAULT_RESOURCE_LIMITS.maxPdfPages,
-    timeoutMs: overrides?.timeoutMs ?? DEFAULT_RESOURCE_LIMITS.timeoutMs,
+      values.maxImagePixels ?? DEFAULT_RESOURCE_LIMITS.maxImagePixels,
+    maxPdfPages: values.maxPdfPages ?? DEFAULT_RESOURCE_LIMITS.maxPdfPages,
+    timeoutMs: values.timeoutMs ?? DEFAULT_RESOURCE_LIMITS.timeoutMs,
     maxOutputBytes:
-      overrides?.maxOutputBytes ?? DEFAULT_RESOURCE_LIMITS.maxOutputBytes,
+      values.maxOutputBytes ?? DEFAULT_RESOURCE_LIMITS.maxOutputBytes,
   };
 }
 
 export function sourceDescriptor(input: TimetableInput): SourceDescriptor {
-  const filename = sanitizeFilename(input.filename);
-  switch (input.kind) {
+  const validated = TimetableInputSchema.parse(input);
+  const filename = sanitizeFilename(validated.filename);
+  switch (validated.kind) {
     case "text":
       return filename === undefined
         ? { kind: "text" }
@@ -50,29 +69,30 @@ export function sourceDescriptor(input: TimetableInput): SourceDescriptor {
         : { kind: "csv", filename };
     case "image":
       return filename === undefined
-        ? { kind: "image", mimeType: input.mimeType }
-        : { kind: "image", filename, mimeType: input.mimeType };
+        ? { kind: "image", mimeType: validated.mimeType }
+        : { kind: "image", filename, mimeType: validated.mimeType };
     case "pdf":
       return filename === undefined
-        ? { kind: "pdf", mimeType: input.mimeType }
-        : { kind: "pdf", filename, mimeType: input.mimeType };
+        ? { kind: "pdf", mimeType: validated.mimeType }
+        : { kind: "pdf", filename, mimeType: validated.mimeType };
     default: {
-      const exhaustive: never = input;
+      const exhaustive: never = validated;
       return exhaustive;
     }
   }
 }
 
 export function inputByteLength(input: TimetableInput): number {
-  switch (input.kind) {
+  const validated = TimetableInputSchema.parse(input);
+  switch (validated.kind) {
     case "text":
     case "csv":
-      return utf8ByteLength(input.text);
+      return utf8ByteLength(validated.text);
     case "image":
     case "pdf":
-      return input.bytes.byteLength;
+      return validated.bytes.byteLength;
     default: {
-      const exhaustive: never = input;
+      const exhaustive: never = validated;
       return exhaustive;
     }
   }
@@ -83,7 +103,11 @@ export function createProviderContext(
   limits: ResourceLimits,
   reportProgress: (progress: ParseProgress) => void,
 ): ProviderContext {
-  return { signal, limits, reportProgress };
+  const parsed = ResourceLimitsSchema.safeParse(limits);
+  if (!parsed.success) {
+    throw new OptionsValidationError("ResourceLimits");
+  }
+  return { signal, limits: parsed.data, reportProgress };
 }
 
 function checkAbort(signal: AbortSignal, providerId: string): void {
@@ -137,9 +161,9 @@ export function deterministicProvider(): ExtractionProvider {
       input: TimetableInput,
       context: ProviderContext,
     ): Promise<ExtractionArtifact> {
-      TimetableInputSchema.parse(input);
+      const validatedInput = TimetableInputSchema.parse(input);
       checkAbort(context.signal, "deterministic");
-      if (inputByteLength(input) > context.limits.maxInputBytes) {
+      if (inputByteLength(validatedInput) > context.limits.maxInputBytes) {
         throw new ProviderError(
           "deterministic",
           "RESOURCE_LIMIT",
@@ -152,14 +176,14 @@ export function deterministicProvider(): ExtractionProvider {
         total: 1,
         message: "Text extracted locally.",
       });
-      if (input.kind !== "text" && input.kind !== "csv") {
+      if (validatedInput.kind !== "text" && validatedInput.kind !== "csv") {
         throw new ProviderError(
           "deterministic",
           "UNSUPPORTED_INPUT",
           "Provider does not support this source.",
         );
       }
-      return deterministicDocument(input);
+      return deterministicDocument(validatedInput);
     },
   };
 }
@@ -167,42 +191,36 @@ export function deterministicProvider(): ExtractionProvider {
 export function isExtractionArtifact(
   value: unknown,
 ): value is ExtractionArtifact {
-  if (!isRecord(value)) {
-    return false;
-  }
-  const record = value;
-  const document = record["document"];
-  if (typeof record["providerId"] !== "string" || !isRecord(document)) {
-    return false;
-  }
-  const pages = document["pages"];
-  return (
-    isRecord(document["source"]) &&
-    Array.isArray(pages) &&
-    pages.every((page) => isTextPage(page)) &&
-    Array.isArray(record["warnings"])
-  );
+  return ExtractionArtifactSchema.safeParse(value).success;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+export function parseExtractionArtifact(
+  value: unknown,
+  expectedProviderId?: string,
+  expectedSourceKind?: SourceKind,
+): ExtractionArtifact | undefined {
+  const parsed = ExtractionArtifactSchema.safeParse(value);
+  if (!parsed.success) return undefined;
+  if (
+    (expectedProviderId !== undefined &&
+      parsed.data.providerId !== expectedProviderId) ||
+    (expectedSourceKind !== undefined &&
+      parsed.data.document.source.kind !== expectedSourceKind)
+  ) {
+    return undefined;
+  }
+  return parsed.data;
 }
 
-function isTextPage(value: unknown): value is TextPage {
-  if (!isRecord(value)) {
-    return false;
+export function extractionArtifactByteLength(
+  value: ExtractionArtifact,
+): number | undefined {
+  try {
+    const serialized = JSON.stringify(value);
+    return serialized === undefined ? undefined : utf8ByteLength(serialized);
+  } catch {
+    return undefined;
   }
-  const page = value;
-  const lines = page["lines"];
-  return (
-    Array.isArray(lines) &&
-    lines.every((line) => {
-      if (!isRecord(line)) {
-        return false;
-      }
-      return typeof line["text"] === "string" && isRecord(line["location"]);
-    })
-  );
 }
 
 export function providerWarning(

@@ -49,16 +49,74 @@ function dateIsInWeeklySchedule(
   );
 }
 
-function* datesForTerm(term: TermRange): Iterable<string> {
-  let current: string | undefined = term.startsOn;
-  while (current !== undefined && current <= term.endsOn) {
+const MAX_WEEKDAY_SEARCH_DAYS = 7;
+
+function nextDate(date: string, amount: number): string | undefined {
+  const next = addDays(date, amount);
+  if (next === undefined || next.length !== 10 || next <= date) {
+    return undefined;
+  }
+  return next;
+}
+
+function firstDateForWeekday(
+  startsOn: string,
+  endsOn: string,
+  weekday: Weekday,
+): string | undefined {
+  let current: string | undefined = startsOn;
+  for (
+    let offset = 0;
+    offset < MAX_WEEKDAY_SEARCH_DAYS && current !== undefined;
+    offset += 1
+  ) {
+    if (current > endsOn) return undefined;
+    if (weekdayForDate(current) === weekday) return current;
+    current = nextDate(current, 1);
+  }
+  return undefined;
+}
+
+function* datesForTerm(
+  term: TermRange,
+  weekdays: readonly Weekday[],
+): Iterable<string> {
+  const nextDates: string[] = [];
+  for (const weekday of new Set(weekdays)) {
+    const firstDate = firstDateForWeekday(term.startsOn, term.endsOn, weekday);
+    if (firstDate !== undefined) nextDates.push(firstDate);
+  }
+  while (nextDates.length > 0) {
+    let nextIndex = 0;
+    for (let index = 1; index < nextDates.length; index += 1) {
+      const candidate = nextDates[index];
+      const selected = nextDates[nextIndex];
+      if (
+        candidate !== undefined &&
+        selected !== undefined &&
+        candidate.localeCompare(selected) < 0
+      ) {
+        nextIndex = index;
+      }
+    }
+    const current = nextDates[nextIndex];
+    if (current === undefined || current > term.endsOn) return;
     yield current;
-    current = addDays(current, 1);
+    const next = nextDate(current, 7);
+    if (next === undefined || next > term.endsOn) {
+      nextDates.splice(nextIndex, 1);
+    } else {
+      nextDates[nextIndex] = next;
+    }
   }
 }
 
 function exactDates(schedule: EventSchedule): readonly string[] {
-  return schedule.kind === "exact" ? schedule.exactDates : [];
+  return schedule.kind === "exact"
+    ? [...new Set(schedule.exactDates)].sort((left, right) =>
+        left.localeCompare(right),
+      )
+    : [];
 }
 
 function latestDate(
@@ -81,6 +139,21 @@ function earliestDate(
   return defined[0];
 }
 
+function hasSharedWeekdayInRange(
+  weekdays: readonly Weekday[],
+  startsOn: string,
+  endsOn: string,
+): boolean {
+  let current: string | undefined = startsOn;
+  for (let offset = 0; offset < 7 && current !== undefined; offset += 1) {
+    if (current > endsOn) return false;
+    const weekday = weekdayForDate(current);
+    if (weekday !== undefined && weekdays.includes(weekday)) return true;
+    current = addDays(current, 1);
+  }
+  return false;
+}
+
 function* sharedOccurrences(
   left: TimetableEvent,
   right: TimetableEvent,
@@ -89,7 +162,12 @@ function* sharedOccurrences(
   if (left.schedule.kind === "exact" && right.schedule.kind === "exact") {
     const rightDates = new Set(exactDates(right.schedule));
     for (const date of exactDates(left.schedule)) {
-      if (rightDates.has(date)) yield { key: `d:${date}`, kind: "date", date };
+      if (
+        rightDates.has(date) &&
+        (term === undefined || (date >= term.startsOn && date <= term.endsOn))
+      ) {
+        yield { key: `d:${date}`, kind: "date", date };
+      }
     }
     return;
   }
@@ -121,8 +199,29 @@ function* sharedOccurrences(
     return;
   }
   if (term === undefined) {
-    for (const weekday of left.schedule.weekdays) {
-      if (scheduleHasWeekday(right.schedule, weekday)) {
+    const sharedWeekdays = left.schedule.weekdays.filter((weekday) =>
+      scheduleHasWeekday(right.schedule, weekday),
+    );
+    if (sharedWeekdays.length === 0) return;
+    const startsOn = latestDate([
+      left.schedule.startsOn,
+      right.schedule.startsOn,
+    ]);
+    const endsOn = earliestDate([left.schedule.endsOn, right.schedule.endsOn]);
+    if (
+      startsOn !== undefined &&
+      endsOn !== undefined &&
+      (startsOn > endsOn ||
+        !hasSharedWeekdayInRange(sharedWeekdays, startsOn, endsOn))
+    ) {
+      return;
+    }
+    for (const weekday of sharedWeekdays) {
+      if (
+        startsOn === undefined ||
+        endsOn === undefined ||
+        hasSharedWeekdayInRange([weekday], startsOn, endsOn)
+      ) {
         yield { key: `w:${weekday}`, kind: "weekday", weekday };
       }
     }
@@ -144,7 +243,7 @@ function* sharedOccurrences(
   ]);
   if (startsOn === undefined || endsOn === undefined || startsOn > endsOn)
     return;
-  for (const date of datesForTerm({ startsOn, endsOn })) {
+  for (const date of datesForTerm({ startsOn, endsOn }, sharedWeekdays)) {
     if (
       dateIsInWeeklySchedule(left.schedule, date) &&
       dateIsInWeeklySchedule(right.schedule, date)

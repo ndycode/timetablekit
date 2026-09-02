@@ -1,4 +1,4 @@
-import { TimetableParseResultSchema } from "../schema/runtime.js";
+import { parseExportResult } from "../schema/runtime.js";
 import type {
   EventSchedule,
   TimetableEvent,
@@ -82,7 +82,7 @@ export function escapeCsvField(value: string): string {
 }
 
 export function toCSV(result: TimetableParseResult): string {
-  const valid = TimetableParseResultSchema.parse(result);
+  const valid = parseExportResult(result);
   const rows = [CSV_HEADERS, ...valid.events.map(eventRow)];
   return `${rows.map((row) => row.map(csvSafe).join(",")).join("\r\n")}\r\n`;
 }

@@ -15,6 +15,8 @@ const sourceRoots = [
   "CHANGELOG.md",
   "docs",
   "application",
+  "examples",
+  "packages",
   ".github",
 ];
 const ignoredDirectories = new Set([

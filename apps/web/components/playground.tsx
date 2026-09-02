@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { toCSV, toICS, toJSON } from "@ndycode/timetablekit";
+import {
+  SchemaValidationError,
+  toCSV,
+  toICS,
+  toJSON,
+} from "@ndycode/timetablekit";
 import {
   applyEventCorrection,
   type PlaygroundCorrection,
@@ -65,7 +70,13 @@ export default function Playground() {
 
   function correctEvent(correction: PlaygroundCorrection): void {
     if (state.result === null) return;
-    updateResult(applyEventCorrection(state.result, correction));
+    try {
+      const nextResult = applyEventCorrection(state.result, correction);
+      if (nextResult !== state.result) updateResult(nextResult);
+    } catch (error) {
+      if (error instanceof SchemaValidationError) return;
+      throw error;
+    }
   }
 
   function exportFormat(format: ExportFormat): void {

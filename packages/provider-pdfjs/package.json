@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "description": "PDF.js extraction and bounded scanned-page OCR handoff for TimetableKit.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ndycode/timetablekit.git"
+  },
+  "homepage": "https://timetablekit.vercel.app/",
+  "bugs": {
+    "url": "https://github.com/ndycode/timetablekit/issues"
+  },
+  "engines": {
+    "node": ">=24 <27"
+  },
   "type": "module",
   "files": [
     "dist"
@@ -24,5 +35,8 @@
   "dependencies": {
     "@ndycode/timetablekit": "workspace:*",
     "pdfjs-dist": "^6.3.289"
+  },
+  "devDependencies": {
+    "@ndycode/timetablekit-provider-tesseract": "workspace:*"
   }
 }

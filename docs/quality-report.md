@@ -4,6 +4,11 @@ Evidence snapshot recorded on 2026-09-01. The fixed implementation commit is
 `fd742d2aaf6ee91a855fdfc60cd355247786499e`. The historical v0.1.0 release
 commit is `e3aeafc3ebf4e1d3ab9082446b3b42eda1f20b23`.
 
+This is a historical snapshot for those commits. It is not current release
+status. The `/api/parse` checks below describe the old deployment and that route
+has since been removed. See [the release checklist](release-checklist.md) for
+current local evidence.
+
 ## Local validation
 
 `mise exec node@24 -- pnpm validate` exited 0.

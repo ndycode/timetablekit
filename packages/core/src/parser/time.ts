@@ -36,7 +36,11 @@ type TimeToken = {
 };
 
 const TIME_TOKEN_PATTERN =
-  /\b(\d{1,2}(?::\d{2})?|\d{3,4})\s*([ap]\.?m\.?)?\b/giu;
+  /(?<![\p{L}\p{N}_])(\d{1,2}(?::\d{2})?|\d{3,4})\s*([ap]\.?m\.?)?(?![\p{L}\p{N}_])/giu;
+
+function isLikelyYear(value: string): boolean {
+  return /^(?:19|20)\d{2}$/u.test(value);
+}
 
 function normalizeMeridiem(value: string | undefined): "AM" | "PM" | undefined {
   if (value === undefined) {
@@ -88,7 +92,7 @@ function parseClockParts(
     return { kind: "invalid", reason: "range" };
   }
   const hasExplicit24HourShape =
-    hour > 12 || hourText.length === 2 || minuteText !== undefined;
+    hour > 12 || hourText.length >= 2 || minuteText !== undefined;
   return {
     kind: "ok",
     time: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
@@ -114,21 +118,21 @@ export function parseTime(
 
 function extractTimeTokens(value: string): readonly TimeToken[] {
   const tokens: TimeToken[] = [];
-  const scrubbed = value.replace(
-    /\b(?:\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[/-]\d{1,2}[/-]\d{4})\b/gu,
-    (date) => " ".repeat(date.length),
-  );
+  const scrubbed = value
+    .replace(
+      /\b(?:\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[/-]\d{1,2}[/-]\d{4})\b/gu,
+      (date) => " ".repeat(date.length),
+    )
+    .replace(
+      /\b(?:academic\s+year|school\s+year|ay|sy|term|room|rm\.?|location|loc\.?|venue|course|subject|section)\s*(?:[:#-]\s*)?\d{1,4}\s*[-–—]\s*\d{1,4}\b/giu,
+      (metadata) => " ".repeat(metadata.length),
+    );
   let match = TIME_TOKEN_PATTERN.exec(scrubbed);
   while (match !== null) {
     const raw = match[0];
     const numeric = match[1];
     const meridiem = normalizeMeridiem(match[2]);
-    const compactIsTime =
-      numeric !== undefined && numeric.length > 2 && !numeric.includes(":")
-        ? Number(numeric.slice(0, numeric.length - 2)) <= 23 &&
-          Number(numeric.slice(-2)) <= 59
-        : true;
-    if (numeric !== undefined && compactIsTime && match.index !== undefined) {
+    if (numeric !== undefined && match.index !== undefined) {
       const token = {
         raw: numeric,
         index: match.index,
@@ -141,57 +145,107 @@ function extractTimeTokens(value: string): readonly TimeToken[] {
   return tokens;
 }
 
+function isRangeSeparator(value: string): boolean {
+  const separator = value.trim().toLocaleLowerCase();
+  return (
+    separator === "-" ||
+    separator === "–" ||
+    separator === "—" ||
+    separator === "to"
+  );
+}
+
+function isStandaloneToken(token: TimeToken): boolean {
+  if (token.meridiem === undefined && isLikelyYear(token.raw)) {
+    return false;
+  }
+  return (
+    token.meridiem !== undefined ||
+    token.raw.includes(":") ||
+    token.raw.length <= 2 ||
+    token.raw.length === 4
+  );
+}
+
+function isUnmarkedCompactToken(token: TimeToken): boolean {
+  return (
+    token.meridiem === undefined &&
+    !token.raw.includes(":") &&
+    token.raw.length >= 3
+  );
+}
+
+function invalidExtraToken(): TimeRangeParse {
+  return { kind: "invalid", reason: "format" };
+}
+
 export function parseTimeRange(value: string): TimeRangeParse {
   const tokens = extractTimeTokens(value);
-  const first = tokens[0];
-  if (first === undefined) {
-    return { kind: "none" };
+  let compactCandidate: TimeRangeParse | undefined;
+  for (let index = 0; index < tokens.length - 1; index += 1) {
+    const first = tokens[index];
+    const second = tokens[index + 1];
+    if (
+      first === undefined ||
+      second === undefined ||
+      !isRangeSeparator(value.slice(first.end, second.index))
+    ) {
+      continue;
+    }
+    const compactPair =
+      isUnmarkedCompactToken(first) && isUnmarkedCompactToken(second);
+    const firstParsed = parseTime(first.raw, first.meridiem ?? second.meridiem);
+    if (firstParsed.kind === "invalid") {
+      if (compactPair) continue;
+      return firstParsed;
+    }
+    const secondParsed = parseTime(
+      second.raw,
+      second.meridiem ?? first.meridiem,
+    );
+    if (secondParsed.kind === "invalid") {
+      if (compactPair) continue;
+      return secondParsed;
+    }
+    const third = tokens[index + 2];
+    if (
+      third !== undefined &&
+      isRangeSeparator(value.slice(second.end, third.index))
+    ) {
+      return invalidExtraToken();
+    }
+    const candidate: TimeRangeParse = {
+      kind: "ok",
+      startTime: firstParsed.time,
+      endTime: secondParsed.time,
+      ambiguous: firstParsed.ambiguous || secondParsed.ambiguous,
+      startIndex: first.index,
+      endIndex: second.index,
+      sourceEnd: second.end,
+    };
+    if (!compactPair) return candidate;
+    compactCandidate ??= candidate;
   }
-  const second = tokens[1];
-  const firstParsed = parseTime(first.raw, first.meridiem ?? second?.meridiem);
-  if (firstParsed.kind === "invalid") {
-    return firstParsed;
-  }
-  if (second === undefined) {
+
+  if (compactCandidate !== undefined) return compactCandidate;
+
+  for (const token of tokens) {
+    if (!isStandaloneToken(token)) {
+      continue;
+    }
+    const parsed = parseTime(token.raw, token.meridiem);
+    if (parsed.kind === "invalid") {
+      return parsed;
+    }
     return {
       kind: "missing-end",
-      startTime: firstParsed.time,
-      ambiguous: firstParsed.ambiguous,
-      startIndex: first.index,
-      sourceEnd: first.end,
+      startTime: parsed.time,
+      ambiguous: parsed.ambiguous,
+      startIndex: token.index,
+      sourceEnd: token.end,
     };
   }
-  const separator = value
-    .slice(first.end, second.index)
-    .trim()
-    .toLocaleLowerCase();
-  if (
-    separator !== "-" &&
-    separator !== "–" &&
-    separator !== "—" &&
-    separator !== "to"
-  ) {
-    return {
-      kind: "missing-end",
-      startTime: firstParsed.time,
-      ambiguous: firstParsed.ambiguous,
-      startIndex: first.index,
-      sourceEnd: first.end,
-    };
-  }
-  const secondParsed = parseTime(second.raw, second.meridiem ?? first.meridiem);
-  if (secondParsed.kind === "invalid") {
-    return secondParsed;
-  }
-  return {
-    kind: "ok",
-    startTime: firstParsed.time,
-    endTime: secondParsed.time,
-    ambiguous: firstParsed.ambiguous || secondParsed.ambiguous,
-    startIndex: first.index,
-    endIndex: second.index,
-    sourceEnd: second.end,
-  };
+  return { kind: "none" };
 }
 
 export function formatTime(

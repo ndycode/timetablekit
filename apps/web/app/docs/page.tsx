@@ -100,24 +100,35 @@ const response = await tool.invoke({
   input: { kind: "text", text: rawTimetable },
 })`}</pre>
             <p>
-              Text and CSV are sent as text. Images and PDFs use bounded base64.
-              The default tool handles text and CSV; a host must inject PDF or
-              OCR providers for binary input. Remote recovery is off unless the
-              host sets <code>allowRemoteRecovery: true</code> when constructing
-              the tool, injects a parser with a recovery provider, and the
-              request sets <code>options.recovery.enabled</code> and{" "}
+              Text and CSV are sent as text. The default tool handles those two
+              input kinds. Before a host can advertise or accept images or PDFs
+              as bounded base64, it must inject a suitable parser and declare
+              the supported <code>inputKinds</code>. Remote recovery is off
+              unless the host sets <code>allowRemoteRecovery: true</code> when
+              constructing the tool, injects a parser with a recovery provider,
+              and the request sets <code>options.recovery.enabled</code> and{" "}
               <code>options.recovery.consent</code> to true. Check{" "}
-              <code>response.ok</code> first. A successful invocation can still
-              return zero events or warnings with{" "}
-              <code>severity: &quot;error&quot;</code>. Treat either condition
-              as unusable and inspect <code>response.result.warnings</code>{" "}
-              before acting. On success, use the public{" "}
+              <code>response.ok</code> first. On success, check{" "}
+              <code>response.assessment.status</code> before you use the result.
+              An unusable assessment identifies no events or error warnings in{" "}
+              <code>response.assessment.reasons</code>. Inspect{" "}
+              <code>response.result.warnings</code> before you change a
+              calendar. Use the public{" "}
               <a href="/schema/timetable-result.schema.json">JSON Schema</a> to
               validate <code>response.result</code>. On failure, handle{" "}
               <code>response.error</code>. The agent package exports{" "}
               <code>timetableAgentOutputJsonSchema</code> for the full{" "}
-              <code>{"{ ok: true, result }"}</code> or{" "}
+              <code>{"{ ok: true, result, assessment }"}</code> or{" "}
               <code>{"{ ok: false, error }"}</code> wrapper.
+            </p>
+            <p>
+              Public agent contracts:{" "}
+              <a href="/schema/agent-input.schema.json">input schema</a>,{" "}
+              <a href="/schema/agent-output.schema.json">output schema</a>, and{" "}
+              <a href="/schema/agent-capabilities.schema.json">
+                capabilities schema
+              </a>
+              {"."}
             </p>
             <p>
               The <code>timetablekit agent</code> command uses JSONL. It reads

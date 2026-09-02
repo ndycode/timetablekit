@@ -1,6 +1,9 @@
-import type { TimetableInput } from "@ndycode/timetablekit";
+import {
+  DEFAULT_RESOURCE_LIMITS,
+  type TimetableInput,
+} from "@ndycode/timetablekit";
 
-export const MAX_INPUT_BYTES = 2_000_000;
+export const MAX_INPUT_BYTES = DEFAULT_RESOURCE_LIMITS.maxInputBytes;
 
 export type ImageDimensions = {
   readonly width: number;

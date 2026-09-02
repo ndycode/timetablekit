@@ -202,10 +202,44 @@ describe("provider boundaries", () => {
     expect(
       isExtractionArtifact({
         providerId: "x",
-        document: { source: {}, pages: [] },
+        document: { source: { kind: "text" }, pages: [] },
         warnings: [],
       }),
     ).toBe(true);
+    expect(
+      isExtractionArtifact({
+        providerId: "x",
+        document: {
+          source: { kind: "text" },
+          pages: [
+            {
+              pageNumber: 1,
+              lines: [
+                {
+                  text: "x",
+                  location: { line: 1, charStart: 1, charEnd: 0 },
+                },
+              ],
+            },
+          ],
+        },
+        warnings: [],
+      }),
+    ).toBe(false);
+    expect(
+      isExtractionArtifact({
+        providerId: "x",
+        document: { source: { kind: "text" }, pages: [] },
+        warnings: [
+          {
+            code: "NO_TEXT_FOUND",
+            severity: "warning",
+            message: "x",
+            source: { line: 0 },
+          },
+        ],
+      }),
+    ).toBe(false);
     expect(
       isExtractionArtifact({
         providerId: "x",
@@ -269,7 +303,7 @@ describe("recovery boundary", () => {
         {
           eventId: "evt-recovery",
           field: "notes",
-          value: ["one", "two"],
+          value: "one, two",
           confidence: 0.8,
         },
       ],
@@ -295,6 +329,18 @@ describe("recovery boundary", () => {
     ).toBe(false);
     expect(isRecoveryResponse({ patches: "not-an-array" })).toBe(false);
     expect(isRecoveryResponse({ patches: [null] })).toBe(false);
+    expect(
+      isRecoveryResponse({
+        patches: [
+          {
+            eventId: "x",
+            field: "notes",
+            value: ["not-text"],
+            confidence: 0.5,
+          },
+        ],
+      }),
+    ).toBe(false);
   });
 
   it("applies every supported field and counts invalid patches", () => {
@@ -456,6 +502,36 @@ describe("recovery boundary", () => {
     });
     expect(invalid).toMatchObject({ applied: 0, invalid: 11 });
   });
+
+  it("treats identical values and confidence as valid no-ops", () => {
+    const original = baseEvent();
+    const unchanged = applyRecoveryPatches([original], {
+      patches: [
+        {
+          eventId: original.id,
+          field: "title",
+          value: " Original Entry ",
+          confidence: 0.6,
+        },
+      ],
+    });
+    expect(unchanged).toMatchObject({ applied: 0, invalid: 0 });
+    expect(unchanged.appliedPatches).toEqual([]);
+    expect(unchanged.events).toEqual([original]);
+
+    const confidenceOnly = applyRecoveryPatches([original], {
+      patches: [
+        {
+          eventId: original.id,
+          field: "title",
+          value: "Original Entry",
+          confidence: 0.7,
+        },
+      ],
+    });
+    expect(confidenceOnly).toMatchObject({ applied: 1, invalid: 0 });
+    expect(confidenceOnly.events[0]).toMatchObject({ confidence: 0.7 });
+  });
 });
 
 describe("pipeline provider and recovery paths", () => {
@@ -530,6 +606,18 @@ describe("pipeline provider and recovery paths", () => {
       parse: { providersUsed: ["custom"] },
     });
 
+    const mismatched: ExtractionProvider = {
+      id: "mismatched",
+      supports: () => true,
+      extract: async () => textArtifact(input.text, "another-provider"),
+    };
+    const mismatchedResult = await createTimetableParser({
+      providers: [mismatched],
+    }).parse(input, options);
+    expect(mismatchedResult.warnings.map((warning) => warning.code)).toContain(
+      "PROVIDER_OUTPUT_INVALID",
+    );
+
     const empty: ExtractionProvider = {
       id: "empty",
       supports: () => true,
@@ -597,6 +685,52 @@ describe("pipeline provider and recovery paths", () => {
     expect(unsupportedResult.warnings.map((warning) => warning.code)).toContain(
       "UNSUPPORTED_PROVIDER",
     );
+  });
+
+  it("parses CSV from the selected provider artifact", async () => {
+    const input: TimetableInput = {
+      kind: "csv",
+      text: "title,days,start,end\nRaw,Monday,09:00,10:00",
+    };
+    const provided = "title,days,start,end\nProvided,Tuesday,11:00,12:00";
+    const provider: ExtractionProvider = {
+      id: "csv-transform",
+      supports: () => true,
+      extract: async () => ({
+        providerId: "csv-transform",
+        document: {
+          source: { kind: "csv" },
+          pages: [
+            {
+              pageNumber: 1,
+              lines: provided.split("\n").map((text, index) => ({
+                text,
+                location: {
+                  line: index + 1,
+                  charStart: 0,
+                  charEnd: text.length,
+                },
+              })),
+            },
+          ],
+        },
+        warnings: [],
+      }),
+    };
+
+    const result = await createTimetableParser({ providers: [provider] }).parse(
+      input,
+      options,
+    );
+
+    expect(result.events).toMatchObject([
+      {
+        title: "Provided",
+        schedule: { kind: "weekly", weekdays: ["TU"] },
+        startTime: "11:00",
+        endTime: "12:00",
+      },
+    ]);
   });
 
   it("supports consented recovery and safe recovery fallbacks", async () => {
@@ -714,6 +848,45 @@ describe("pipeline provider and recovery paths", () => {
         recoveryBase,
       ),
     ).rejects.toMatchObject({ code: "ABORTED" });
+  });
+
+  it("does not report recovery use for a valid no-op patch", async () => {
+    const input: TimetableInput = {
+      kind: "text",
+      text: "No-op Entry; Monday; 9-10",
+    };
+    const initial = await parseTimetable(input, options);
+    const eventId = initial.events[0]?.id;
+    expect(eventId).toBeDefined();
+    if (eventId === undefined) return;
+    const provider: RecoveryProvider = {
+      id: "no-op-recovery",
+      recover: async () => ({
+        patches: [
+          { eventId, field: "startTime", value: "09:00", confidence: 0 },
+        ],
+      }),
+    };
+    const result = await createTimetableParser({
+      recoveryProvider: provider,
+    }).parse(input, {
+      ...options,
+      recovery: { enabled: true, consent: true },
+    });
+    expect(result.parse.aiRecoveryUsed).toBe(false);
+    expect(result.parse.providersUsed).toEqual(["deterministic"]);
+    expect(
+      result.parse.stageReports.find((report) => report.stage === "recovery"),
+    ).toMatchObject({ providerId: "no-op-recovery", status: "completed" });
+    expect(
+      result.warnings.filter((warning) => warning.code === "AI_OUTPUT_INVALID"),
+    ).toHaveLength(0);
+    expect(
+      result.warnings.filter(
+        (warning) =>
+          warning.code === "AMBIGUOUS_TIME" && warning.field === "startTime",
+      ),
+    ).toHaveLength(1);
   });
 
   it("stops before extraction when the caller aborts", async () => {

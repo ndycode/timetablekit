@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateObject } from "ai";
+import { SchemaValidationError } from "@ndycode/timetablekit";
 import type {
   ParseProgress,
   ProviderContext,
@@ -178,6 +179,32 @@ describe("Vercel AI recovery provider contract", () => {
     expect(generateObjectMock).not.toHaveBeenCalled();
   });
 
+  it("returns a structured validation error for malformed direct input", async () => {
+    const provider = createVercelAIProvider({
+      model: "mock/model",
+      consent: true,
+    });
+    const malformedRequest: unknown = {
+      ...request,
+      unresolved: null,
+    };
+
+    const error = await provider
+      .recover(malformedRequest as RecoveryRequest, contextFor().context)
+      .then(
+        () => undefined,
+        (reason: unknown) => reason,
+      );
+
+    expect(error).toBeInstanceOf(SchemaValidationError);
+    expect(error).toMatchObject({
+      name: "SchemaValidationError",
+      code: "INVALID_INPUT",
+      schemaName: "RecoveryRequest",
+    });
+    expect(generateObjectMock).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed model output", async () => {
     mockGenerated({
       patches: [
@@ -250,5 +277,57 @@ describe("Vercel AI recovery provider contract", () => {
     ).rejects.toMatchObject({
       providerCode: "RESOURCE_LIMIT",
     });
+  });
+
+  it("validates provider limits before making a request", () => {
+    expect(() =>
+      createVercelAIProvider({
+        model: "mock/model",
+        consent: true,
+        maxFields: 0,
+      }),
+    ).toThrow(RangeError);
+    expect(() =>
+      createVercelAIProvider({
+        model: "mock/model",
+        consent: true,
+        maxRequestBytes: Number.POSITIVE_INFINITY,
+      }),
+    ).toThrow(RangeError);
+    expect(() =>
+      createVercelAIProvider({
+        model: "mock/model",
+        consent: true,
+        timeoutMs: -1,
+      }),
+    ).toThrow(RangeError);
+  });
+
+  it("rejects timeout values above the Node timer maximum", () => {
+    expect(() =>
+      createVercelAIProvider({
+        model: "mock/model",
+        consent: true,
+        timeoutMs: 2_147_483_648,
+      }),
+    ).toThrow(/timeoutMs must not exceed 2147483647/);
+  });
+
+  it("classifies its bounded timeout separately from caller abort", async () => {
+    generateObjectMock.mockReturnValue(
+      new Promise<Awaited<ReturnType<typeof generateObject>>>(() => undefined),
+    );
+    const provider = createVercelAIProvider({
+      model: "mock/model",
+      consent: true,
+      timeoutMs: 1_000,
+    });
+
+    await expect(
+      provider.recover(
+        request,
+        contextFor({ limits: { timeoutMs: 10 } }).context,
+      ),
+    ).rejects.toMatchObject({ providerCode: "TIMEOUT" });
   });
 });

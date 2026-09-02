@@ -5,11 +5,13 @@ on:
     paths:
       - fixtures/**
       - packages/core/**
+      - scripts/generate-fixtures.mjs
       - scripts/validate-fixtures.mjs
   pull_request:
     paths:
       - fixtures/**
       - packages/core/**
+      - scripts/generate-fixtures.mjs
       - scripts/validate-fixtures.mjs
   workflow_dispatch:
 

@@ -5,11 +5,7 @@
     "outDir": "dist",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "baseUrl": ".",
-    "paths": {
-      "@ndycode/timetablekit": ["src/core-compat.d.ts"]
-    }
+    "noUnusedParameters": true
   },
   "include": ["src"],
   "exclude": ["dist", "node_modules"]
