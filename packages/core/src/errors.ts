@@ -35,10 +35,21 @@ export class TimetableError extends Error {
 export class SchemaValidationError extends TimetableError {
   override readonly name: string = "SchemaValidationError";
 
-  constructor(readonly schemaName: string) {
-    super("INVALID_INPUT", `Value does not match ${schemaName}.`, {
+  constructor(
+    readonly schemaName: string,
+    code: "INVALID_INPUT" | "INVALID_OPTIONS" = "INVALID_INPUT",
+  ) {
+    super(code, `Value does not match ${schemaName}.`, {
       schema: schemaName,
     });
+  }
+}
+
+export class OptionsValidationError extends SchemaValidationError {
+  override readonly name: string = "OptionsValidationError";
+
+  constructor(schemaName = "ParseOptions") {
+    super(schemaName, "INVALID_OPTIONS");
   }
 }
 

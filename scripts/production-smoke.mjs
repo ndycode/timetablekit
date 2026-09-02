@@ -45,20 +45,24 @@ if (typeof rawBaseUrl !== "string" || rawBaseUrl.length === 0) {
       throw new Error("The health response is not healthy.");
     }
 
-    const parse = await fetch(new URL("/api/parse", baseUrl), {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        kind: "text",
-        text: "Production Smoke; Tuesday; 10:00-11:00",
-        timezone: "UTC",
-      }),
-    });
-    if (!parse.ok) throw new Error(`/api/parse returned HTTP ${parse.status}`);
-    const parsedBody = await parse.json();
-    if (!Array.isArray(parsedBody.events) || parsedBody.events.length !== 1) {
+    const schemas = [
+      ["/schema/timetable-result.schema.json", "TimetableParseResult"],
+      ["/schema/agent-input.schema.json", "TimetableAgentRequest"],
+      ["/schema/agent-output.schema.json", "TimetableAgentResponse"],
+      ["/schema/agent-capabilities.schema.json", "TimetableAgentCapabilities"],
+    ];
+    for (const [pathname, title] of schemas) {
+      const response = await get(pathname);
+      const schema = await response.json();
+      if (schema.title !== title || typeof schema.$id !== "string") {
+        throw new Error(`${pathname} did not return the expected schema.`);
+      }
+    }
+
+    const removedParseRoute = await fetch(new URL("/api/parse", baseUrl));
+    if (removedParseRoute.status !== 404) {
       throw new Error(
-        "The production parser did not return one synthetic event.",
+        `/api/parse should be absent but returned HTTP ${removedParseRoute.status}`,
       );
     }
 

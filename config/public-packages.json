@@ -1,0 +1,46 @@
+{
+  "version": "0.1.0",
+  "metadata": {
+    "engines": {
+      "node": ">=24 <27"
+    },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/ndycode/timetablekit.git"
+    },
+    "homepage": "https://timetablekit.vercel.app/",
+    "bugs": {
+      "url": "https://github.com/ndycode/timetablekit/issues"
+    }
+  },
+  "packages": [
+    {
+      "name": "@ndycode/timetablekit",
+      "path": "packages/core"
+    },
+    {
+      "name": "@ndycode/timetablekit-provider-pdfjs",
+      "path": "packages/provider-pdfjs"
+    },
+    {
+      "name": "@ndycode/timetablekit-provider-tesseract",
+      "path": "packages/provider-tesseract"
+    },
+    {
+      "name": "@ndycode/timetablekit-provider-vercel-ai",
+      "path": "packages/provider-vercel-ai"
+    },
+    {
+      "name": "@ndycode/timetablekit-react",
+      "path": "packages/react"
+    },
+    {
+      "name": "@ndycode/timetablekit-agent",
+      "path": "packages/agent"
+    },
+    {
+      "name": "@ndycode/timetablekit-cli",
+      "path": "packages/cli"
+    }
+  ]
+}

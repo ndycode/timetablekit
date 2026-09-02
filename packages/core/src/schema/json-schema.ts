@@ -49,6 +49,55 @@ export const timetableResultJsonSchema = {
     date: { type: "string", pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
     time: { type: "string", pattern: "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$" },
     weekday: { enum: ["MO", "TU", "WE", "TH", "FR", "SA", "SU"] },
+    eventField: {
+      enum: [
+        "title",
+        "code",
+        "eventType",
+        "schedule",
+        "startTime",
+        "endTime",
+        "timezone",
+        "location",
+        "instructor",
+        "notes",
+      ],
+    },
+    warningCode: {
+      enum: [
+        "UNSUPPORTED_FILE_TYPE",
+        "UNRECOGNIZED_CSV",
+        "FILE_TOO_LARGE",
+        "TOO_MANY_PAGES",
+        "NO_TEXT_FOUND",
+        "NO_EVENTS_FOUND",
+        "LOW_CONFIDENCE",
+        "UNKNOWN_DAY_LABEL",
+        "UNKNOWN_LOCALE",
+        "AMBIGUOUS_TIME",
+        "MISSING_TITLE",
+        "MISSING_START_TIME",
+        "MISSING_END_TIME",
+        "INVALID_TIME_RANGE",
+        "INVALID_DATE",
+        "INVALID_TERM_RANGE",
+        "INVALID_TIMEZONE",
+        "DUPLICATE_EVENT",
+        "POSSIBLE_DUPLICATE",
+        "SCHEDULE_CONFLICT",
+        "CONFLICT_LIMIT",
+        "OUTSIDE_TERM_RANGE",
+        "OCR_PARTIAL",
+        "UNSUPPORTED_PROVIDER",
+        "PROVIDER_FAILED",
+        "PROVIDER_ABORTED",
+        "PROVIDER_TIMEOUT",
+        "PROVIDER_OUTPUT_INVALID",
+        "AI_PROVIDER_UNAVAILABLE",
+        "AI_RECOVERY_SKIPPED",
+        "AI_OUTPUT_INVALID",
+      ],
+    },
     schedule: {
       oneOf: [
         {
@@ -141,13 +190,64 @@ export const timetableResultJsonSchema = {
         confidence: { type: "number", minimum: 0, maximum: 1 },
         fieldConfidence: {
           type: "object",
-          additionalProperties: { type: "number", minimum: 0, maximum: 1 },
+          additionalProperties: false,
+          properties: {
+            title: { type: "number", minimum: 0, maximum: 1 },
+            code: { type: "number", minimum: 0, maximum: 1 },
+            eventType: { type: "number", minimum: 0, maximum: 1 },
+            schedule: { type: "number", minimum: 0, maximum: 1 },
+            startTime: { type: "number", minimum: 0, maximum: 1 },
+            endTime: { type: "number", minimum: 0, maximum: 1 },
+            timezone: { type: "number", minimum: 0, maximum: 1 },
+            location: { type: "number", minimum: 0, maximum: 1 },
+            instructor: { type: "number", minimum: 0, maximum: 1 },
+            notes: { type: "number", minimum: 0, maximum: 1 },
+          },
         },
         evidence: {
           type: "object",
-          additionalProperties: {
-            type: "array",
-            items: { $ref: "#/$defs/evidence" },
+          additionalProperties: false,
+          properties: {
+            title: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            code: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            eventType: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            schedule: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            startTime: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            endTime: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            timezone: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            location: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            instructor: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
+            notes: {
+              type: "array",
+              items: { $ref: "#/$defs/evidence" },
+            },
           },
         },
       },
@@ -157,13 +257,22 @@ export const timetableResultJsonSchema = {
       additionalProperties: false,
       required: ["code", "severity", "message"],
       properties: {
-        code: { type: "string" },
+        code: { $ref: "#/$defs/warningCode" },
         severity: { enum: ["info", "warning", "error"] },
-        message: { type: "string" },
-        eventId: { type: "string" },
-        field: { type: "string" },
+        message: { type: "string", minLength: 1 },
+        eventId: { type: "string", minLength: 1 },
+        field: { $ref: "#/$defs/eventField" },
         source: { $ref: "#/$defs/location" },
-        details: { type: "object" },
+        details: {
+          type: "object",
+          additionalProperties: {
+            oneOf: [
+              { type: "string" },
+              { type: "number" },
+              { type: "boolean" },
+            ],
+          },
+        },
       },
     },
     conflict: {
@@ -172,15 +281,44 @@ export const timetableResultJsonSchema = {
       required: ["code", "id", "eventIds", "occurrence", "overlap"],
       properties: {
         code: { const: "SCHEDULE_CONFLICT" },
-        id: { type: "string" },
+        id: { type: "string", minLength: 1 },
         eventIds: {
           type: "array",
           minItems: 2,
           maxItems: 2,
-          items: { type: "string" },
+          items: { type: "string", minLength: 1 },
         },
-        occurrence: { type: "object" },
-        overlap: { type: "object" },
+        occurrence: {
+          oneOf: [
+            {
+              type: "object",
+              additionalProperties: false,
+              required: ["kind", "weekday"],
+              properties: {
+                kind: { const: "weekday" },
+                weekday: { $ref: "#/$defs/weekday" },
+              },
+            },
+            {
+              type: "object",
+              additionalProperties: false,
+              required: ["kind", "date"],
+              properties: {
+                kind: { const: "date" },
+                date: { $ref: "#/$defs/date" },
+              },
+            },
+          ],
+        },
+        overlap: {
+          type: "object",
+          additionalProperties: false,
+          required: ["startsAt", "endsAt"],
+          properties: {
+            startsAt: { $ref: "#/$defs/time" },
+            endsAt: { $ref: "#/$defs/time" },
+          },
+        },
       },
     },
     stageReport: {
@@ -188,11 +326,27 @@ export const timetableResultJsonSchema = {
       additionalProperties: false,
       required: ["stage", "status", "durationMs", "warningCount"],
       properties: {
-        stage: { type: "string" },
+        stage: {
+          enum: [
+            "preflight",
+            "extract",
+            "normalize",
+            "segment",
+            "recognize",
+            "assemble",
+            "locale",
+            "deduplicate",
+            "validate",
+            "conflicts",
+            "confidence",
+            "recovery",
+            "finalize",
+          ],
+        },
         status: { enum: ["completed", "skipped", "failed"] },
         durationMs: { type: "number", minimum: 0 },
         warningCount: { type: "integer", minimum: 0 },
-        providerId: { type: "string" },
+        providerId: { type: "string", minLength: 1 },
       },
     },
     parse: {
@@ -209,7 +363,10 @@ export const timetableResultJsonSchema = {
         durationMs: { type: "number", minimum: 0 },
         deterministicConfidence: { type: "number", minimum: 0, maximum: 1 },
         aiRecoveryUsed: { type: "boolean" },
-        providersUsed: { type: "array", items: { type: "string" } },
+        providersUsed: {
+          type: "array",
+          items: { type: "string", minLength: 1 },
+        },
         stageReports: { type: "array", items: { $ref: "#/$defs/stageReport" } },
       },
     },

@@ -1,12 +1,12 @@
 # @ndycode/timetablekit-provider-vercel-ai
 
-This package is an optional structured recovery adapter. It is disabled by
-default and only calls a model when the caller sets both `enabled: true` and
-`consent: true`. It accepts a core `RecoveryRequest`, sends only its unresolved
-fields, validates the response with a strict Zod schema, and applies request,
-timeout, and output-size bounds.
+This package is an optional structured recovery adapter. Create it with a
+Vercel AI SDK `LanguageModel` and an explicit `consent: true` option, then pass
+the provider to the core parser configuration. Core parsing remains local until
+the parse options also set `recovery: { enabled: true, consent: true }`.
 
-The `transport` option is a deterministic test seam. Without it, the package
-uses the Vercel AI SDK and the caller-supplied language model. This provider is
-never part of local deterministic parsing unless the caller explicitly wires
-it in.
+The adapter sends only unresolved fields from a core `RecoveryRequest`,
+validates model output with a strict Zod schema, and enforces these optional
+provider bounds: `maxFields`, `maxRequestBytes`, `maxResponseBytes`, and
+`timeoutMs`. It uses the SDK `generateObject` call directly. Tests can mock the
+SDK module; there is no `transport` or `enabled` provider option.

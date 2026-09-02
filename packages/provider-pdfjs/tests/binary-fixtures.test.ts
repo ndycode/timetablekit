@@ -15,7 +15,7 @@ import { allFixtureDefinitions } from "../../../scripts/generate-fixtures.mjs";
 import {
   createTesseractProvider,
   type TesseractWorker,
-} from "../../provider-tesseract/src/index.js";
+} from "@ndycode/timetablekit-provider-tesseract";
 import { createPdfJsProvider, type PdfDocument } from "../src/index.js";
 
 const fixturesRoot = fileURLToPath(
@@ -166,7 +166,7 @@ function ocrPage(
 
 function imageExtractionProvider(ocr: OcrProvider): ExtractionProvider {
   return {
-    id: "fixture-image-ocr",
+    id: ocr.id,
     supports: (input) => input.kind === "image",
     async extract(input, context): Promise<ExtractionArtifact> {
       if (input.kind !== "image") throw new Error("Expected image input");

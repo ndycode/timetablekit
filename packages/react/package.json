@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "description": "Framework-light React correction and preview components for TimetableKit.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ndycode/timetablekit.git"
+  },
+  "homepage": "https://timetablekit.vercel.app/",
+  "bugs": {
+    "url": "https://github.com/ndycode/timetablekit/issues"
+  },
+  "engines": {
+    "node": ">=24 <27"
+  },
   "type": "module",
   "files": [
     "dist"

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_RESOURCE_LIMITS } from "@ndycode/timetablekit";
 import { exceedsImagePixelLimit, readImageDimensions } from "./input-boundary";
 
 function pngBytes(width: number, height: number): Uint8Array {
@@ -24,7 +25,10 @@ describe("image input boundary", () => {
     expect(
       dimensions === undefined
         ? false
-        : exceedsImagePixelLimit(dimensions, 25_000_000),
+        : exceedsImagePixelLimit(
+            dimensions,
+            DEFAULT_RESOURCE_LIMITS.maxImagePixels,
+          ),
     ).toBe(true);
   });
 

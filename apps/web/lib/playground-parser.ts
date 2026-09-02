@@ -22,7 +22,7 @@ export const LOCAL_OCR_ASSETS = {
 
 function imageExtractionProvider(ocrProvider: OcrProvider): ExtractionProvider {
   return {
-    id: "tesseract-image",
+    id: ocrProvider.id,
     supports(input): boolean {
       return input.kind === "image";
     },
@@ -34,7 +34,7 @@ function imageExtractionProvider(ocrProvider: OcrProvider): ExtractionProvider {
         exceedsImagePixelLimit(dimensions, context.limits.maxImagePixels)
       ) {
         throw new ProviderError(
-          "tesseract-image",
+          ocrProvider.id,
           "RESOURCE_LIMIT",
           "That image is too large.",
         );
@@ -51,7 +51,7 @@ function imageExtractionProvider(ocrProvider: OcrProvider): ExtractionProvider {
           )
         ) {
           throw new ProviderError(
-            "tesseract-image",
+            ocrProvider.id,
             "RESOURCE_LIMIT",
             "That image is too large.",
           );

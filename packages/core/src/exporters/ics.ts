@@ -2,7 +2,7 @@ import { TimetableError } from "../errors.js";
 import { addDays, weekdayForDate } from "../parser/date.js";
 import { timeToMinutes } from "../parser/time.js";
 import { utf8ByteLength } from "../parser/text.js";
-import { TimetableParseResultSchema } from "../schema/runtime.js";
+import { parseExportResult } from "../schema/runtime.js";
 import type {
   EventSchedule,
   IsoDate,
@@ -318,7 +318,7 @@ export function toICS(
   result: TimetableParseResult,
   options: IcsOptions = {},
 ): string {
-  const valid = TimetableParseResultSchema.parse(result);
+  const valid = parseExportResult(result);
   if (!validTimezone(valid.timezone))
     throw new TimetableError(
       "EXPORT_INVALID_RESULT",

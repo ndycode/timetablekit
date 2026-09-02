@@ -1,11 +1,11 @@
-import {
-  DEFAULT_MAX_CONFLICTS,
-  detectConflictsBounded,
-  validateTimetable,
+export {
+  applyEventCorrection,
+  warningForEventField,
+  warningsForEvent,
+  warningsForResult,
 } from "@ndycode/timetablekit";
 import type {
-  EventField,
-  EventSchedule,
+  EventCorrection,
   ParseOptions,
   ParseStage,
   ParseWarning,
@@ -44,22 +44,16 @@ export type PlaygroundState = PlaygroundSettings & {
   readonly source: PlaygroundSource;
   readonly result: TimetableParseResult | null;
   readonly busy: boolean;
+  readonly fileReading: boolean;
   readonly progress: number;
   readonly status: string;
   readonly error: string;
 };
 
-export type PlaygroundCorrection =
-  | {
-      readonly eventId: string;
-      readonly field: "title" | "startTime" | "endTime" | "location";
-      readonly value: string;
-    }
-  | {
-      readonly eventId: string;
-      readonly field: "schedule";
-      readonly value: EventSchedule;
-    };
+export type PlaygroundCorrection = Extract<
+  EventCorrection,
+  { readonly field: EditableField }
+>;
 
 export type AgendaGroup = {
   readonly key: string;
@@ -81,6 +75,7 @@ export type PlaygroundAction =
   | { readonly type: "term-start-changed"; readonly value: string }
   | { readonly type: "term-end-changed"; readonly value: string }
   | { readonly type: "ai-recovery-changed"; readonly enabled: boolean }
+  | { readonly type: "file-read-started" }
   | { readonly type: "parse-started" }
   | {
       readonly type: "parse-progressed";
@@ -188,26 +183,6 @@ const ISSUE_MESSAGES: Partial<Record<WarningCode, string>> = {
   UNSUPPORTED_PROVIDER: "We cannot read this file type yet.",
 };
 
-const VALIDATION_WARNING_CODES: ReadonlySet<WarningCode> = new Set([
-  "INVALID_TIMEZONE",
-  "INVALID_TERM_RANGE",
-  "MISSING_TITLE",
-  "MISSING_START_TIME",
-  "MISSING_END_TIME",
-  "INVALID_TIME_RANGE",
-  "LOW_CONFIDENCE",
-  "CONFLICT_LIMIT",
-  "UNKNOWN_DAY_LABEL",
-  "INVALID_DATE",
-  "OUTSIDE_TERM_RANGE",
-]);
-
-function warningIsFromValidation(warning: ParseWarning): boolean {
-  return (
-    warning.source === undefined && VALIDATION_WARNING_CODES.has(warning.code)
-  );
-}
-
 export function createInitialPlaygroundState(): PlaygroundState {
   return {
     source: { kind: "sample" },
@@ -218,6 +193,7 @@ export function createInitialPlaygroundState(): PlaygroundState {
     aiRecovery: false,
     result: null,
     busy: false,
+    fileReading: false,
     progress: 0,
     status: "Sample ready.",
     error: "",
@@ -250,21 +226,6 @@ export function currentInputForSource(
       return source.input ?? undefined;
     default: {
       const exhaustive: never = source;
-      return exhaustive;
-    }
-  }
-}
-
-export function sourceTabLabel(tab: PlaygroundTab): string {
-  switch (tab) {
-    case "sample":
-      return "Sample";
-    case "paste":
-      return "Paste text";
-    case "upload":
-      return "Choose file";
-    default: {
-      const exhaustive: never = tab;
       return exhaustive;
     }
   }
@@ -307,55 +268,6 @@ export function draftSettingsError(
     : "Add both dates for a range, or clear both dates.";
 }
 
-function warningForConflict(conflictId: string): ParseWarning {
-  return {
-    code: "SCHEDULE_CONFLICT",
-    severity: "error",
-    message: "Two events happen at the same time.",
-    details: { conflictId },
-  };
-}
-
-function warningForConflictLimit(): ParseWarning {
-  return {
-    code: "CONFLICT_LIMIT",
-    severity: "warning",
-    message: "We could not check every conflict.",
-    details: { limit: DEFAULT_MAX_CONFLICTS },
-  };
-}
-
-function hasConflictWarning(
-  warnings: readonly ParseWarning[],
-  conflictId: string,
-): boolean {
-  return warnings.some(
-    (warning) =>
-      warning.code === "SCHEDULE_CONFLICT" &&
-      warning.details?.["conflictId"] === conflictId,
-  );
-}
-
-export function warningsForResult(
-  result: TimetableParseResult,
-): readonly ParseWarning[] {
-  const missingConflictWarnings = result.conflicts
-    .filter((conflict) => !hasConflictWarning(result.warnings, conflict.id))
-    .map((conflict) => warningForConflict(conflict.id));
-  return [...result.warnings, ...missingConflictWarnings];
-}
-
-export function warningForEventField(
-  result: TimetableParseResult,
-  eventId: string,
-  field: EditableField,
-): ParseWarning | undefined {
-  const warningField: EventField = field === "schedule" ? "schedule" : field;
-  return warningsForResult(result).find(
-    (warning) => warning.eventId === eventId && warning.field === warningField,
-  );
-}
-
 export function issueTitle(warning: ParseWarning): string {
   return (
     ISSUE_TITLES[warning.code] ??
@@ -372,103 +284,6 @@ export function issueTitle(warning: ParseWarning): string {
 
 export function issueMessage(warning: ParseWarning): string {
   return ISSUE_MESSAGES[warning.code] ?? warning.message;
-}
-
-export function applyEventCorrection(
-  result: TimetableParseResult,
-  correction: PlaygroundCorrection,
-): TimetableParseResult {
-  let found = false;
-  const events = result.events.map((event) => {
-    if (event.id !== correction.eventId) return event;
-    found = true;
-    return updateEvent(event, correction);
-  });
-  return found ? recalculateResult(result, events, correction) : result;
-}
-
-function updateEvent(
-  event: TimetableEvent,
-  correction: PlaygroundCorrection,
-): TimetableEvent {
-  switch (correction.field) {
-    case "title":
-      return { ...event, title: correction.value };
-    case "startTime":
-      return { ...event, startTime: correction.value.trim() };
-    case "endTime":
-      return { ...event, endTime: correction.value.trim() };
-    case "schedule":
-      return { ...event, schedule: correction.value };
-    case "location":
-      return correction.value.trim() === ""
-        ? omitLocation(event)
-        : { ...event, location: correction.value };
-    default: {
-      const exhaustive: never = correction;
-      return exhaustive;
-    }
-  }
-}
-
-function omitLocation(event: TimetableEvent): TimetableEvent {
-  const { location: _location, ...withoutLocation } = event;
-  return withoutLocation;
-}
-
-function recalculateResult(
-  result: TimetableParseResult,
-  events: readonly TimetableEvent[],
-  correction: PlaygroundCorrection,
-): TimetableParseResult {
-  const preservedWarnings = result.warnings.filter(
-    (warning) =>
-      warning.code !== "SCHEDULE_CONFLICT" &&
-      !warningIsFromValidation(warning) &&
-      !warningIsForCorrection(warning, correction),
-  );
-  const validationWarnings = validateTimetable(events, {
-    timezone: result.timezone,
-    ...(result.term === undefined ? {} : { term: result.term }),
-  });
-  const detected = detectConflictsBounded(
-    events,
-    result.term === undefined ? {} : { term: result.term },
-  );
-  const conflicts = detected.conflicts;
-  return {
-    ...result,
-    events,
-    warnings: [
-      ...preservedWarnings,
-      ...validationWarnings,
-      ...conflicts.map((conflict) => warningForConflict(conflict.id)),
-      ...(detected.truncated ? [warningForConflictLimit()] : []),
-    ],
-    conflicts,
-    parse: {
-      ...result.parse,
-      deterministicConfidence: deterministicConfidence(events),
-    },
-  };
-}
-
-function warningIsForCorrection(
-  warning: ParseWarning,
-  correction: PlaygroundCorrection,
-): boolean {
-  const warningField =
-    correction.field === "schedule" ? "schedule" : correction.field;
-  return (
-    warning.eventId === correction.eventId && warning.field === warningField
-  );
-}
-
-function deterministicConfidence(events: readonly TimetableEvent[]): number {
-  if (events.length === 0) return 0;
-  return (
-    events.reduce((sum, event) => sum + event.confidence, 0) / events.length
-  );
 }
 
 function sortEvents(
@@ -588,6 +403,7 @@ export function playgroundReducer(
         ...state,
         source: { kind: "upload", input: action.input, label: action.label },
         result: null,
+        fileReading: false,
         status: `Selected ${action.label}. Ready to read.`,
         error: "",
       };
@@ -631,11 +447,20 @@ export function playgroundReducer(
         status: "Settings changed. Ready to read.",
         error: "",
       };
+    case "file-read-started":
+      return {
+        ...state,
+        result: null,
+        fileReading: true,
+        status: "Checking file.",
+        error: "",
+      };
     case "parse-started":
       return {
         ...state,
         result: null,
         busy: true,
+        fileReading: false,
         progress: 0,
         status: "Reading it here.",
         error: "",
@@ -653,6 +478,7 @@ export function playgroundReducer(
         ...state,
         result: action.result,
         busy: false,
+        fileReading: false,
         progress: 100,
         status: `Found ${action.result.events.length} event${action.result.events.length === 1 ? "" : "s"}.`,
         error: "",
@@ -662,6 +488,7 @@ export function playgroundReducer(
         ...state,
         result: null,
         busy: false,
+        fileReading: false,
         progress: 0,
         status:
           action.status ??
@@ -672,6 +499,7 @@ export function playgroundReducer(
       return {
         ...state,
         busy: false,
+        fileReading: false,
         progress: 0,
         status: "Reading stopped.",
       };
@@ -693,6 +521,7 @@ export function playgroundReducer(
         ...state,
         source: { kind: "upload", input: null, label: "" },
         result: null,
+        fileReading: false,
         status: "File rejected before reading.",
         error: action.message,
       };

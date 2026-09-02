@@ -27,15 +27,6 @@ const EVENT_FIELDS: readonly EventField[] = [
   "notes",
 ];
 
-function isEventField(value: string): value is EventField {
-  for (const field of EVENT_FIELDS) {
-    if (field === value) {
-      return true;
-    }
-  }
-  return false;
-}
-
 export type Candidate = {
   readonly title?: string;
   readonly code?: string;
@@ -66,6 +57,12 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+const METADATA_LABEL_PATTERN =
+  "(?:room|rm\\.?|location|loc\\.?|venue|instructor|teacher|professor|prof\\.?|lecturer|notes?|remarks?|event\\s*type|type)";
+
+const ACADEMIC_PERIOD_RANGE_PATTERN =
+  "(?:academic\\s+year|school\\s+year|ay|sy)\\s*(?:[:#-]\\s*)?\\d{1,4}\\s*[-–—]\\s*\\d{1,4}";
+
 function removeDayWords(text: string, definition: LocaleDefinition): string {
   const aliases = Object.keys(definition.dayAliases)
     .filter((alias) => alias.length > 1)
@@ -95,7 +92,7 @@ function readLabeledValue(
 ): string | undefined {
   const label = labels.join("|");
   const match = new RegExp(
-    `(?:${label})\\s*(?:[:#-]\\s*)?([^|,;]+)`,
+    `(?<![\\p{L}\\p{N}_])(?:${label})(?![\\p{L}\\p{N}_])\\s*(?:[:#-]\\s*)?([^|,;]+)`,
     "iu",
   ).exec(text);
   return match?.[1] === undefined ? undefined : cleanCell(match[1]);
@@ -131,14 +128,17 @@ function readEventType(text: string): string | undefined {
 
 function readCode(text: string): {
   readonly code?: string;
+  readonly displayCode?: string;
   readonly remainder: string;
 } {
   const match = /\b[A-Z]{2,}(?:[- ]?\d{2,4}[A-Z]?)\b/iu.exec(text);
   if (match?.[0] === undefined || match.index === undefined) {
     return { remainder: text };
   }
+  const displayCode = match[0].replace(/\s+/g, " ");
   return {
-    code: match[0].replace(/\s+/g, " ").toUpperCase(),
+    code: displayCode.toUpperCase(),
+    displayCode,
     remainder: `${text.slice(0, match.index)} ${text.slice(match.index + match[0].length)}`,
   };
 }
@@ -171,15 +171,21 @@ function candidateTitle(
   const residual = removeDayWords(
     removeTimeAndDates(text, timeStart, timeEnd),
     definition,
-  ).replace(
-    /(?:room|rm\.?|location|loc\.?|venue|instructor|teacher|professor|prof\.?|lecturer|notes?|remarks?|event\s*type|type)\s*[:#-]?[^|,;]*/giu,
-    " ",
-  );
+  )
+    .replace(new RegExp(`\\b${ACADEMIC_PERIOD_RANGE_PATTERN}\\b`, "giu"), " ")
+    .replace(
+      new RegExp(
+        `(?<![\\p{L}\\p{N}_])${METADATA_LABEL_PATTERN}(?![\\p{L}\\p{N}_])\\s*[:#-]?[^|,;]*`,
+        "giu",
+      ),
+      " ",
+    );
   const residualCells = cells.filter(
     (cell) =>
       !isTimeCell(cell) &&
       !isScheduleCell(cell, definition) &&
       !isMetadataCell(cell) &&
+      !new RegExp(`^${ACADEMIC_PERIOD_RANGE_PATTERN}$`, "iu").test(cell) &&
       !/^\d+$/.test(cell),
   );
   const combined =
@@ -194,7 +200,12 @@ function candidateTitle(
     .replace(/^(?:[|,;]\s*)+|(?:[|,;]\s*)+$/gu, "")
     .trim();
   if (title.length === 0) {
-    return codeResult.code === undefined ? {} : { code: codeResult.code };
+    return codeResult.code === undefined
+      ? {}
+      : {
+          title: codeResult.displayCode ?? codeResult.code,
+          code: codeResult.code,
+        };
   }
   return codeResult.code === undefined
     ? { title }
@@ -392,21 +403,103 @@ export function evidenceForCandidate(
     return {};
   }
   const evidence: Partial<Record<EventField, readonly FieldEvidence[]>> = {};
-  for (const fieldName of Object.keys(candidate.fieldLocations)) {
-    if (!isEventField(fieldName)) {
+  for (const field of EVENT_FIELDS) {
+    if (!candidateRecognizesField(candidate, field)) {
       continue;
     }
-    const field = fieldName;
     const location = candidate.fieldLocations[field];
     if (location === undefined) {
       continue;
     }
     evidence[field] =
       mode === "snippets"
-        ? [{ source, location, excerpt: sourceText.slice(0, 160) }]
+        ? [
+            {
+              source,
+              location,
+              excerpt: candidateSourceText(candidate, field, sourceText).slice(
+                0,
+                160,
+              ),
+            },
+          ]
         : [{ source, location }];
   }
   return evidence;
+}
+
+function candidateRecognizesField(
+  candidate: Candidate,
+  field: EventField,
+): boolean {
+  switch (field) {
+    case "title":
+      return candidate.title !== undefined;
+    case "code":
+      return candidate.code !== undefined;
+    case "eventType":
+      return candidate.eventType !== undefined;
+    case "schedule":
+      return candidate.schedule !== undefined;
+    case "startTime":
+      return candidate.startTime !== undefined;
+    case "endTime":
+      return candidate.endTime !== undefined;
+    case "timezone":
+      return false;
+    case "location":
+      return candidate.location !== undefined;
+    case "instructor":
+      return candidate.instructor !== undefined;
+    case "notes":
+      return candidate.notes !== undefined;
+    default: {
+      const exhaustive: never = field;
+      return exhaustive;
+    }
+  }
+}
+
+function candidateSourceText(
+  candidate: Candidate,
+  field: EventField,
+  fallback: string,
+): string {
+  const fieldText = candidate.fieldText[field];
+  if (fieldText !== undefined) {
+    return fieldText;
+  }
+  switch (field) {
+    case "title":
+      return candidate.title ?? fallback;
+    case "code":
+      return candidate.code ?? fallback;
+    case "eventType":
+      return candidate.eventType ?? fallback;
+    case "schedule": {
+      const schedule = candidate.schedule;
+      if (schedule === undefined) return fallback;
+      return schedule.kind === "exact"
+        ? schedule.exactDates.join(", ")
+        : schedule.weekdays.join(", ");
+    }
+    case "startTime":
+      return candidate.startTime ?? fallback;
+    case "endTime":
+      return candidate.endTime ?? fallback;
+    case "timezone":
+      return fallback;
+    case "location":
+      return candidate.location ?? fallback;
+    case "instructor":
+      return candidate.instructor ?? fallback;
+    case "notes":
+      return candidate.notes ?? fallback;
+    default: {
+      const exhaustive: never = field;
+      return exhaustive;
+    }
+  }
 }
 
 export function candidateHasRequiredFields(

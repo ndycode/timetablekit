@@ -1,28 +1,18 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const files = [
-  "apps/web/app/api/parse/route.ts",
-  "apps/web/app/code-of-conduct/page.tsx",
-  "apps/web/app/docs/page.tsx",
-  "apps/web/app/layout.tsx",
-  "apps/web/app/manifest.ts",
-  "apps/web/app/page.tsx",
-  "apps/web/app/privacy/page.tsx",
-  "apps/web/app/roadmap/page.tsx",
-  "apps/web/app/security/page.tsx",
-  "apps/web/components/playground.tsx",
-  "apps/web/components/playground-events.tsx",
-  "apps/web/components/playground-issues.tsx",
-  "apps/web/components/playground-json.tsx",
-  "apps/web/components/playground-preview.tsx",
-  "apps/web/components/playground-source.tsx",
-  "apps/web/components/site-header.tsx",
-  "apps/web/components/timetable-demo.tsx",
-  "apps/web/lib/input-boundary.ts",
-  "apps/web/lib/playground-model.ts",
-  "apps/web/lib/samples.ts",
-];
+const files = ["apps/web/app", "apps/web/components", "apps/web/lib"]
+  .flatMap((directory) =>
+    readdirSync(join(process.cwd(), directory), { recursive: true })
+      .filter(
+        (entry) =>
+          typeof entry === "string" &&
+          /\.(?:ts|tsx)$/u.test(entry) &&
+          !/\.test\.(?:ts|tsx)$/u.test(entry),
+      )
+      .map((entry) => join(directory, entry)),
+  )
+  .sort((left, right) => left.localeCompare(right));
 
 const oldPhrases = [
   "A short path from a timetable source",

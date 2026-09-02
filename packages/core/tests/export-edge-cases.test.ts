@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TimetableError, parseTimetable, toICS } from "../src";
+import { TimetableError, parseTimetable, toCSV, toICS, toJSON } from "../src";
 import type { TimetableEvent, TimetableParseResult } from "../src";
 
 const options = {
@@ -29,6 +29,13 @@ function errorCode(action: () => void): string | undefined {
 }
 
 describe("ICS export edge cases", () => {
+  it("maps malformed result boundaries to the export error", () => {
+    const malformed = {} as unknown as TimetableParseResult;
+    expect(errorCode(() => toJSON(malformed))).toBe("EXPORT_INVALID_RESULT");
+    expect(errorCode(() => toCSV(malformed))).toBe("EXPORT_INVALID_RESULT");
+    expect(errorCode(() => toICS(malformed))).toBe("EXPORT_INVALID_RESULT");
+  });
+
   it("exports exact dates and UTC timestamps", async () => {
     const result = await parseTimetable(
       {

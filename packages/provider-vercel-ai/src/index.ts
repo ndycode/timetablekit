@@ -1,10 +1,11 @@
 import { generateObject } from "ai";
-import { z } from "zod";
-import { ProviderError } from "@ndycode/timetablekit";
+import {
+  ProviderError,
+  RecoveryRequestSchema,
+  recoveryResponseSchema,
+} from "@ndycode/timetablekit";
 import type {
-  EventField,
   EventSchedule,
-  FieldValue,
   ProviderContext,
   RecoveryProvider,
   RecoveryRequest,
@@ -13,45 +14,7 @@ import type {
 import type { LanguageModel } from "ai";
 
 export const VERCEL_AI_PROVIDER_ID = "vercel-ai-recovery";
-
-const scheduleSchema = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("weekly"),
-    weekdays: z.array(z.enum(["MO", "TU", "WE", "TH", "FR", "SA", "SU"])),
-    startsOn: z.string().optional(),
-    endsOn: z.string().optional(),
-  }),
-  z.object({
-    kind: z.literal("exact"),
-    exactDates: z.array(z.string()),
-  }),
-]);
-
-const fieldSchema = z.enum([
-  "title",
-  "code",
-  "eventType",
-  "schedule",
-  "startTime",
-  "endTime",
-  "timezone",
-  "location",
-  "instructor",
-  "notes",
-]);
-
-const recoveryResponseSchema = z.object({
-  patches: z
-    .array(
-      z.object({
-        eventId: z.string().min(1),
-        field: fieldSchema,
-        value: z.union([z.string(), scheduleSchema, z.array(z.string())]),
-        confidence: z.number().min(0).max(1),
-      }),
-    )
-    .max(32),
-});
+const MAX_NODE_TIMEOUT_MS = 2_147_483_647;
 
 export type VercelAIRecoveryProviderOptions = {
   readonly model: LanguageModel;
@@ -62,17 +25,51 @@ export type VercelAIRecoveryProviderOptions = {
   readonly timeoutMs?: number;
 };
 
-export type RecoveryOutput = z.infer<typeof recoveryResponseSchema>;
+export type RecoveryOutput = RecoveryResponse;
+
+function positiveLimit(
+  value: number | undefined,
+  fallback: number,
+  name: string,
+  maximum = Number.MAX_SAFE_INTEGER,
+): number {
+  const resolved = value ?? fallback;
+  if (!Number.isSafeInteger(resolved) || resolved <= 0) {
+    throw new RangeError(`${name} must be a positive safe integer.`);
+  }
+  if (resolved > maximum) {
+    throw new RangeError(`${name} must not exceed ${maximum}.`);
+  }
+  return resolved;
+}
 
 export function createVercelAIProvider(
   options: VercelAIRecoveryProviderOptions,
 ): RecoveryProvider {
+  const maxFields = positiveLimit(options.maxFields, 8, "maxFields", 32);
+  const maxRequestBytes = positiveLimit(
+    options.maxRequestBytes,
+    40_000,
+    "maxRequestBytes",
+  );
+  const maxResponseBytes = positiveLimit(
+    options.maxResponseBytes,
+    80_000,
+    "maxResponseBytes",
+  );
+  const configuredTimeoutMs = positiveLimit(
+    options.timeoutMs,
+    15_000,
+    "timeoutMs",
+    MAX_NODE_TIMEOUT_MS,
+  );
   return {
     id: VERCEL_AI_PROVIDER_ID,
     async recover(
       request: RecoveryRequest,
       context: ProviderContext,
     ): Promise<RecoveryResponse> {
+      const parsedRequest = RecoveryRequestSchema.parse(request);
       if (!options.consent) {
         throw new ProviderError(
           VERCEL_AI_PROVIDER_ID,
@@ -89,11 +86,10 @@ export function createVercelAIProvider(
       }
 
       const boundedRequest = {
-        ...request,
-        unresolved: request.unresolved.slice(0, options.maxFields ?? 8),
+        ...parsedRequest,
+        unresolved: parsedRequest.unresolved.slice(0, maxFields),
       };
       const requestText = JSON.stringify(boundedRequest);
-      const maxRequestBytes = options.maxRequestBytes ?? 40_000;
       if (new TextEncoder().encode(requestText).byteLength > maxRequestBytes) {
         throw new ProviderError(
           VERCEL_AI_PROVIDER_ID,
@@ -102,14 +98,18 @@ export function createVercelAIProvider(
         );
       }
 
-      const timeoutMs =
-        options.timeoutMs ?? Math.min(context.limits.timeoutMs, 15_000);
+      const timeoutMs = Math.min(configuredTimeoutMs, context.limits.timeoutMs);
       const controller = new AbortController();
       const onAbort = (): void => controller.abort();
       context.signal.addEventListener("abort", onAbort, { once: true });
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      let timedOut = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, timeoutMs);
+      let removeGenerationAbort = (): void => undefined;
       try {
-        const generated = await generateObject({
+        const generation = generateObject({
           model: options.model,
           schema: recoveryResponseSchema,
           abortSignal: controller.signal,
@@ -122,13 +122,31 @@ export function createVercelAIProvider(
             requestText,
           ].join("\n"),
         });
-        if (controller.signal.aborted) {
-          throw new ProviderError(
-            VERCEL_AI_PROVIDER_ID,
-            "ABORTED",
-            "Recovery timed out or was aborted.",
-          );
-        }
+        void generation.then(
+          () => undefined,
+          () => undefined,
+        );
+        const generationAbort = new Promise<never>((_resolve, reject) => {
+          const onGenerationAbort = (): void => {
+            reject(
+              new ProviderError(
+                VERCEL_AI_PROVIDER_ID,
+                context.signal.aborted ? "ABORTED" : "TIMEOUT",
+                context.signal.aborted
+                  ? "Recovery was aborted."
+                  : "Recovery timed out.",
+              ),
+            );
+          };
+          controller.signal.addEventListener("abort", onGenerationAbort, {
+            once: true,
+          });
+          removeGenerationAbort = (): void => {
+            controller.signal.removeEventListener("abort", onGenerationAbort);
+          };
+          if (controller.signal.aborted) onGenerationAbort();
+        });
+        const generated = await Promise.race([generation, generationAbort]);
         const output = recoveryResponseSchema.safeParse(generated.object);
         if (!output.success) {
           throw new ProviderError(
@@ -138,7 +156,6 @@ export function createVercelAIProvider(
           );
         }
         const responseText = JSON.stringify(output.data);
-        const maxResponseBytes = options.maxResponseBytes ?? 80_000;
         if (
           new TextEncoder().encode(responseText).byteLength > maxResponseBytes
         ) {
@@ -148,14 +165,16 @@ export function createVercelAIProvider(
             "Recovery output exceeds the configured limit.",
           );
         }
-        return toCoreResponse(output.data);
+        return output.data;
       } catch (error) {
         if (error instanceof ProviderError) throw error;
         if (controller.signal.aborted) {
           throw new ProviderError(
             VERCEL_AI_PROVIDER_ID,
-            "ABORTED",
-            "Recovery timed out or was aborted.",
+            context.signal.aborted || !timedOut ? "ABORTED" : "TIMEOUT",
+            context.signal.aborted || !timedOut
+              ? "Recovery was aborted."
+              : "Recovery timed out.",
           );
         }
         throw new ProviderError(
@@ -164,21 +183,11 @@ export function createVercelAIProvider(
           "The recovery provider was unavailable.",
         );
       } finally {
+        removeGenerationAbort();
         clearTimeout(timer);
         context.signal.removeEventListener("abort", onAbort);
       }
     },
-  };
-}
-
-function toCoreResponse(output: RecoveryOutput): RecoveryResponse {
-  return {
-    patches: output.patches.map((patch) => ({
-      eventId: patch.eventId,
-      field: patch.field as EventField,
-      value: patch.value as FieldValue,
-      confidence: patch.confidence,
-    })),
   };
 }
 

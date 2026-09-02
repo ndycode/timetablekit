@@ -154,6 +154,49 @@ describe("schedule conflicts", () => {
     ).toEqual([]);
   });
 
+  it("stops weekly occurrence iteration at the four-digit date boundary", () => {
+    const events = [
+      event(
+        "evt-a",
+        { kind: "weekly", weekdays: ["FR", "MO"] },
+        "09:00",
+        "10:00",
+      ),
+      event(
+        "evt-b",
+        { kind: "weekly", weekdays: ["FR", "MO"] },
+        "09:30",
+        "10:30",
+      ),
+    ];
+
+    expect(
+      detectConflicts(events, {
+        term: { startsOn: "9999-12-20", endsOn: "9999-12-31" },
+      })
+        .map((conflict) => conflict.occurrence)
+        .sort((left, right) => {
+          if (left.kind !== "date" || right.kind !== "date") return 0;
+          return left.date.localeCompare(right.date);
+        }),
+    ).toEqual([
+      { kind: "date", date: "9999-12-20" },
+      { kind: "date", date: "9999-12-24" },
+      { kind: "date", date: "9999-12-27" },
+      { kind: "date", date: "9999-12-31" },
+    ]);
+
+    const mondayOnly = events.map((value) => ({
+      ...value,
+      schedule: { kind: "weekly", weekdays: ["MO"] } as const,
+    }));
+    expect(
+      detectConflicts(mondayOnly, {
+        term: { startsOn: "9999-12-31", endsOn: "9999-12-31" },
+      }),
+    ).toEqual([]);
+  });
+
   it("sorts event ids and reports a shared weekly overlap", () => {
     const first = event(
       "evt-a",
@@ -226,5 +269,117 @@ describe("schedule conflicts", () => {
         overlap: { startsAt: "13:30", endsAt: "14:00" },
       },
     ]);
+  });
+
+  it("handles mixed exact and weekly schedules in both sort orders", () => {
+    const exactFirst = event(
+      "evt-a",
+      { kind: "exact", exactDates: ["2026-09-14"] },
+      "09:00",
+      "10:00",
+    );
+    const weeklySecond = event(
+      "evt-b",
+      {
+        kind: "weekly",
+        weekdays: ["MO"],
+        startsOn: "2026-09-01",
+        endsOn: "2026-09-30",
+      },
+      "09:30",
+      "10:30",
+    );
+    expect(detectConflicts([exactFirst, weeklySecond])).toMatchObject([
+      { occurrence: { kind: "date", date: "2026-09-14" } },
+    ]);
+    expect(
+      detectConflicts([exactFirst, weeklySecond], {
+        term: { startsOn: "2026-09-01", endsOn: "2026-09-30" },
+      }),
+    ).toHaveLength(1);
+    expect(
+      detectConflicts([exactFirst, weeklySecond], {
+        term: { startsOn: "2026-10-01", endsOn: "2026-10-31" },
+      }),
+    ).toEqual([]);
+
+    const weeklyFirst = event(
+      "evt-a",
+      { kind: "weekly", weekdays: ["MO"] },
+      "09:00",
+      "10:00",
+    );
+    const exactSecond = event(
+      "evt-b",
+      { kind: "exact", exactDates: ["2026-09-14"] },
+      "09:30",
+      "10:30",
+    );
+    expect(detectConflicts([weeklyFirst, exactSecond])).toMatchObject([
+      { occurrence: { kind: "date", date: "2026-09-14" } },
+    ]);
+    expect(
+      detectConflicts([weeklyFirst, exactSecond], {
+        term: { startsOn: "2026-09-01", endsOn: "2026-09-30" },
+      }),
+    ).toHaveLength(1);
+    expect(
+      detectConflicts([weeklyFirst, exactSecond], {
+        term: { startsOn: "2026-10-01", endsOn: "2026-10-31" },
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects inactive mixed dates, disjoint weekdays, and invalid times", () => {
+    const exact = event(
+      "evt-a",
+      { kind: "exact", exactDates: ["2026-09-14"] },
+      "09:00",
+      "10:00",
+    );
+    const inactive = event(
+      "evt-b",
+      {
+        kind: "weekly",
+        weekdays: ["MO"],
+        startsOn: "2026-09-15",
+      },
+      "09:30",
+      "10:30",
+    );
+    expect(detectConflicts([exact, inactive])).toEqual([]);
+
+    const monday = event(
+      "evt-a",
+      { kind: "weekly", weekdays: ["MO"] },
+      "09:00",
+      "10:00",
+    );
+    const tuesday = event(
+      "evt-b",
+      { kind: "weekly", weekdays: ["TU"] },
+      "09:30",
+      "10:30",
+    );
+    expect(detectConflicts([monday, tuesday])).toEqual([]);
+    expect(
+      detectConflicts([
+        { ...monday, startTime: "invalid" },
+        { ...tuesday, schedule: { kind: "weekly", weekdays: ["MO"] } },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      detectConflictsBounded(
+        [
+          monday,
+          { ...monday, id: "evt-b", startTime: "09:30", endTime: "10:30" },
+        ],
+        { maxConflicts: -1, maxPairs: -1 },
+      ),
+    ).toMatchObject({
+      conflicts: [{ code: "SCHEDULE_CONFLICT" }],
+      truncated: false,
+    });
   });
 });

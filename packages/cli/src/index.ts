@@ -9,14 +9,19 @@ import {
   DEFAULT_RESOURCE_LIMITS,
   EN_PH_LOCALE,
   TimetableError,
+  assessTimetableResult,
   createLocaleRegistry,
   parseDate,
   parseTimetable,
   toCSV,
   toICS,
   toJSON,
+  warningsForResult,
 } from "@ndycode/timetablekit";
-import { runTimetableAgentProtocol } from "@ndycode/timetablekit-agent";
+import {
+  createTimetableAgentTool,
+  runTimetableAgentProtocol,
+} from "@ndycode/timetablekit-agent";
 import type {
   IsoDate,
   ParseOptions,
@@ -82,6 +87,7 @@ Commands:
 Parse a local text or CSV timetable and write a normalized export.
 
 Options:
+  --input-kind <kind>     Input kind: text or csv. Overrides path detection. Default: inferred (stdin is text).
   --timezone <iana>       Timezone for the parsed events. Default: UTC.
   --locale <id>           Parser locale. Default: en-PH.
   --format <format>       Output format: json, csv, or ics. Default: json.
@@ -186,6 +192,17 @@ function outputFormat(value: string): OutputFormat | undefined {
   }
 }
 
+function inputKind(value: string): InputKind | undefined {
+  switch (value.toLocaleLowerCase()) {
+    case "text":
+      return "text";
+    case "csv":
+      return "csv";
+    default:
+      return undefined;
+  }
+}
+
 function optionValue(
   argv: readonly string[],
   index: number,
@@ -247,6 +264,7 @@ export function parseArguments(argv: readonly string[]): CliCommand {
     );
   }
   let inputPath: string | undefined;
+  let selectedInputKind: InputKind | undefined;
   let timezone = "UTC";
   let locale = "en-PH";
   let format: OutputFormat = "json";
@@ -275,6 +293,18 @@ export function parseArguments(argv: readonly string[]): CliCommand {
       const name = separator < 0 ? argument : argument.slice(0, separator);
       const inline = separator < 0 ? undefined : argument.slice(separator + 1);
       switch (name) {
+        case "--input-kind": {
+          const selected = optionValue(argv, index, name, inline);
+          const parsedKind = inputKind(selected.value);
+          if (parsedKind === undefined) {
+            throw new CliError(
+              `Unsupported input kind "${selected.value}". Use text or csv.`,
+            );
+          }
+          selectedInputKind = parsedKind;
+          index = selected.index;
+          break;
+        }
         case "--timezone": {
           const selected = optionValue(argv, index, name, inline);
           timezone = selected.value;
@@ -344,11 +374,13 @@ export function parseArguments(argv: readonly string[]): CliCommand {
   if (inputPath === undefined || inputPath.length === 0) {
     throw new CliError("An input path is required. Use --help for usage.");
   }
+  assertLocalPath(inputPath, "Input");
+  const resolvedInputKind = selectedInputKind ?? inputKindForPath(inputPath);
   return {
     kind: "parse",
     options: {
       inputPath,
-      inputKind: inputKindForPath(inputPath),
+      inputKind: resolvedInputKind,
       timezone,
       locale,
       format,
@@ -499,17 +531,20 @@ function warningSummary(warning: ParseWarning): string {
 }
 
 function assertUsableResult(result: TimetableParseResult): void {
-  const errors = result.warnings.filter(
+  const assessment = assessTimetableResult(result);
+  if (assessment.status === "usable") return;
+  const errors = warningsForResult(result).filter(
     (warning) => warning.severity === "error",
   );
-  if (errors.length > 0) {
+  if (assessment.reasons.includes("ERROR_WARNINGS")) {
     const shown = errors.slice(0, 3).map(warningSummary).join(" ");
     const remaining = errors.length > 3 ? ` (+${errors.length - 3} more)` : "";
     throw new CliError(`Input is invalid. ${shown}${remaining}`);
   }
-  if (result.events.length === 0) {
+  if (assessment.reasons.includes("NO_EVENTS")) {
     throw new CliError("No timetable events were recognized in the input.");
   }
+  throw new CliError("Input is unusable.");
 }
 
 function serializeResult(
@@ -571,6 +606,7 @@ async function executeAgent(io: ResolvedCliIO): Promise<void> {
   await runTimetableAgentProtocol({
     input: io.stdin,
     output: io.stdout,
+    tool: createTimetableAgentTool(),
   });
 }
 

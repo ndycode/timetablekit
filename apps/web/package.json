@@ -5,14 +5,15 @@
   "description": "TimetableKit public playground and documentation site.",
   "scripts": {
     "dev": "node ../../scripts/prepare-ocr-assets.mjs && next dev",
-    "build": "corepack pnpm --filter @ndycode/timetablekit build && corepack pnpm --filter @ndycode/timetablekit-provider-tesseract build && corepack pnpm --filter @ndycode/timetablekit-provider-pdfjs build && node ../../scripts/prepare-ocr-assets.mjs && next build",
-    "typecheck": "corepack pnpm --filter @ndycode/timetablekit build && corepack pnpm --filter @ndycode/timetablekit-provider-tesseract build && corepack pnpm --filter @ndycode/timetablekit-provider-pdfjs build && tsc --noEmit",
+    "build": "corepack pnpm --filter @ndycode/timetablekit build && corepack pnpm --filter @ndycode/timetablekit-agent build && corepack pnpm --filter @ndycode/timetablekit-provider-tesseract build && corepack pnpm --filter @ndycode/timetablekit-provider-pdfjs build && node ../../scripts/prepare-ocr-assets.mjs && next build",
+    "typecheck": "corepack pnpm --filter @ndycode/timetablekit build && corepack pnpm --filter @ndycode/timetablekit-agent build && corepack pnpm --filter @ndycode/timetablekit-provider-tesseract build && corepack pnpm --filter @ndycode/timetablekit-provider-pdfjs build && tsc --noEmit",
     "lint": "pnpm --dir ../.. lint",
     "test": "pnpm exec playwright test --config ../../playwright.config.ts",
-    "test:unit": "pnpm exec vitest run lib/input-boundary.test.ts lib/playground-model.test.ts app/api/parse/route.unit.test.ts --config ../../vitest.config.ts"
+    "test:unit": "corepack pnpm --filter @ndycode/timetablekit-agent build && pnpm exec vitest run lib/input-boundary.test.ts lib/playground-model.test.ts app/schema/routes.unit.test.ts --config ../../vitest.config.ts"
   },
   "dependencies": {
     "@ndycode/timetablekit": "workspace:*",
+    "@ndycode/timetablekit-agent": "workspace:*",
     "@ndycode/timetablekit-provider-pdfjs": "workspace:*",
     "@ndycode/timetablekit-provider-tesseract": "workspace:*",
     "@tesseract.js-data/eng": "1.0.0",

@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import type {
   EventSchedule,
   TimetableEvent,
@@ -73,6 +73,10 @@ function ScheduleEditor({
   readonly onCorrection: (correction: PlaygroundCorrection) => void;
 }) {
   const schedule = event.schedule;
+  const exactValue =
+    schedule.kind === "exact" ? schedule.exactDates.join(", ") : "";
+  const [exactDraft, setExactDraft] = useState(exactValue);
+  useEffect(() => setExactDraft(exactValue), [exactValue]);
   const warning = warningForEventField(result, event.id, "schedule");
   const warningDescription =
     warning === undefined ? undefined : warningId(event, "schedule");
@@ -86,17 +90,21 @@ function ScheduleEditor({
         <input
           className={`event-input${warning === undefined ? "" : " warning"}`}
           id={inputId}
-          value={schedule.exactDates.join(", ")}
+          value={exactDraft}
+          required
           aria-invalid={warning !== undefined}
           aria-describedby={warningDescription}
           data-testid={`event-schedule-${event.id}`}
           onChange={(change: ChangeEvent<HTMLInputElement>) =>
+            setExactDraft(change.currentTarget.value)
+          }
+          onBlur={() =>
             onCorrection({
               eventId: event.id,
               field: "schedule",
               value: {
                 ...schedule,
-                exactDates: parseDateList(change.currentTarget.value),
+                exactDates: parseDateList(exactDraft),
               },
             })
           }
@@ -185,6 +193,8 @@ function EventTextInput({
   readonly onChange: (value: string) => void;
 }) {
   const warning = warningForEventField(result, event.id, field);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
   const inputId = `${event.id}-${field}`;
   const warningDescription =
     warning === undefined ? undefined : warningId(event, field);
@@ -202,7 +212,7 @@ function EventTextInput({
       <input
         className={`event-input${warning === undefined ? "" : " warning"}`}
         id={inputId}
-        value={value}
+        value={draft}
         placeholder={placeholder}
         inputMode={
           field === "startTime" || field === "endTime" ? "numeric" : undefined
@@ -210,9 +220,11 @@ function EventTextInput({
         aria-invalid={warning !== undefined}
         aria-describedby={warningDescription}
         data-testid={`event-${field}-${event.id}`}
+        required={field !== "location"}
         onChange={(change: ChangeEvent<HTMLInputElement>) =>
-          onChange(change.currentTarget.value)
+          setDraft(change.currentTarget.value)
         }
+        onBlur={() => onChange(draft)}
       />
       {warning === undefined ? null : (
         <FieldWarning

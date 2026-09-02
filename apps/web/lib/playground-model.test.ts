@@ -62,6 +62,34 @@ describe("playground model", () => {
     expect(currentInputForSource(state.source)).toBeUndefined();
   });
 
+  it("clears the old result before an uploaded file is read", async () => {
+    const result = await parseTimetable(
+      { kind: "text", text: "Old Result; Monday; 09:00-10:00" },
+      parseOptions,
+    );
+    const parsed = playgroundReducer(createInitialPlaygroundState(), {
+      type: "parse-succeeded",
+      result,
+    });
+
+    const reading = playgroundReducer(parsed, { type: "file-read-started" });
+
+    expect(reading.result).toBeNull();
+    expect(reading.fileReading).toBe(true);
+    expect(reading.status).toBe("Checking file.");
+
+    const selected = playgroundReducer(reading, {
+      type: "file-selected",
+      input: {
+        kind: "text",
+        text: "New Result; Tuesday; 10:00-11:00",
+        filename: "new.txt",
+      },
+      label: "new.txt",
+    });
+    expect(selected.fileReading).toBe(false);
+  });
+
   it("recalculates conflicts and removes stale validation warnings after edits", async () => {
     const result = await parseTimetable(
       {
@@ -87,7 +115,7 @@ describe("playground model", () => {
     ).toBe(false);
   });
 
-  it("preserves source-row warnings for rejected candidates after edits", async () => {
+  it("removes corrected warnings while preserving unrelated source-row warnings", async () => {
     const result = await parseTimetable(
       {
         kind: "text",
@@ -107,17 +135,33 @@ describe("playground model", () => {
     );
     if (event === undefined) return;
 
-    const corrected = applyEventCorrection(result, {
+    const withUnrelatedWarning = {
+      ...result,
+      warnings: [
+        ...result.warnings,
+        {
+          code: "POSSIBLE_DUPLICATE" as const,
+          severity: "warning" as const,
+          message: "The source row may be duplicated.",
+          eventId: event.id,
+          source: { line: 4 },
+        },
+      ],
+    };
+
+    const corrected = applyEventCorrection(withUnrelatedWarning, {
       eventId: event.id,
       field: "title",
       value: "Updated Alpha",
     });
 
+    expect(corrected.warnings).toHaveLength(2);
     expect(corrected.warnings).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ code: "MISSING_TITLE" }),
         expect.objectContaining({
-          code: "MISSING_TITLE",
-          source: expect.anything(),
+          code: "POSSIBLE_DUPLICATE",
+          source: { line: 4 },
         }),
       ]),
     );

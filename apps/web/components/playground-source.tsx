@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
 import type { PlaygroundState, PlaygroundTab } from "../lib/playground-model";
 import { SAMPLE_LABEL, SAMPLE_TEXT } from "../lib/samples";
 import { RotateCcwIcon, ShieldCheckIcon, StopIcon, UploadIcon } from "./icons";
@@ -48,6 +48,36 @@ export function PlaygroundSource({
     onFileSelect(event.currentTarget.files?.[0]);
   }
 
+  function handleTabKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    tab: PlaygroundTab,
+  ): void {
+    const currentIndex = SOURCE_TABS.indexOf(tab);
+    let nextIndex: number | undefined;
+    switch (event.key) {
+      case "ArrowLeft":
+        nextIndex =
+          (currentIndex - 1 + SOURCE_TABS.length) % SOURCE_TABS.length;
+        break;
+      case "ArrowRight":
+        nextIndex = (currentIndex + 1) % SOURCE_TABS.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = SOURCE_TABS.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    const nextTab = SOURCE_TABS[nextIndex];
+    if (nextTab === undefined) return;
+    onTabChange(nextTab);
+    document.getElementById(`source-tab-${nextTab}`)?.focus();
+  }
+
   return (
     <section
       className="playground-panel source-panel"
@@ -77,8 +107,10 @@ export function PlaygroundSource({
             role="tab"
             aria-selected={activeTab === tab}
             aria-controls="source-tabpanel"
+            tabIndex={activeTab === tab ? 0 : -1}
             data-testid={`source-tab-${tab}`}
             onClick={() => onTabChange(tab)}
+            onKeyDown={(event) => handleTabKeyDown(event, tab)}
           >
             {TAB_LABELS[tab]}
           </button>
@@ -235,17 +267,21 @@ export function PlaygroundSource({
               className="compact-button primary"
               type="button"
               onClick={onRead}
-              disabled={state.busy}
+              disabled={state.busy || state.fileReading}
               data-testid="read-schedule"
             >
               <ShieldCheckIcon aria-hidden="true" />
-              {state.busy ? "Reading…" : "Read schedule"}
+              {state.fileReading
+                ? "Checking file…"
+                : state.busy
+                  ? "Reading…"
+                  : "Read schedule"}
             </button>
             <button
               className="compact-button"
               type="button"
               onClick={onStop}
-              disabled={!state.busy}
+              disabled={!state.busy && !state.fileReading}
               data-testid="stop-reading"
             >
               <StopIcon aria-hidden="true" />

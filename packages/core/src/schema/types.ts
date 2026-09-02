@@ -15,32 +15,32 @@ export type TimetableInput =
   | {
       readonly kind: "text";
       readonly text: string;
-      readonly filename?: string;
+      readonly filename?: string | undefined;
     }
   | {
       readonly kind: "csv";
       readonly text: string;
-      readonly delimiter?: "," | ";" | "\t";
-      readonly filename?: string;
+      readonly delimiter?: "," | ";" | "\t" | undefined;
+      readonly filename?: string | undefined;
     }
   | {
       readonly kind: "image";
       readonly bytes: Readonly<Uint8Array>;
       readonly mimeType: "image/png" | "image/jpeg" | "image/webp";
-      readonly filename?: string;
+      readonly filename?: string | undefined;
     }
   | {
       readonly kind: "pdf";
       readonly bytes: Readonly<Uint8Array>;
       readonly mimeType: "application/pdf";
-      readonly filename?: string;
+      readonly filename?: string | undefined;
     };
 
 export type SourceDescriptor = {
   readonly kind: SourceKind;
-  readonly filename?: string;
-  readonly mimeType?: string;
-  readonly pageCount?: number;
+  readonly filename?: string | undefined;
+  readonly mimeType?: string | undefined;
+  readonly pageCount?: number | undefined;
 };
 
 export type TermRange = {
@@ -52,8 +52,8 @@ export type EventSchedule =
   | {
       readonly kind: "weekly";
       readonly weekdays: readonly Weekday[];
-      readonly startsOn?: IsoDate;
-      readonly endsOn?: IsoDate;
+      readonly startsOn?: IsoDate | undefined;
+      readonly endsOn?: IsoDate | undefined;
     }
   | {
       readonly kind: "exact";
@@ -72,40 +72,58 @@ export type EventField =
   | "instructor"
   | "notes";
 
+export type EventFieldValueMap = {
+  readonly [Field in EventField]: Field extends "schedule"
+    ? EventSchedule
+    : string;
+};
+
+type EventCorrectionFor<Field extends EventField> = {
+  readonly eventId: EventId;
+  readonly field: Field;
+  readonly value: EventFieldValueMap[Field];
+};
+
+export type EventCorrection = {
+  [Field in EventField]: EventCorrectionFor<Field>;
+}[EventField];
+
 export type FieldValue =
   string | EventSchedule | readonly Weekday[] | readonly IsoDate[];
 
 export type SourceLocation = {
-  readonly page?: number;
-  readonly line?: number;
-  readonly charStart?: number;
-  readonly charEnd?: number;
-  readonly bounds?: {
-    readonly x: number;
-    readonly y: number;
-    readonly width: number;
-    readonly height: number;
-  };
+  readonly page?: number | undefined;
+  readonly line?: number | undefined;
+  readonly charStart?: number | undefined;
+  readonly charEnd?: number | undefined;
+  readonly bounds?:
+    | {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      }
+    | undefined;
 };
 
 export type FieldEvidence = {
   readonly source: SourceDescriptor;
   readonly location: SourceLocation;
-  readonly excerpt?: string;
+  readonly excerpt?: string | undefined;
 };
 
 export type TimetableEvent = {
   readonly id: EventId;
   readonly title: string;
-  readonly code?: string;
-  readonly eventType?: string;
+  readonly code?: string | undefined;
+  readonly eventType?: string | undefined;
   readonly schedule: EventSchedule;
   readonly startTime: LocalTime;
   readonly endTime: LocalTime;
   readonly timezone: TimeZone;
-  readonly location?: string;
-  readonly instructor?: string;
-  readonly notes?: string;
+  readonly location?: string | undefined;
+  readonly instructor?: string | undefined;
+  readonly notes?: string | undefined;
   readonly confidence: number;
   readonly fieldConfidence: Partial<Record<EventField, number>>;
   readonly evidence: Partial<Record<EventField, readonly FieldEvidence[]>>;
@@ -150,10 +168,11 @@ export type ParseWarning = {
   readonly code: WarningCode;
   readonly severity: WarningSeverity;
   readonly message: string;
-  readonly eventId?: EventId;
-  readonly field?: EventField;
-  readonly source?: SourceLocation;
-  readonly details?: Readonly<Record<string, string | number | boolean>>;
+  readonly eventId?: EventId | undefined;
+  readonly field?: EventField | undefined;
+  readonly source?: SourceLocation | undefined;
+  readonly details?:
+    Readonly<Record<string, string | number | boolean>> | undefined;
 };
 
 export type ConflictCode = "SCHEDULE_CONFLICT";
@@ -189,7 +208,7 @@ export type ParseStage =
 export type ParseProgress = {
   readonly stage: ParseStage;
   readonly completed: number;
-  readonly total?: number;
+  readonly total?: number | undefined;
   readonly message: string;
 };
 
@@ -198,7 +217,7 @@ export type ParseStageReport = {
   readonly status: "completed" | "skipped" | "failed";
   readonly durationMs: number;
   readonly warningCount: number;
-  readonly providerId?: string;
+  readonly providerId?: string | undefined;
 };
 
 export type TimetableParseResult = {
@@ -206,7 +225,7 @@ export type TimetableParseResult = {
   readonly source: SourceDescriptor;
   readonly timezone: TimeZone;
   readonly locale: string;
-  readonly term?: TermRange;
+  readonly term?: TermRange | undefined;
   readonly events: readonly TimetableEvent[];
   readonly warnings: readonly ParseWarning[];
   readonly conflicts: readonly ScheduleConflict[];
@@ -219,6 +238,18 @@ export type TimetableParseResult = {
   };
 };
 
+export type ResultAssessmentReason = "NO_EVENTS" | "ERROR_WARNINGS";
+
+export type ResultAssessment =
+  | {
+      readonly status: "usable";
+      readonly reasons: readonly ResultAssessmentReason[];
+    }
+  | {
+      readonly status: "unusable";
+      readonly reasons: readonly ResultAssessmentReason[];
+    };
+
 export type ResourceLimits = {
   readonly maxInputBytes: number;
   readonly maxImagePixels: number;
@@ -227,19 +258,25 @@ export type ResourceLimits = {
   readonly maxOutputBytes: number;
 };
 
+export type ResourceLimitsOverrides = {
+  readonly [Limit in keyof ResourceLimits]?: ResourceLimits[Limit] | undefined;
+};
+
 export type ParseOptions = {
   readonly locale: string;
   readonly timezone: TimeZone;
-  readonly term?: TermRange;
-  readonly evidence?: "none" | "locations" | "snippets";
-  readonly limits?: Partial<ResourceLimits>;
-  readonly signal?: AbortSignal;
-  readonly onProgress?: (progress: ParseProgress) => void;
-  readonly recovery?: {
-    readonly enabled: boolean;
-    readonly consent: boolean;
-    readonly maxFields?: number;
-  };
+  readonly term?: TermRange | undefined;
+  readonly evidence?: "none" | "locations" | "snippets" | undefined;
+  readonly limits?: ResourceLimitsOverrides | undefined;
+  readonly signal?: AbortSignal | undefined;
+  readonly onProgress?: ((progress: ParseProgress) => void) | undefined;
+  readonly recovery?:
+    | {
+        readonly enabled: boolean;
+        readonly consent: boolean;
+        readonly maxFields?: number | undefined;
+      }
+    | undefined;
 };
 
 export type TextLine = {
@@ -248,7 +285,7 @@ export type TextLine = {
 };
 
 export type TextPage = {
-  readonly pageNumber?: number;
+  readonly pageNumber?: number | undefined;
   readonly lines: readonly TextLine[];
 };
 
@@ -311,12 +348,19 @@ export type RecoveryRequest = {
   readonly unresolved: readonly UnresolvedField[];
 };
 
-export type RecoveryPatch = {
-  readonly eventId: EventId;
-  readonly field: EventField;
-  readonly value: FieldValue;
-  readonly confidence: number;
-};
+export type RecoveryPatch =
+  | {
+      readonly eventId: EventId;
+      readonly field: Exclude<EventField, "schedule">;
+      readonly value: string;
+      readonly confidence: number;
+    }
+  | {
+      readonly eventId: EventId;
+      readonly field: "schedule";
+      readonly value: EventSchedule;
+      readonly confidence: number;
+    };
 
 export type RecoveryResponse = {
   readonly patches: readonly RecoveryPatch[];
@@ -334,7 +378,7 @@ export type TimetableParserConfig = {
   readonly providers?: readonly ExtractionProvider[];
   readonly recoveryProvider?: RecoveryProvider;
   readonly localeRegistry?: LocaleRegistry;
-  readonly limits?: Partial<ResourceLimits>;
+  readonly limits?: ResourceLimitsOverrides;
 };
 
 export interface TimetableParser {
