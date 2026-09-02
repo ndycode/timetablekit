@@ -16,9 +16,9 @@ export default function HomePage() {
         <div className="hero-copy">
           <h1 id="home-title">Turn schedules into calendar events.</h1>
           <p>
-            Paste a schedule or choose a text, image, or PDF file. TimetableKit
-            turns it into calendar events you can check and download in your
-            browser.
+            Paste text or CSV, or choose an image or PDF. TimetableKit reads it
+            locally, shows warnings and conflicts, and lets you edit the result
+            before you export JSON, CSV, or iCalendar.
           </p>
           <div className="hero-actions">
             <Link className="button" href="/playground">
@@ -34,23 +34,23 @@ export default function HomePage() {
             </a>
           </div>
           <p className="privacy-note">
-            <strong>Runs in your browser by default.</strong> No account or API
-            key. Your schedule stays in this browser unless you turn on AI help.
+            <strong>Local by default.</strong> No account or API key. The public
+            playground has no remote provider configured.
           </p>
         </div>
 
         <div
           className="transform-frame"
-          aria-label="Example schedule turned into calendar events"
+          aria-label="Example schedule turned into a reviewable calendar result"
         >
           <div className="transform-frame-header">
-            <span>Input file</span>
+            <span>Schedule input</span>
             <ArrowRightIcon />
-            <span>Calendar events</span>
+            <span>Reviewable result</span>
           </div>
           <div className="transform-grid">
             <div className="sample-input">
-              <div className="sample-label">Sample week</div>
+              <div className="sample-label">Fictional week</div>
               <pre>{`Mon 09:00-11:00 CS101 Algorithms
 Mon 10:30-12:00 MATH201 Discrete Math
 Mon 14:00-15:30 CS205 Databases
@@ -58,7 +58,7 @@ Mon 14:00-15:30 CS205 Databases
 Time zone: Asia/Manila`}</pre>
             </div>
             <div className="sample-output">
-              <div className="agenda-date">Monday · 12 May 2025</div>
+              <div className="agenda-date">Monday · fictional week</div>
               <ul className="sample-event-list">
                 {sampleEvents.map((event) => (
                   <li key={event.time}>
@@ -70,7 +70,7 @@ Time zone: Asia/Manila`}</pre>
                   </li>
                 ))}
               </ul>
-              <div className="agenda-date">Tuesday · 13 May 2025</div>
+              <div className="agenda-date">Tuesday · fictional week</div>
               <ul className="sample-event-list">
                 <li>
                   <time>09:00</time>
@@ -94,21 +94,21 @@ Time zone: Asia/Manila`}</pre>
         <div className="workflow-step">
           <span className="workflow-number">01</span>
           <div>
-            <h2>Add</h2>
-            <p>Add a schedule from text, an image, or a PDF.</p>
+            <h2>Read</h2>
+            <p>Read text, CSV, image, or PDF input locally.</p>
           </div>
         </div>
         <div className="workflow-step">
           <span className="workflow-number">02</span>
           <div>
-            <h2>Check</h2>
-            <p>Check and edit the events.</p>
+            <h2>Review</h2>
+            <p>Edit events and resolve warnings or conflicts.</p>
           </div>
         </div>
         <div className="workflow-step">
           <span className="workflow-number">03</span>
           <div>
-            <h2>Download</h2>
+            <h2>Export</h2>
             <p>Download JSON, CSV, or iCalendar.</p>
           </div>
         </div>
@@ -116,28 +116,30 @@ Time zone: Asia/Manila`}</pre>
 
       <section className="demo-section" aria-labelledby="demo-title">
         <div className="demo-section-heading">
-          <h2 id="demo-title">See how it works</h2>
-          <span>sample input · stays here</span>
+          <h2 id="demo-title">See the review flow</h2>
+          <span>fictional input · local by default</span>
         </div>
         <TimetableDemo />
       </section>
 
       <section className="formats-band" aria-labelledby="formats-title">
-        <h2 id="formats-title">Files you can use</h2>
+        <h2 id="formats-title">Accepted input formats</h2>
         <ul className="format-list">
-          <li>Text · .txt</li>
+          <li>Text · .txt, .text</li>
           <li>CSV · .csv</li>
-          <li>PNG</li>
-          <li>JPEG</li>
-          <li>WebP</li>
-          <li>PDF</li>
+          <li>Images · PNG, JPEG, WebP</li>
+          <li>PDF · .pdf</li>
         </ul>
       </section>
 
       <section className="sdk-band" aria-labelledby="sdk-title">
         <div className="sdk-copy">
-          <h2 id="sdk-title">Use it in TypeScript</h2>
-          <p>A small package for your app.</p>
+          <h2 id="sdk-title">Use it in TypeScript or an agent host</h2>
+          <p>
+            <code>@ndycode/timetablekit</code> parses schedules. The current
+            main branch also includes <code>@ndycode/timetablekit-agent</code>,
+            which exposes <code>timetablekit.parse</code> over JSON.
+          </p>
           <Link href="/docs">
             Read the guide <ArrowRightIcon />
           </Link>
@@ -145,7 +147,7 @@ Time zone: Asia/Manila`}</pre>
         <pre className="sdk-code">
           <code>
             <span className="code-keyword">import</span> &#123; parseTimetable,
-            toICS &#125; <span className="code-keyword">from</span>{" "}
+            toJSON &#125; <span className="code-keyword">from</span>{" "}
             <span className="code-string">
               &quot;@ndycode/timetablekit&quot;
             </span>
@@ -156,22 +158,24 @@ Time zone: Asia/Manila`}</pre>
             <span className="code-string">&quot;en-PH&quot;</span>, timezone:{" "}
             <span className="code-string">&quot;Asia/Manila&quot;</span> &#125;,
             );
-            <span className="code-keyword">const</span> ics = toICS(result);
+            <span className="code-keyword">const</span> normalized =
+            toJSON(result);
           </code>
         </pre>
       </section>
 
       <section className="privacy-band" aria-labelledby="privacy-title">
         <h2 id="privacy-title">
-          Your data stays here.
+          Local by default.
           <br />
           No account needed.
         </h2>
         <div>
           <p>
-            The app reads schedules in your browser. Files stay in memory while
-            you work. AI help is off until you turn it on and agree to the
-            outside service&apos;s terms.
+            The public playground keeps selected files and pasted text in
+            browser memory. No remote provider is configured here. Agent hosts
+            can opt into remote recovery only with provider setup and explicit
+            consent.
           </p>
           <Link href="/privacy">
             See how privacy works <ArrowRightIcon />
@@ -181,9 +185,9 @@ Time zone: Asia/Manila`}</pre>
 
       <section className="roadmap-band" aria-labelledby="roadmap-title">
         <div>
-          <h2 id="roadmap-title">What comes next</h2>
+          <h2 id="roadmap-title">Shipped and next</h2>
           <p className="privacy-note">
-            We add small, tested steps to make schedule imports easier.
+            Small, tested steps keep the parser and its boundaries predictable.
           </p>
           <Link href="/roadmap">
             See the plan <ArrowRightIcon />
@@ -191,16 +195,20 @@ Time zone: Asia/Manila`}</pre>
         </div>
         <ul className="roadmap-list">
           <li>
-            <strong>Now</strong>Read text and CSV schedules
+            <strong>Shipped</strong>Local text, CSV, image, and PDF readers
           </li>
           <li>
-            <strong>Now</strong>Fix events and download them
+            <strong>Shipped</strong>Review events, warnings, conflicts, and
+            evidence
           </li>
           <li>
-            <strong>Next</strong>Support more languages
+            <strong>Shipped</strong>JSON, CSV, and iCalendar exports
           </li>
           <li>
-            <strong>Next</strong>Add more file readers
+            <strong>Current main</strong>Agent tool and JSONL transport
+          </li>
+          <li>
+            <strong>Next</strong>More languages, file types, and host examples
           </li>
         </ul>
       </section>

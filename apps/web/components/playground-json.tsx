@@ -38,8 +38,10 @@ export function PlaygroundJson({
             05
           </span>
           <div>
-            <h2 id="json-title">JSON result</h2>
-            <p>Download a standard file or copy the TypeScript example.</p>
+            <h2 id="json-title">Export result</h2>
+            <p>
+              Download JSON, CSV, or iCalendar, or copy the TypeScript example.
+            </p>
           </div>
         </div>
         <div className="export-actions">

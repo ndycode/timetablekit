@@ -27,7 +27,6 @@ const oldPhrases = [
   "Fictional campus week",
   "File providers",
   "Import timetable",
-  "Local by default",
   "Normalized JSON",
   "Optional AI recovery",
   "PARSER TRACE",
@@ -44,9 +43,35 @@ const oldPhrases = [
   "TypeScript SDK",
   "Upload",
   "Warnings and conflicts",
+  "Spring 2025",
+  "May 2025",
+  "sample-week-spring-2025",
+  "127.0.0.1:4173/demo",
+  "A small package for your app.",
+  "sample input · stays here",
+  "Read here",
+  "Read files",
+  "The app never hides them.",
+  "works in UTC",
+  "<strong>Now</strong>",
+  "Add more file readers",
   "validated events",
   "fictional sample",
   "prefers-color-scheme: dark",
+];
+
+const requiredPhrases = [
+  [
+    "apps/web/app/page.tsx",
+    ["@ndycode/timetablekit-agent", "timetablekit.parse"],
+  ],
+  [
+    "apps/web/app/docs/page.tsx",
+    ["Agent integrations", "timetablekit agent", "base64"],
+  ],
+  ["apps/web/app/privacy/page.tsx", ["Remote recovery is opt-in"]],
+  ["apps/web/app/security/page.tsx", ["What agent mode accepts"]],
+  ["apps/web/app/roadmap/page.tsx", ["Framework-neutral agent tool"]],
 ];
 
 const findings = [];
@@ -54,6 +79,15 @@ for (const file of files) {
   const source = readFileSync(join(process.cwd(), file), "utf8");
   for (const phrase of oldPhrases) {
     if (source.includes(phrase)) findings.push(`${file}: ${phrase}`);
+  }
+}
+
+for (const [file, phrases] of requiredPhrases) {
+  const source = readFileSync(join(process.cwd(), file), "utf8");
+  for (const phrase of phrases) {
+    if (!source.includes(phrase)) {
+      findings.push(file + ": missing " + phrase);
+    }
   }
 }
 

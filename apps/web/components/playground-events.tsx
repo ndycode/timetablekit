@@ -240,8 +240,8 @@ export function PlaygroundEvents({
             02
           </span>
           <div>
-            <h2 id="result-title">Events</h2>
-            <p>Edit fields to resolve issues before you export.</p>
+            <h2 id="result-title">Review events</h2>
+            <p>Edit the result, then review warnings before you export.</p>
           </div>
         </div>
         <span className="result-meta">
@@ -250,7 +250,8 @@ export function PlaygroundEvents({
           ) : (
             <>
               <strong>{result.events.length} events</strong> ·{" "}
-              {Math.round(result.parse.deterministicConfidence * 100)}% match
+              {Math.round(result.parse.deterministicConfidence * 100)}% overall
+              confidence
             </>
           )}
         </span>
@@ -266,7 +267,9 @@ export function PlaygroundEvents({
       ) : (
         <div className="table-scroll">
           <table className="event-table" data-testid="event-table">
-            <caption className="sr-only">Editable schedule events</caption>
+            <caption className="sr-only">
+              Editable schedule events with confidence scores
+            </caption>
             <thead>
               <tr>
                 <th scope="col">Title</th>
@@ -274,7 +277,7 @@ export function PlaygroundEvents({
                 <th scope="col">Start</th>
                 <th scope="col">End</th>
                 <th scope="col">Place</th>
-                <th scope="col">Match</th>
+                <th scope="col">Confidence</th>
               </tr>
             </thead>
             <tbody>

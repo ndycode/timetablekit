@@ -60,8 +60,8 @@ export function PlaygroundSource({
             01
           </span>
           <div>
-            <h2 id="source-title">Add a schedule</h2>
-            <p>Choose a source, then read it in this browser.</p>
+            <h2 id="source-title">Choose an input</h2>
+            <p>Pick a source, then read it locally.</p>
           </div>
         </div>
         <span className="panel-note">{TAB_LABELS[activeTab]}</span>
@@ -157,10 +157,10 @@ export function PlaygroundSource({
                 />
                 <span className="toggle-control" aria-hidden="true" />
                 <span className="toggle-copy">
-                  <strong>Use optional AI help</strong>
+                  <strong>Enable optional remote recovery</strong>
                   <small>
-                    Off by default. This public demo has no AI provider
-                    configured.
+                    Off by default. This public playground has no recovery
+                    provider, so it makes no remote request.
                   </small>
                 </span>
               </label>

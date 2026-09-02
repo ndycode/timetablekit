@@ -12,11 +12,12 @@ export const metadata: Metadata = {
     template: "%s · TimetableKit",
   },
   description:
-    "Turn schedule text, images, and PDFs into calendar events in your browser.",
+    "Local-first timetable parsing for browsers, TypeScript apps, CLIs, and agent hosts. Review warnings and conflicts, then export JSON, CSV, or iCalendar.",
   icons: { icon: "/icon.svg" },
   openGraph: {
     title: "TimetableKit",
-    description: "Turn schedules into calendar events in your browser.",
+    description:
+      "Read timetables locally, review warnings and conflicts, and export JSON, CSV, or iCalendar.",
     type: "website",
     images: [
       {

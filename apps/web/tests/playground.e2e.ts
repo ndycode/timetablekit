@@ -32,7 +32,7 @@ test("sample flow supports review, correction, and ICS export", async ({
 }) => {
   await openReadyPlayground(page);
   await expect(
-    page.getByRole("heading", { name: "Check your schedule." }),
+    page.getByRole("heading", { name: "Read and review your schedule." }),
   ).toBeVisible();
   await expect(page.getByText("Found 6 events.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Issues" })).toBeVisible();
@@ -70,7 +70,7 @@ test("paste parsing stays local and requires no account", async ({ page }) => {
   expect(await page.evaluate(() => window.localStorage.length)).toBe(0);
 });
 
-test("correction changes recompute conflicts and expose AI consent state", async ({
+test("correction changes recompute conflicts and expose recovery state", async ({
   page,
 }) => {
   await openReadyPlayground(page);
@@ -88,10 +88,31 @@ test("correction changes recompute conflicts and expose AI consent state", async
   await expect(page.getByText("Time conflict")).toHaveCount(0);
 
   await page.getByLabel("Schedule text").fill("Sketching; Monday; 9-10");
-  await page.getByRole("checkbox", { name: /Use optional AI help/ }).check();
+  await page
+    .getByRole("checkbox", { name: /Enable optional remote recovery/ })
+    .check();
   await page.getByRole("button", { name: "Read schedule" }).click();
-  await expect(page.getByText("AI help unavailable")).toBeVisible();
+  await expect(page.getByText("Recovery unavailable")).toBeVisible();
   await expect(page.getByText("Unclear time")).toBeVisible();
+});
+
+test("public copy names the shipped agent contract", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", {
+      name: "Use it in TypeScript or an agent host",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("@ndycode/timetablekit-agent")).toBeVisible();
+  await expect(page.getByText("timetablekit.parse")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("May 2025");
+
+  await page.goto("/docs");
+  await expect(
+    page.getByRole("heading", { name: "Agent integrations" }),
+  ).toBeVisible();
+  await expect(page.getByText("timetablekit agent")).toBeVisible();
+  await expect(page.getByText("bounded base64")).toBeVisible();
 });
 
 test("file input, exact dates, multiple weekdays, and reset stay observable", async ({

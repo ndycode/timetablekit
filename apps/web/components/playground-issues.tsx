@@ -85,7 +85,7 @@ export function PlaygroundIssues({ result }: PlaygroundIssuesProps) {
         {issues.length === 0 ? (
           <div className="empty-issues" data-testid="issues-empty">
             <CheckCircleIcon aria-hidden="true" />
-            <p>No issues. Ready to download.</p>
+            <p>No issues found. The result is ready to export.</p>
           </div>
         ) : (
           <ul className="issue-list">

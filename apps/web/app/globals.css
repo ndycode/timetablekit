@@ -993,22 +993,18 @@ main {
 
 @keyframes demo-message-enter {
   from {
-    opacity: 0;
     transform: translateY(4px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
 
 @keyframes demo-log-enter {
   from {
-    opacity: 0;
     transform: translateX(4px);
   }
   to {
-    opacity: 1;
     transform: translateX(0);
   }
 }

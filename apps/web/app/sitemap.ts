@@ -13,6 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/roadmap",
   ].map((path) => ({
     url: `${base}${path}`,
-    lastModified: new Date("2026-09-01"),
+    lastModified: new Date("2026-09-02"),
   }));
 }

@@ -134,15 +134,15 @@ export const PROGRESS_LABELS: Readonly<Record<ParseStage, string>> = {
   normalize: "Preparing events.",
   preflight: "Checking the input.",
   recognize: "Finding days and times.",
-  recovery: "Running optional AI help.",
+  recovery: "Running optional recovery.",
   segment: "Reading rows.",
   validate: "Checking events.",
 };
 
 const ISSUE_TITLES: Partial<Record<WarningCode, string>> = {
   AMBIGUOUS_TIME: "Unclear time",
-  AI_OUTPUT_INVALID: "AI help returned an unusable result",
-  AI_PROVIDER_UNAVAILABLE: "AI help unavailable",
+  AI_OUTPUT_INVALID: "Recovery returned an unusable result",
+  AI_PROVIDER_UNAVAILABLE: "Recovery unavailable",
   CONFLICT_LIMIT: "Conflict check stopped",
   DUPLICATE_EVENT: "Duplicate event",
   INVALID_DATE: "Invalid date",
@@ -157,9 +157,10 @@ const ISSUE_TITLES: Partial<Record<WarningCode, string>> = {
 };
 
 const ISSUE_MESSAGES: Partial<Record<WarningCode, string>> = {
-  AI_OUTPUT_INVALID: "AI help returned a result we could not use.",
-  AI_PROVIDER_UNAVAILABLE: "AI help is not available right now.",
-  AI_RECOVERY_SKIPPED: "AI help was skipped.",
+  AI_OUTPUT_INVALID: "Recovery returned a result we could not use.",
+  AI_PROVIDER_UNAVAILABLE:
+    "No recovery provider is available in this playground.",
+  AI_RECOVERY_SKIPPED: "Recovery was skipped because consent was not provided.",
   AMBIGUOUS_TIME: "We could not tell which time this means.",
   CONFLICT_LIMIT: "We could not check every time conflict.",
   DUPLICATE_EVENT: "We found the same event twice. One copy was removed.",
