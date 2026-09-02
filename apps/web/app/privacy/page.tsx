@@ -23,8 +23,10 @@ export default function PrivacyPage() {
             The public playground has no recovery provider configured. If you
             enable its recovery control, it reports that recovery is unavailable
             and makes no remote request. In another host, a provider must be
-            configured and the request must include explicit recovery consent
-            before content can leave the local process.
+            configured and the host must set{" "}
+            <code>allowRemoteRecovery: true</code>. The request must also
+            include explicit recovery consent before content can leave the local
+            process.
           </p>
         </section>
         <section>

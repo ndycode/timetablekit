@@ -12,9 +12,10 @@ export default function SecurityPage() {
           <h2>What the browser accepts</h2>
           <p>
             The playground accepts only pasted text or files you select. It
-            rejects URLs, unsupported types, files whose names and types do not
-            match, and selected files over 2 MB. It does not save uploaded
-            bytes.
+            rejects remote URLs as input sources, unsupported types, files whose
+            names and types do not match, and selected files over 2 MB. Pasted
+            URL-shaped text stays text and is not fetched. It does not save
+            uploaded bytes.
           </p>
         </section>
         <section>
@@ -41,7 +42,8 @@ export default function SecurityPage() {
             Image and PDF readers stay separate from the main parser. Each
             reader must stop when asked, follow size limits, limit its output,
             and return clear errors. A host-injected remote recovery provider
-            needs both host configuration and request consent.
+            needs <code>allowRemoteRecovery: true</code>, host configuration,
+            and request consent.
           </p>
         </section>
         <section>

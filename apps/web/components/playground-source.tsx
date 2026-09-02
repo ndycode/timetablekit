@@ -177,7 +177,9 @@ export function PlaygroundSource({
                 <span>{SAMPLE_LABEL}</span>
                 <span>fictional data</span>
               </div>
-              <pre>{SAMPLE_TEXT}</pre>
+              <pre tabIndex={0} aria-label="Fictional schedule text">
+                {SAMPLE_TEXT}
+              </pre>
             </div>
           ) : null}
 

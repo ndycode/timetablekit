@@ -73,6 +73,15 @@ test("paste parsing stays local and requires no account", async ({ page }) => {
 test("correction changes recompute conflicts and expose recovery state", async ({
   page,
 }) => {
+  const dataRequests: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.resourceType() === "fetch" ||
+      request.resourceType() === "xhr"
+    ) {
+      dataRequests.push(request.url());
+    }
+  });
   await openReadyPlayground(page);
   await page.getByRole("tab", { name: "Paste text" }).click();
   await page
@@ -94,6 +103,7 @@ test("correction changes recompute conflicts and expose recovery state", async (
   await page.getByRole("button", { name: "Read schedule" }).click();
   await expect(page.getByText("Recovery unavailable")).toBeVisible();
   await expect(page.getByText("Unclear time")).toBeVisible();
+  expect(dataRequests).toEqual([]);
 });
 
 test("public copy names the shipped agent contract", async ({ page }) => {
@@ -105,7 +115,10 @@ test("public copy names the shipped agent contract", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText("@ndycode/timetablekit-agent")).toBeVisible();
   await expect(page.getByText("timetablekit.parse")).toBeVisible();
+  await expect(page.getByText("Fictional week").first()).toBeVisible();
   await expect(page.locator("body")).not.toContainText("May 2025");
+  await expect(page.locator("body")).not.toContainText("Spring 2025");
+  await expect(page.locator("body")).not.toContainText("AI help");
 
   await page.goto("/docs");
   await expect(
@@ -113,6 +126,59 @@ test("public copy names the shipped agent contract", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText("timetablekit agent")).toBeVisible();
   await expect(page.getByText("bounded base64")).toBeVisible();
+});
+
+test("reduced motion pauses the example without hiding its content", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.locator(".timetable-demo")).toHaveAttribute(
+    "data-reduced-motion",
+    "true",
+  );
+  await expect(
+    page.getByRole("button", { name: "Play schedule example" }),
+  ).toBeVisible();
+  await expect(page.locator(".demo-message").first()).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+});
+
+test("mobile pages keep scroll regions focusable and review order intact", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const path of ["/playground", "/docs"]) {
+    await page.goto(path);
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(
+      results.violations,
+      path + " mobile accessibility violations",
+    ).toEqual([]);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+  }
+
+  await page.goto("/playground");
+  const panelOrder = await page
+    .locator(
+      '[data-testid="playground-source"], [data-testid="playground-events"], [data-testid="playground-issues"], [data-testid="playground-preview"], [data-testid="playground-json"]',
+    )
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-testid")),
+    );
+  expect(panelOrder).toEqual([
+    "playground-source",
+    "playground-events",
+    "playground-issues",
+    "playground-preview",
+    "playground-json",
+  ]);
 });
 
 test("file input, exact dates, multiple weekdays, and reset stay observable", async ({

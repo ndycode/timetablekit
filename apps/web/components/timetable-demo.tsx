@@ -41,13 +41,13 @@ const DEMO_LOGS: DemoLog[] = [
     tone: "accent",
   },
   {
-    code: "events[6]",
+    code: "events",
     detail: "92% confidence · Asia/Manila",
     label: "Rows read",
     tone: "success",
   },
   {
-    code: "conflicts[3]",
+    code: "conflicts",
     detail: "review required · warning remains visible",
     label: "Conflicts found",
     tone: "danger",
@@ -108,6 +108,7 @@ export function TimetableDemo() {
   const [isPaused, setIsPaused] = useState(false);
   const [stage, setStage] = useState(0);
   const [typedText, setTypedText] = useState(DEMO_STAGES[0]);
+  const isDemoPaused = isPaused || reducedMotion;
 
   useEffect(() => {
     const root = rootRef.current;
@@ -202,14 +203,14 @@ export function TimetableDemo() {
         <button
           type="button"
           className="demo-toggle"
-          aria-pressed={isPaused}
+          aria-pressed={isDemoPaused}
           aria-label={
-            isPaused ? "Play schedule example" : "Pause schedule example"
+            isDemoPaused ? "Play schedule example" : "Pause schedule example"
           }
           onClick={() => setIsPaused((paused) => !paused)}
         >
-          <span aria-hidden="true">{isPaused ? "▶" : "Ⅱ"}</span>
-          {isPaused ? "Play" : "Pause"}
+          <span aria-hidden="true">{isDemoPaused ? "▶" : "Ⅱ"}</span>
+          {isDemoPaused ? "Play" : "Pause"}
         </button>
       </div>
 

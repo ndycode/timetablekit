@@ -154,13 +154,6 @@ export default function Playground() {
             onReset={reset}
           />
           <PlaygroundEvents result={state.result} onCorrection={correctEvent} />
-          <PlaygroundJson
-            jsonText={jsonText}
-            hasResult={state.result !== null}
-            copyStatus={copyStatus}
-            onExport={exportFormat}
-            onCopy={() => void copySdk()}
-          />
         </div>
         <aside
           className="playground-rail"
@@ -170,6 +163,15 @@ export default function Playground() {
           <PlaygroundIssues result={state.result} />
           <PlaygroundPreview result={state.result} />
         </aside>
+        <div className="playground-export">
+          <PlaygroundJson
+            jsonText={jsonText}
+            hasResult={state.result !== null}
+            copyStatus={copyStatus}
+            onExport={exportFormat}
+            onCopy={() => void copySdk()}
+          />
+        </div>
       </div>
     </main>
   );

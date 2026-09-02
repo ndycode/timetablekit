@@ -28,7 +28,10 @@ export default function DocsPage() {
               and the CLI use the same core parser. You do not need an account,
               database, or AI key.
             </p>
-            <pre>{`import { parseTimetable, toJSON } from "@ndycode/timetablekit"
+            <pre
+              tabIndex={0}
+              aria-label="TypeScript parser example"
+            >{`import { parseTimetable, toJSON } from "@ndycode/timetablekit"
 
 const result = await parseTimetable(
   { kind: "text", text: rawTimetable },
@@ -42,7 +45,8 @@ const normalized = toJSON(result)`}</pre>
             <p>
               TimetableKit checks the input and its size. It reads each row,
               finds days and times, and builds events. It then checks each
-              event, finds time conflicts, and gives each event a match score.
+              event, finds time conflicts, and gives each event a confidence
+              score.
             </p>
             <ol>
               <li>Check the input and options.</li>
@@ -65,8 +69,8 @@ const normalized = toJSON(result)`}</pre>
               use two-letter RFC 5545 codes. Time zones use IANA names.
             </p>
             <p>
-              Each event has a match score. You can also ask for a score for
-              each field and the source of each value.
+              Each event has a confidence score. You can also ask for a score
+              for each field and the source of each value.
             </p>
             <p>
               The public{" "}
@@ -85,7 +89,10 @@ const normalized = toJSON(result)`}</pre>
               same versioned result, warnings, conflicts, confidence, and source
               evidence.
             </p>
-            <pre>{`import { createTimetableAgentTool } from "@ndycode/timetablekit-agent"
+            <pre
+              tabIndex={0}
+              aria-label="TypeScript agent tool example"
+            >{`import { createTimetableAgentTool } from "@ndycode/timetablekit-agent"
 
 const tool = createTimetableAgentTool()
 const response = await tool.invoke({
@@ -96,10 +103,14 @@ const response = await tool.invoke({
               Text and CSV are sent as text. Images and PDFs use bounded base64.
               The default tool handles text and CSV; a host must inject PDF or
               OCR providers for binary input. Remote recovery is off unless the
-              host configures a provider and the request includes explicit
-              consent. Use the public{" "}
+              host sets <code>allowRemoteRecovery: true</code> when constructing
+              the tool, injects a parser with a recovery provider, and the
+              request sets <code>recovery.enabled</code> and{" "}
+              <code>recovery.consent</code> to true. Use the public{" "}
               <a href="/schema/timetable-result.schema.json">JSON Schema</a> to
-              validate the result.
+              validate <code>response.result</code>. The agent package exports{" "}
+              <code>timetableAgentOutputJsonSchema</code> for the full{" "}
+              <code>{"{ ok, result }"}</code> wrapper.
             </p>
             <p>
               The <code>timetablekit agent</code> command uses JSONL. It reads

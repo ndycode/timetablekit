@@ -174,8 +174,9 @@ Time zone: Asia/Manila`}</pre>
           <p>
             The public playground keeps selected files and pasted text in
             browser memory. No remote provider is configured here. Agent hosts
-            can opt into remote recovery only with provider setup and explicit
-            consent.
+            can opt into remote recovery only with{" "}
+            <code>allowRemoteRecovery: true</code>, provider setup, and explicit
+            request consent.
           </p>
           <Link href="/privacy">
             See how privacy works <ArrowRightIcon />

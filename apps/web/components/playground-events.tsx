@@ -265,7 +265,12 @@ export function PlaygroundEvents({
           No events were found. Try a different source.
         </p>
       ) : (
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label="Editable schedule events"
+          tabIndex={0}
+        >
           <table className="event-table" data-testid="event-table">
             <caption className="sr-only">
               Editable schedule events with confidence scores
