@@ -138,7 +138,7 @@ export type TimetableAgentCapabilities = {
 export const timetableParseToolDefinition: TimetableAgentToolDefinition = {
   name: TIMETABLE_AGENT_TOOL_NAME,
   description:
-    "Parse a timetable into validated events, warnings, conflicts, confidence, and source metadata. Inputs are local text, CSV, or bounded base64 binary data. Binary parsing requires a host-injected provider. Remote recovery is disabled unless the host opts in. Check warnings when no events are found. Remote URLs are not fetched.",
+    "Parse a timetable into validated events, warnings, conflicts, confidence, and source metadata. Inputs are local text, CSV, or bounded base64 binary data. Binary parsing requires a host-injected provider. Remote recovery is disabled unless the host opts in. A successful invocation can still return zero events or error-severity warnings. Hosts must inspect warnings and treat either condition as unusable before acting. Remote URLs are not fetched.",
   inputSchema: timetableAgentInputJsonSchema,
   outputSchema: timetableAgentOutputJsonSchema,
 };

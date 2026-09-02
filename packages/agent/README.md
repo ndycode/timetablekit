@@ -41,3 +41,8 @@ Errors use a stable `{ code, message, retryable, details? }` shape. Request,
 input, output, provider, and parser failures are returned as data instead of
 being thrown across the agent boundary. Raw input is never logged by this
 package.
+
+`ok: true` means the parser completed and returned a schema-valid result. It
+does not mean that the result is usable. Hosts must inspect `result.warnings`
+and treat zero events or any warning with `severity: "error"` as an unusable
+parse before taking action.

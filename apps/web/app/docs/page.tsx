@@ -107,7 +107,11 @@ const response = await tool.invoke({
               the tool, injects a parser with a recovery provider, and the
               request sets <code>options.recovery.enabled</code> and{" "}
               <code>options.recovery.consent</code> to true. Check{" "}
-              <code>response.ok</code> first. On success, use the public{" "}
+              <code>response.ok</code> first. A successful invocation can still
+              return zero events or warnings with{" "}
+              <code>severity: &quot;error&quot;</code>. Treat either condition
+              as unusable and inspect <code>response.result.warnings</code>{" "}
+              before acting. On success, use the public{" "}
               <a href="/schema/timetable-result.schema.json">JSON Schema</a> to
               validate <code>response.result</code>. On failure, handle{" "}
               <code>response.error</code>. The agent package exports{" "}
