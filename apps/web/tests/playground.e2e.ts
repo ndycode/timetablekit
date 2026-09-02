@@ -284,13 +284,15 @@ test("a slower file read cannot replace a newer file selection", async ({
   await page.addInitScript(() => {
     const originalText = File.prototype.text;
     let delayed = true;
+    let releaseSlow: (() => void) | undefined;
+    window.addEventListener("release-slow-file", () => releaseSlow?.());
     File.prototype.text = function (): Promise<string> {
       if (delayed && this.name === "slow.txt") {
         delayed = false;
         return new Promise((resolve, reject) => {
-          window.setTimeout(() => {
+          releaseSlow = () => {
             originalText.call(this).then(resolve, reject);
-          }, 300);
+          };
         });
       }
       return originalText.call(this);
@@ -313,7 +315,9 @@ test("a slower file read cannot replace a newer file selection", async ({
 
   const uploadPanel = page.getByTestId("upload-panel");
   await expect(uploadPanel.getByText("Selected new.txt.")).toBeVisible();
-  await page.waitForTimeout(400);
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("release-slow-file"));
+  });
   await expect(uploadPanel.getByText("Selected slow.txt.")).toHaveCount(0);
   await expect(uploadPanel.getByText("Selected new.txt.")).toBeVisible();
 });
