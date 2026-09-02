@@ -138,6 +138,9 @@ describe("TimetableKit agent tool", () => {
     expect(getTimetableAgentCapabilities().protocolVersion).toBe(
       AGENT_PROTOCOL_VERSION,
     );
+    expect(timetableParseToolDefinition.description).toContain(
+      "zero events or error-severity warnings",
+    );
     expect(
       timetableAgentResponseSchema.safeParse({
         ok: false,

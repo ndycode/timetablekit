@@ -33,8 +33,8 @@ export function PlaygroundPreview({ result }: PlaygroundPreviewProps) {
             04
           </span>
           <div>
-            <h2 id="preview-title">Schedule preview</h2>
-            <p>See the days and dates that will be exported.</p>
+            <h2 id="preview-title">Export preview</h2>
+            <p>See the weekday groups and exact dates in the result.</p>
           </div>
         </div>
         <span className="panel-note">
@@ -44,7 +44,7 @@ export function PlaygroundPreview({ result }: PlaygroundPreviewProps) {
       <div className="rail-body">
         {groups.length === 0 ? (
           <p className="empty-result" data-testid="preview-empty">
-            Read a schedule to see its weekly preview.
+            Read a schedule to see its export preview.
           </p>
         ) : (
           <div className="agenda-preview">

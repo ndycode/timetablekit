@@ -25,14 +25,14 @@ function toDownload(name: string, content: string, type: string): void {
 }
 
 function sdkSnippet(locale: string, timezone: string): string {
-  return `import { parseTimetable, toICS } from "@ndycode/timetablekit"
+  return `import { parseTimetable, toJSON } from "@ndycode/timetablekit"
 
 const result = await parseTimetable(
   { kind: "text", text: rawTimetable },
   { locale: "${locale}", timezone: "${timezone}" },
 )
 
-const calendar = toICS(result)`;
+const normalized = toJSON(result)`;
 }
 
 export default function Playground() {
@@ -125,15 +125,15 @@ export default function Playground() {
     >
       <div className="playground-intro">
         <div>
-          <h1>Check your schedule.</h1>
+          <h1>Read and review your schedule.</h1>
           <p>
-            Start with a sample. Paste a schedule. Or choose a local file. We
-            read it in your browser by default.
+            Start with the sample, paste text, or choose a local file. The
+            playground reads supported inputs in your browser by default.
           </p>
         </div>
         <p className="privacy-note" data-testid="privacy-note">
           <ShieldCheckIcon aria-hidden="true" />
-          <strong>Runs in this browser.</strong> No account or API key.
+          <strong>Local browser by default.</strong> No account or API key.
         </p>
       </div>
 
@@ -154,13 +154,6 @@ export default function Playground() {
             onReset={reset}
           />
           <PlaygroundEvents result={state.result} onCorrection={correctEvent} />
-          <PlaygroundJson
-            jsonText={jsonText}
-            hasResult={state.result !== null}
-            copyStatus={copyStatus}
-            onExport={exportFormat}
-            onCopy={() => void copySdk()}
-          />
         </div>
         <aside
           className="playground-rail"
@@ -170,6 +163,15 @@ export default function Playground() {
           <PlaygroundIssues result={state.result} />
           <PlaygroundPreview result={state.result} />
         </aside>
+        <div className="playground-export">
+          <PlaygroundJson
+            jsonText={jsonText}
+            hasResult={state.result !== null}
+            copyStatus={copyStatus}
+            onExport={exportFormat}
+            onCopy={() => void copySdk()}
+          />
+        </div>
       </div>
     </main>
   );

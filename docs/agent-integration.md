@@ -14,6 +14,8 @@ JSON wire type. The default tool parses text and CSV. Hosts must inject a
 parser with the PDF.js or OCR providers to process binary input.
 
 ```ts
+import { createTimetableAgentTool } from "@ndycode/timetablekit-agent";
+
 const tool = createTimetableAgentTool();
 const response = await tool.invoke({
   schemaVersion: "1",
@@ -30,9 +32,10 @@ The success response contains the normal versioned `TimetableParseResult`.
 `ok: true` means the parser completed and returned a schema-valid result. It
 does not mean that events were found or that every field is certain. Agents
 must inspect `warnings`, including `NO_EVENTS_FOUND` and
-`UNSUPPORTED_PROVIDER`. Failures contain a stable error code, a short safe
-message, a retry hint, and optional non-content details. The boundary never
-logs the request.
+`UNSUPPORTED_PROVIDER`, and treat zero events or any warning with
+`severity: "error"` as an unusable parse before taking action. Failures contain
+a stable error code, a short safe message, a retry hint, and optional
+non-content details. The boundary never logs the request.
 
 ## Capability discovery
 

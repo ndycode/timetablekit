@@ -16,39 +16,39 @@ type DemoLog = {
 };
 
 const DEMO_MESSAGES: DemoMessage[] = [
-  { role: "user", text: "Can you read my schedule?" },
+  { role: "user", text: "Example input is ready." },
   {
     role: "assistant",
-    text: "Yes. Paste sample text or choose a file. It stays in this browser.",
+    text: "Text, CSV, images, and PDFs use the documented reader boundary.",
   },
-  { role: "user", text: "Show time conflicts before I download." },
+  { role: "user", text: "Show the result before export." },
   {
     role: "assistant",
-    text: "They stay visible until you fix them. The app never hides them.",
+    text: "Review warnings, conflicts, confidence, and source evidence.",
   },
-  { role: "user", text: "Make a calendar file." },
+  { role: "user", text: "What can an agent call?" },
   {
     role: "assistant",
-    text: "Review the events, then download JSON, CSV, or ICS.",
+    text: "Use timetablekit.parse with JSON Schema and JSONL transport.",
   },
 ];
 
 const DEMO_LOGS: DemoLog[] = [
   {
     code: "source.text",
-    detail: "this browser · no network call",
+    detail: "browser memory · no remote provider",
     label: "Input read",
     tone: "accent",
   },
   {
-    code: "events[6]",
-    detail: "92% match · Asia/Manila",
+    code: "events",
+    detail: "92% confidence · Asia/Manila",
     label: "Rows read",
     tone: "success",
   },
   {
-    code: "conflicts[3]",
-    detail: "please review · nothing hidden",
+    code: "conflicts",
+    detail: "review required · warning remains visible",
     label: "Conflicts found",
     tone: "danger",
   },
@@ -60,25 +60,25 @@ const DEMO_LOGS: DemoLog[] = [
   },
   {
     code: "calendar.ics",
-    detail: "time zone kept · works in UTC",
-    label: "Calendar file made",
+    detail: "time zone kept · term range supplied",
+    label: "iCalendar prepared",
     tone: "accent",
   },
   {
     code: "export.ready",
-    detail: "download starts here",
-    label: "Download ready",
+    detail: "JSON · CSV · iCalendar",
+    label: "Exports ready",
     tone: "success",
   },
 ];
 
 const DEMO_STAGES = [
-  "Paste a schedule to start",
+  "Pick an input",
   "Reading sample rows",
-  "Checking dates, times, and clashes",
-  "Waiting for your changes",
-  "Keeping your time zone",
-  "Ready to download your events",
+  "Checking dates, times, and conflicts",
+  "Reviewing warnings and evidence",
+  "Using the selected time zone",
+  "Ready to export the result",
 ];
 
 const DEMO_INTERVAL_MS = 2_100;
@@ -134,6 +134,8 @@ export function TimetableDemo() {
     if (reducedMotion) {
       setStage(DEMO_STAGES.length - 1);
       setIsPaused(true);
+    } else {
+      setIsPaused(false);
     }
   }, [reducedMotion]);
 
@@ -194,23 +196,29 @@ export function TimetableDemo() {
       data-stage={stage}
     >
       <p className="sr-only">
-        This example shows a sample schedule being read in this browser. It
-        finds conflicts, lets you make changes, and creates a calendar file.
+        This illustration shows the TimetableKit flow from local input to a
+        reviewable result and agent-ready JSON contract.
       </p>
       <div className="demo-toolbar">
-        <span className="demo-toolbar-label">LOCAL STEPS · {progress}</span>
-        <button
-          type="button"
-          className="demo-toggle"
-          aria-pressed={isPaused}
-          aria-label={
-            isPaused ? "Play schedule example" : "Pause schedule example"
-          }
-          onClick={() => setIsPaused((paused) => !paused)}
-        >
-          <span aria-hidden="true">{isPaused ? "▶" : "Ⅱ"}</span>
-          {isPaused ? "Play" : "Pause"}
-        </button>
+        <span className="demo-toolbar-label">ILLUSTRATION · {progress}</span>
+        {reducedMotion ? (
+          <span className="demo-toggle demo-motion-note" role="status">
+            Paused for reduced motion
+          </span>
+        ) : (
+          <button
+            type="button"
+            className="demo-toggle"
+            aria-pressed={isPaused}
+            aria-label={
+              isPaused ? "Play schedule example" : "Pause schedule example"
+            }
+            onClick={() => setIsPaused((paused) => !paused)}
+          >
+            <span aria-hidden="true">{isPaused ? "▶" : "Ⅱ"}</span>
+            {isPaused ? "Play" : "Pause"}
+          </button>
+        )}
       </div>
 
       <div className="demo-layout">
@@ -221,30 +229,32 @@ export function TimetableDemo() {
               <span />
               <span />
             </div>
-            <div className="demo-address">127.0.0.1:4173/demo</div>
+            <div className="demo-address">
+              timetablekit.vercel.app/playground
+            </div>
           </div>
           <div className="demo-browser-titlebar">
-            <span className="demo-status-pill">HERE</span>
-            <span>TimetableKit demo</span>
+            <span className="demo-status-pill">EXAMPLE</span>
+            <span>TimetableKit playground</span>
           </div>
           <div className="demo-browser-body">
             <aside
               className="demo-plan-sidebar"
-              aria-label="Ways to add a schedule"
+              aria-label="Supported input paths"
             >
               <div className="demo-plan-card is-current">
                 <div>
-                  <strong>Read here</strong>
-                  <span>Text and CSV</span>
+                  <strong>Browser input</strong>
+                  <span>Text, CSV, image, PDF</span>
                 </div>
-                <span className="demo-plan-state">Used now</span>
+                <span className="demo-plan-state">Local by default</span>
               </div>
               <div className="demo-plan-card">
                 <div>
-                  <strong>Read files</strong>
-                  <span>Images and PDF</span>
+                  <strong>Agent input</strong>
+                  <span>JSON tool, JSONL</span>
                 </div>
-                <span className="demo-plan-state">Runs here</span>
+                <span className="demo-plan-state">Same result</span>
               </div>
               <div className="demo-sidebar-footnote">
                 <span className="demo-sidebar-dot" aria-hidden="true" />
@@ -254,11 +264,11 @@ export function TimetableDemo() {
 
             <section
               className="demo-chat-panel"
-              aria-label="TimetableKit local schedule reader"
+              aria-label="TimetableKit example flow"
             >
               <div className="demo-chat-header">
-                <span>Schedule helper</span>
-                <span className="demo-chat-state">sample schedule</span>
+                <span>Local parser flow</span>
+                <span className="demo-chat-state">illustration</span>
               </div>
               <div className="demo-chat-messages">
                 {visibleMessages.map(({ index, message }) => (
@@ -280,10 +290,10 @@ export function TimetableDemo() {
           </div>
         </div>
 
-        <section className="demo-backend-panel" aria-label="What happened">
+        <section className="demo-backend-panel" aria-label="Example output">
           <div className="demo-backend-header">
-            <span>WHAT HAPPENED</span>
-            <span className="demo-backend-state">stays here</span>
+            <span>EXAMPLE OUTPUT</span>
+            <span className="demo-backend-state">versioned result</span>
           </div>
           <div className="demo-log-stack">
             {visibleLogs.map(({ index, log }) => (

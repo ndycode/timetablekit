@@ -32,7 +32,7 @@ test("sample flow supports review, correction, and ICS export", async ({
 }) => {
   await openReadyPlayground(page);
   await expect(
-    page.getByRole("heading", { name: "Check your schedule." }),
+    page.getByRole("heading", { name: "Read and review your schedule." }),
   ).toBeVisible();
   await expect(page.getByText("Found 6 events.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Issues" })).toBeVisible();
@@ -70,7 +70,7 @@ test("paste parsing stays local and requires no account", async ({ page }) => {
   expect(await page.evaluate(() => window.localStorage.length)).toBe(0);
 });
 
-test("correction changes recompute conflicts and expose AI consent state", async ({
+test("correction changes recompute conflicts and expose recovery state", async ({
   page,
 }) => {
   await openReadyPlayground(page);
@@ -87,11 +87,149 @@ test("correction changes recompute conflicts and expose AI consent state", async
     .fill("09:15");
   await expect(page.getByText("Time conflict")).toHaveCount(0);
 
-  await page.getByLabel("Schedule text").fill("Sketching; Monday; 9-10");
-  await page.getByRole("checkbox", { name: /Use optional AI help/ }).check();
+  const recoveryDataRequests: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.resourceType() === "fetch" ||
+      request.resourceType() === "xhr"
+    ) {
+      recoveryDataRequests.push(request.url());
+    }
+  });
+  await page.getByLabel("Schedule text").fill("Resolved; Monday; 09:00-10:00");
+  await page
+    .getByRole("checkbox", { name: /Enable optional remote recovery/ })
+    .check();
   await page.getByRole("button", { name: "Read schedule" }).click();
-  await expect(page.getByText("AI help unavailable")).toBeVisible();
+  await expect(page.getByText("Found 1 event.")).toBeVisible();
+  await expect(page.getByText("Recovery unavailable")).toHaveCount(0);
+  expect(recoveryDataRequests).toEqual([]);
+
+  await page.getByLabel("Schedule text").fill("Sketching; Monday; 9-10");
+  await page.getByRole("button", { name: "Read schedule" }).click();
+  await expect(page.getByText("Recovery unavailable")).toBeVisible();
   await expect(page.getByText("Unclear time")).toBeVisible();
+  expect(recoveryDataRequests).toEqual([]);
+});
+
+test("public copy names the shipped agent contract", async ({ page }) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", {
+      name: "Use it in TypeScript or an agent host",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("@ndycode/timetablekit-agent")).toBeVisible();
+  await expect(page.getByText("timetablekit.parse")).toBeVisible();
+  await expect(page.getByText("Fictional week").first()).toBeVisible();
+  await expect(
+    page.getByText("duplicate row was removed before export"),
+  ).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("May 2025");
+  await expect(page.locator("body")).not.toContainText("Spring 2025");
+  await expect(page.locator("body")).not.toContainText("AI help");
+
+  await page.goto("/docs");
+  await expect(
+    page.getByRole("heading", { name: "Agent integrations" }),
+  ).toBeVisible();
+  await expect(page.getByText("timetablekit agent")).toBeVisible();
+  await expect(page.getByText("bounded base64")).toBeVisible();
+});
+
+test("reduced motion pauses the example without hiding its content", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.locator(".timetable-demo")).toHaveAttribute(
+    "data-reduced-motion",
+    "true",
+  );
+  await expect(page.getByText("Paused for reduced motion")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Play schedule example" }),
+  ).toHaveCount(0);
+  await expect(page.locator(".demo-message").first()).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(
+    page.getByRole("button", { name: "Pause schedule example" }),
+  ).toBeVisible();
+});
+
+test("mobile pages keep scroll regions focusable and review order intact", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const path of [
+    "/",
+    "/playground",
+    "/docs",
+    "/privacy",
+    "/security",
+    "/roadmap",
+    "/code-of-conduct",
+  ]) {
+    await page.goto(path);
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(
+      results.violations,
+      path + " mobile accessibility violations",
+    ).toEqual([]);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+      path + " horizontal overflow",
+    ).toBe(true);
+  }
+
+  await page.goto("/docs");
+  const docsCodeTabIndexes = await page
+    .locator(".doc-content pre")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => (node instanceof HTMLElement ? node.tabIndex : -1)),
+    );
+  expect(docsCodeTabIndexes).toEqual([0, 0]);
+
+  await page.goto("/playground");
+  await expect(page.getByText("Found 6 events.")).toBeVisible();
+  const scrollRegionTabIndexes = await page
+    .locator(".source-text-preview > pre, .table-scroll, .json-inspector")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => (node instanceof HTMLElement ? node.tabIndex : -1)),
+    );
+  expect(scrollRegionTabIndexes).toEqual([0, 0, 0]);
+  const panelOrder = await page
+    .locator(
+      '[data-testid="playground-source"], [data-testid="playground-events"], [data-testid="playground-issues"], [data-testid="playground-preview"], [data-testid="playground-json"]',
+    )
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-testid")),
+    );
+  expect(panelOrder).toEqual([
+    "playground-source",
+    "playground-events",
+    "playground-issues",
+    "playground-preview",
+    "playground-json",
+  ]);
+  const panelTops = await page
+    .locator(
+      '[data-testid="playground-source"], [data-testid="playground-events"], [data-testid="playground-issues"], [data-testid="playground-preview"], [data-testid="playground-json"]',
+    )
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().top),
+    );
+  expect(
+    panelTops.slice(1).every((top, index) => {
+      const previousTop = panelTops[index];
+      return previousTop !== undefined && top >= previousTop;
+    }),
+  ).toBe(true);
 });
 
 test("file input, exact dates, multiple weekdays, and reset stay observable", async ({
@@ -138,6 +276,50 @@ test("file input, exact dates, multiple weekdays, and reset stay observable", as
     "true",
   );
   await expect(page.getByTestId("parse-status")).toHaveText("Found 6 events.");
+});
+
+test("a slower file read cannot replace a newer file selection", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const originalText = File.prototype.text;
+    let delayed = true;
+    let releaseSlow: (() => void) | undefined;
+    window.addEventListener("release-slow-file", () => releaseSlow?.());
+    File.prototype.text = function (): Promise<string> {
+      if (delayed && this.name === "slow.txt") {
+        delayed = false;
+        return new Promise((resolve, reject) => {
+          releaseSlow = () => {
+            originalText.call(this).then(resolve, reject);
+          };
+        });
+      }
+      return originalText.call(this);
+    };
+  });
+  await openReadyPlayground(page);
+  await page.getByRole("tab", { name: "Choose file" }).click();
+
+  const fileInput = page.locator("#timetable-file");
+  await fileInput.setInputFiles({
+    name: "slow.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Old file; Monday; 09:00-10:00"),
+  });
+  await fileInput.setInputFiles({
+    name: "new.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("New file; Tuesday; 11:00-12:00"),
+  });
+
+  const uploadPanel = page.getByTestId("upload-panel");
+  await expect(uploadPanel.getByText("Selected new.txt.")).toBeVisible();
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("release-slow-file"));
+  });
+  await expect(uploadPanel.getByText("Selected slow.txt.")).toHaveCount(0);
+  await expect(uploadPanel.getByText("Selected new.txt.")).toBeVisible();
 });
 
 test("OCR runtime assets stay on the app origin", async ({ page }) => {
@@ -209,7 +391,15 @@ test("landing page and playground have no automated accessibility violations", a
   page,
 }) => {
   test.setTimeout(60_000);
-  for (const path of ["/", "/playground", "/docs", "/privacy", "/security"]) {
+  for (const path of [
+    "/",
+    "/playground",
+    "/docs",
+    "/privacy",
+    "/security",
+    "/roadmap",
+    "/code-of-conduct",
+  ]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations, `${path} accessibility violations`).toEqual([]);

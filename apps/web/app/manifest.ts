@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "TimetableKit",
     short_name: "TimetableKit",
-    description: "Turn schedules into calendar events.",
+    description:
+      "Local-first timetable parsing for browsers, apps, CLIs, and agent hosts.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
