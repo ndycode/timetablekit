@@ -55,6 +55,9 @@ export default function HomePage() {
 Mon 10:30-12:00 MATH201 Discrete Math
 Mon 14:00-15:30 CS205 Databases
 
+Tue 09:00-10:30 CS101 Algorithms
+Tue 13:00-14:30 MATH201 Discrete Math
+
 Time zone: Asia/Manila`}</pre>
             </div>
             <div className="sample-output">

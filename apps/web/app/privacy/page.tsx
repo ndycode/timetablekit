@@ -20,10 +20,10 @@ export default function PrivacyPage() {
         <section>
           <h2>Remote recovery is opt-in</h2>
           <p>
-            The public playground has no recovery provider configured. When an
-            input needs recovery, it reports that recovery is unavailable and
-            makes no remote request. In another host, a provider must be
-            configured and the host must set{" "}
+            The public playground has no recovery provider configured. When you
+            enable its recovery control and an input needs recovery, it reports
+            that recovery is unavailable and makes no remote request. In another
+            host, a provider must be configured and the host must set{" "}
             <code>allowRemoteRecovery: true</code>. The request must also
             include explicit recovery consent before content can leave the local
             process.

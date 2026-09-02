@@ -106,9 +106,11 @@ const response = await tool.invoke({
               host sets <code>allowRemoteRecovery: true</code> when constructing
               the tool, injects a parser with a recovery provider, and the
               request sets <code>options.recovery.enabled</code> and{" "}
-              <code>options.recovery.consent</code> to true. Use the public{" "}
+              <code>options.recovery.consent</code> to true. Check{" "}
+              <code>response.ok</code> first. On success, use the public{" "}
               <a href="/schema/timetable-result.schema.json">JSON Schema</a> to
-              validate <code>response.result</code>. The agent package exports{" "}
+              validate <code>response.result</code>. On failure, handle{" "}
+              <code>response.error</code>. The agent package exports{" "}
               <code>timetableAgentOutputJsonSchema</code> for the full{" "}
               <code>{"{ ok: true, result }"}</code> or{" "}
               <code>{"{ ok: false, error }"}</code> wrapper.

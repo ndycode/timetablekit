@@ -96,10 +96,16 @@ test("correction changes recompute conflicts and expose recovery state", async (
       recoveryDataRequests.push(request.url());
     }
   });
-  await page.getByLabel("Schedule text").fill("Sketching; Monday; 9-10");
+  await page.getByLabel("Schedule text").fill("Resolved; Monday; 09:00-10:00");
   await page
     .getByRole("checkbox", { name: /Enable optional remote recovery/ })
     .check();
+  await page.getByRole("button", { name: "Read schedule" }).click();
+  await expect(page.getByText("Found 1 event.")).toBeVisible();
+  await expect(page.getByText("Recovery unavailable")).toHaveCount(0);
+  expect(recoveryDataRequests).toEqual([]);
+
+  await page.getByLabel("Schedule text").fill("Sketching; Monday; 9-10");
   await page.getByRole("button", { name: "Read schedule" }).click();
   await expect(page.getByText("Recovery unavailable")).toBeVisible();
   await expect(page.getByText("Unclear time")).toBeVisible();
@@ -158,6 +164,7 @@ test("mobile pages keep scroll regions focusable and review order intact", async
     "/privacy",
     "/security",
     "/roadmap",
+    "/code-of-conduct",
   ]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
@@ -169,6 +176,7 @@ test("mobile pages keep scroll regions focusable and review order intact", async
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
+      path + " horizontal overflow",
     ).toBe(true);
   }
 
@@ -336,6 +344,7 @@ test("landing page and playground have no automated accessibility violations", a
     "/privacy",
     "/security",
     "/roadmap",
+    "/code-of-conduct",
   ]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
