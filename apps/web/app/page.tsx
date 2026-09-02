@@ -2,6 +2,7 @@ import Link from "next/link";
 import { VERIFIED_GITHUB_URL } from "../components/site-header";
 import { ArrowRightIcon, ArrowUpRightIcon } from "../components/icons";
 import { TimetableDemo } from "../components/timetable-demo";
+import { SAMPLE_TEXT } from "../lib/samples";
 
 const sampleEvents = [
   { time: "09:00", title: "Algorithms", detail: "CS101 · Room 204" },
@@ -51,14 +52,7 @@ export default function HomePage() {
           <div className="transform-grid">
             <div className="sample-input">
               <div className="sample-label">Fictional week</div>
-              <pre>{`Mon 09:00-11:00 CS101 Algorithms
-Mon 10:30-12:00 MATH201 Discrete Math
-Mon 14:00-15:30 CS205 Databases
-
-Tue 09:00-10:30 CS101 Algorithms
-Tue 13:00-14:30 MATH201 Discrete Math
-
-Time zone: Asia/Manila`}</pre>
+              <pre>{SAMPLE_TEXT}</pre>
             </div>
             <div className="sample-output">
               <div className="agenda-date">Monday · fictional week</div>
@@ -85,6 +79,18 @@ Time zone: Asia/Manila`}</pre>
                   <time>13:00</time>
                   <span>
                     Discrete Math<small>MATH201 · Room 204</small>
+                  </span>
+                </li>
+                <li>
+                  <time>15:00</time>
+                  <span>
+                    Databases<small>CS205 · Room 305</small>
+                  </span>
+                </li>
+                <li>
+                  <time>15:00</time>
+                  <span>
+                    Databases<small>CS205 · Room 305</small>
                   </span>
                 </li>
               </ul>

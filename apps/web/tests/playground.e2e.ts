@@ -151,6 +151,10 @@ test("reduced motion pauses the example without hiding its content", async ({
     "animation-name",
     "none",
   );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(
+    page.getByRole("button", { name: "Pause schedule example" }),
+  ).toBeVisible();
 });
 
 test("mobile pages keep scroll regions focusable and review order intact", async ({
@@ -184,7 +188,7 @@ test("mobile pages keep scroll regions focusable and review order intact", async
   const docsCodeTabIndexes = await page
     .locator(".doc-content pre")
     .evaluateAll((nodes) =>
-      nodes.map((node) => (node as HTMLElement).tabIndex),
+      nodes.map((node) => (node instanceof HTMLElement ? node.tabIndex : -1)),
     );
   expect(docsCodeTabIndexes).toEqual([0, 0]);
 
@@ -193,7 +197,7 @@ test("mobile pages keep scroll regions focusable and review order intact", async
   const scrollRegionTabIndexes = await page
     .locator(".source-text-preview > pre, .table-scroll, .json-inspector")
     .evaluateAll((nodes) =>
-      nodes.map((node) => (node as HTMLElement).tabIndex),
+      nodes.map((node) => (node instanceof HTMLElement ? node.tabIndex : -1)),
     );
   expect(scrollRegionTabIndexes).toEqual([0, 0, 0]);
   const panelOrder = await page
@@ -218,7 +222,10 @@ test("mobile pages keep scroll regions focusable and review order intact", async
       nodes.map((node) => node.getBoundingClientRect().top),
     );
   expect(
-    panelTops.slice(1).every((top, index) => top >= panelTops[index]!),
+    panelTops.slice(1).every((top, index) => {
+      const previousTop = panelTops[index];
+      return previousTop !== undefined && top >= previousTop;
+    }),
   ).toBe(true);
 });
 

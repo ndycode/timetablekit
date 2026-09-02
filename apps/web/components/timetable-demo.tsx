@@ -134,6 +134,8 @@ export function TimetableDemo() {
     if (reducedMotion) {
       setStage(DEMO_STAGES.length - 1);
       setIsPaused(true);
+    } else {
+      setIsPaused(false);
     }
   }, [reducedMotion]);
 
