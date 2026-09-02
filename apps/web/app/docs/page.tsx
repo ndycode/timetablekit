@@ -105,12 +105,13 @@ const response = await tool.invoke({
               OCR providers for binary input. Remote recovery is off unless the
               host sets <code>allowRemoteRecovery: true</code> when constructing
               the tool, injects a parser with a recovery provider, and the
-              request sets <code>recovery.enabled</code> and{" "}
-              <code>recovery.consent</code> to true. Use the public{" "}
+              request sets <code>options.recovery.enabled</code> and{" "}
+              <code>options.recovery.consent</code> to true. Use the public{" "}
               <a href="/schema/timetable-result.schema.json">JSON Schema</a> to
               validate <code>response.result</code>. The agent package exports{" "}
               <code>timetableAgentOutputJsonSchema</code> for the full{" "}
-              <code>{"{ ok, result }"}</code> wrapper.
+              <code>{"{ ok: true, result }"}</code> or{" "}
+              <code>{"{ ok: false, error }"}</code> wrapper.
             </p>
             <p>
               The <code>timetablekit agent</code> command uses JSONL. It reads

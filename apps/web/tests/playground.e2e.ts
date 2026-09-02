@@ -73,15 +73,6 @@ test("paste parsing stays local and requires no account", async ({ page }) => {
 test("correction changes recompute conflicts and expose recovery state", async ({
   page,
 }) => {
-  const dataRequests: string[] = [];
-  page.on("request", (request) => {
-    if (
-      request.resourceType() === "fetch" ||
-      request.resourceType() === "xhr"
-    ) {
-      dataRequests.push(request.url());
-    }
-  });
   await openReadyPlayground(page);
   await page.getByRole("tab", { name: "Paste text" }).click();
   await page
@@ -96,6 +87,15 @@ test("correction changes recompute conflicts and expose recovery state", async (
     .fill("09:15");
   await expect(page.getByText("Time conflict")).toHaveCount(0);
 
+  const recoveryDataRequests: string[] = [];
+  page.on("request", (request) => {
+    if (
+      request.resourceType() === "fetch" ||
+      request.resourceType() === "xhr"
+    ) {
+      recoveryDataRequests.push(request.url());
+    }
+  });
   await page.getByLabel("Schedule text").fill("Sketching; Monday; 9-10");
   await page
     .getByRole("checkbox", { name: /Enable optional remote recovery/ })
@@ -103,7 +103,7 @@ test("correction changes recompute conflicts and expose recovery state", async (
   await page.getByRole("button", { name: "Read schedule" }).click();
   await expect(page.getByText("Recovery unavailable")).toBeVisible();
   await expect(page.getByText("Unclear time")).toBeVisible();
-  expect(dataRequests).toEqual([]);
+  expect(recoveryDataRequests).toEqual([]);
 });
 
 test("public copy names the shipped agent contract", async ({ page }) => {
@@ -137,9 +137,10 @@ test("reduced motion pauses the example without hiding its content", async ({
     "data-reduced-motion",
     "true",
   );
+  await expect(page.getByText("Paused for reduced motion")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Play schedule example" }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(page.locator(".demo-message").first()).toHaveCSS(
     "animation-name",
     "none",
@@ -150,7 +151,14 @@ test("mobile pages keep scroll regions focusable and review order intact", async
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const path of ["/playground", "/docs"]) {
+  for (const path of [
+    "/",
+    "/playground",
+    "/docs",
+    "/privacy",
+    "/security",
+    "/roadmap",
+  ]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
     expect(
@@ -164,7 +172,22 @@ test("mobile pages keep scroll regions focusable and review order intact", async
     ).toBe(true);
   }
 
+  await page.goto("/docs");
+  const docsCodeTabIndexes = await page
+    .locator(".doc-content pre")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => (node as HTMLElement).tabIndex),
+    );
+  expect(docsCodeTabIndexes).toEqual([0, 0]);
+
   await page.goto("/playground");
+  await expect(page.getByText("Found 6 events.")).toBeVisible();
+  const scrollRegionTabIndexes = await page
+    .locator(".source-text-preview > pre, .table-scroll, .json-inspector")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => (node as HTMLElement).tabIndex),
+    );
+  expect(scrollRegionTabIndexes).toEqual([0, 0, 0]);
   const panelOrder = await page
     .locator(
       '[data-testid="playground-source"], [data-testid="playground-events"], [data-testid="playground-issues"], [data-testid="playground-preview"], [data-testid="playground-json"]',
@@ -179,6 +202,16 @@ test("mobile pages keep scroll regions focusable and review order intact", async
     "playground-preview",
     "playground-json",
   ]);
+  const panelTops = await page
+    .locator(
+      '[data-testid="playground-source"], [data-testid="playground-events"], [data-testid="playground-issues"], [data-testid="playground-preview"], [data-testid="playground-json"]',
+    )
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().top),
+    );
+  expect(
+    panelTops.slice(1).every((top, index) => top >= panelTops[index]!),
+  ).toBe(true);
 });
 
 test("file input, exact dates, multiple weekdays, and reset stay observable", async ({
@@ -296,7 +329,14 @@ test("landing page and playground have no automated accessibility violations", a
   page,
 }) => {
   test.setTimeout(60_000);
-  for (const path of ["/", "/playground", "/docs", "/privacy", "/security"]) {
+  for (const path of [
+    "/",
+    "/playground",
+    "/docs",
+    "/privacy",
+    "/security",
+    "/roadmap",
+  ]) {
     await page.goto(path);
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations, `${path} accessibility violations`).toEqual([]);

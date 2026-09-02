@@ -108,7 +108,6 @@ export function TimetableDemo() {
   const [isPaused, setIsPaused] = useState(false);
   const [stage, setStage] = useState(0);
   const [typedText, setTypedText] = useState(DEMO_STAGES[0]);
-  const isDemoPaused = isPaused || reducedMotion;
 
   useEffect(() => {
     const root = rootRef.current;
@@ -200,18 +199,24 @@ export function TimetableDemo() {
       </p>
       <div className="demo-toolbar">
         <span className="demo-toolbar-label">ILLUSTRATION · {progress}</span>
-        <button
-          type="button"
-          className="demo-toggle"
-          aria-pressed={isDemoPaused}
-          aria-label={
-            isDemoPaused ? "Play schedule example" : "Pause schedule example"
-          }
-          onClick={() => setIsPaused((paused) => !paused)}
-        >
-          <span aria-hidden="true">{isDemoPaused ? "▶" : "Ⅱ"}</span>
-          {isDemoPaused ? "Play" : "Pause"}
-        </button>
+        {reducedMotion ? (
+          <span className="demo-toggle demo-motion-note" role="status">
+            Paused for reduced motion
+          </span>
+        ) : (
+          <button
+            type="button"
+            className="demo-toggle"
+            aria-pressed={isPaused}
+            aria-label={
+              isPaused ? "Play schedule example" : "Pause schedule example"
+            }
+            onClick={() => setIsPaused((paused) => !paused)}
+          >
+            <span aria-hidden="true">{isPaused ? "▶" : "Ⅱ"}</span>
+            {isPaused ? "Play" : "Pause"}
+          </button>
+        )}
       </div>
 
       <div className="demo-layout">

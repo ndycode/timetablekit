@@ -125,7 +125,7 @@ export const DAY_OPTIONS: readonly Weekday[] = [
 
 export const PROGRESS_LABELS: Readonly<Record<ParseStage, string>> = {
   assemble: "Building events.",
-  confidence: "Checking match scores.",
+  confidence: "Checking confidence.",
   conflicts: "Checking for time conflicts.",
   deduplicate: "Removing duplicates.",
   extract: "Reading the schedule.",

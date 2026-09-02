@@ -144,7 +144,7 @@ Time zone: Asia/Manila`}</pre>
             Read the guide <ArrowRightIcon />
           </Link>
         </div>
-        <pre className="sdk-code">
+        <pre className="sdk-code" tabIndex={0} aria-label="TypeScript example">
           <code>
             <span className="code-keyword">import</span> &#123; parseTimetable,
             toJSON &#125; <span className="code-keyword">from</span>{" "}

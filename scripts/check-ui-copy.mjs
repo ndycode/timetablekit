@@ -20,6 +20,7 @@ const files = [
   "apps/web/components/site-header.tsx",
   "apps/web/components/timetable-demo.tsx",
   "apps/web/lib/input-boundary.ts",
+  "apps/web/lib/playground-model.ts",
   "apps/web/lib/samples.ts",
 ];
 
@@ -68,6 +69,8 @@ const oldPhrases = [
   "prefers-color-scheme: dark",
 ];
 
+const oldTextPatterns = [["standalone Upload label", />\s*Upload\s*</]];
+
 const requiredPhrases = [
   [
     "apps/web/app/page.tsx",
@@ -80,8 +83,11 @@ const requiredPhrases = [
       "timetablekit agent",
       "base64",
       "allowRemoteRecovery: true",
+      "options.recovery.enabled",
+      "options.recovery.consent",
       "response.result",
       "timetableAgentOutputJsonSchema",
+      "ok: false",
     ],
   ],
   [
@@ -100,6 +106,13 @@ for (const file of files) {
   const source = readFileSync(join(process.cwd(), file), "utf8");
   for (const phrase of oldPhrases) {
     if (source.includes(phrase)) findings.push(`${file}: ${phrase}`);
+  }
+}
+
+for (const file of files) {
+  const source = readFileSync(join(process.cwd(), file), "utf8");
+  for (const [label, pattern] of oldTextPatterns) {
+    if (pattern.test(source)) findings.push(file + ": " + label);
   }
 }
 

@@ -634,6 +634,12 @@ main {
   transform: scale(0.98);
 }
 
+.demo-motion-note {
+  display: inline-flex;
+  align-items: center;
+  color: var(--tk-text-secondary);
+}
+
 .demo-toggle span {
   display: inline-block;
   width: 14px;
