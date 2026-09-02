@@ -122,6 +122,9 @@ test("public copy names the shipped agent contract", async ({ page }) => {
   await expect(page.getByText("@ndycode/timetablekit-agent")).toBeVisible();
   await expect(page.getByText("timetablekit.parse")).toBeVisible();
   await expect(page.getByText("Fictional week").first()).toBeVisible();
+  await expect(
+    page.getByText("duplicate row was removed before export"),
+  ).toBeVisible();
   await expect(page.locator("body")).not.toContainText("May 2025");
   await expect(page.locator("body")).not.toContainText("Spring 2025");
   await expect(page.locator("body")).not.toContainText("AI help");
@@ -273,6 +276,46 @@ test("file input, exact dates, multiple weekdays, and reset stay observable", as
     "true",
   );
   await expect(page.getByTestId("parse-status")).toHaveText("Found 6 events.");
+});
+
+test("a slower file read cannot replace a newer file selection", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const originalText = File.prototype.text;
+    let delayed = true;
+    File.prototype.text = function (): Promise<string> {
+      if (delayed && this.name === "slow.txt") {
+        delayed = false;
+        return new Promise((resolve, reject) => {
+          window.setTimeout(() => {
+            originalText.call(this).then(resolve, reject);
+          }, 300);
+        });
+      }
+      return originalText.call(this);
+    };
+  });
+  await openReadyPlayground(page);
+  await page.getByRole("tab", { name: "Choose file" }).click();
+
+  const fileInput = page.locator("#timetable-file");
+  await fileInput.setInputFiles({
+    name: "slow.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Old file; Monday; 09:00-10:00"),
+  });
+  await fileInput.setInputFiles({
+    name: "new.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("New file; Tuesday; 11:00-12:00"),
+  });
+
+  const uploadPanel = page.getByTestId("upload-panel");
+  await expect(uploadPanel.getByText("Selected new.txt.")).toBeVisible();
+  await page.waitForTimeout(400);
+  await expect(uploadPanel.getByText("Selected slow.txt.")).toHaveCount(0);
+  await expect(uploadPanel.getByText("Selected new.txt.")).toBeVisible();
 });
 
 test("OCR runtime assets stay on the app origin", async ({ page }) => {

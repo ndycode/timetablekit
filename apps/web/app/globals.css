@@ -493,6 +493,13 @@ main {
   line-height: 18px;
 }
 
+.sample-output-note {
+  margin: calc(var(--tk-space-6) * -1) 0 0;
+  color: var(--tk-text-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
 .workflow-band,
 .formats-band,
 .sdk-band,

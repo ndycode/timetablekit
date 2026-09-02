@@ -61,6 +61,7 @@ export function usePlayground(): PlaygroundController {
     createInitialPlaygroundState,
   );
   const requestIdRef = useRef(0);
+  const fileReadIdRef = useRef(0);
   const activeRequestRef = useRef<ActiveRequest | null>(null);
 
   const currentInput = useMemo(
@@ -177,6 +178,7 @@ export function usePlayground(): PlaygroundController {
   }, []);
 
   const reset = useCallback((): void => {
+    fileReadIdRef.current += 1;
     stop();
     const initialState = createInitialPlaygroundState();
     dispatch({ type: "reset" });
@@ -186,9 +188,11 @@ export function usePlayground(): PlaygroundController {
   const handleFile = useCallback(
     async (file: File | undefined): Promise<void> => {
       if (file === undefined) return;
+      const fileReadId = ++fileReadIdRef.current;
       stop();
       try {
         const boundary = await fileToTimetableInput(file);
+        if (fileReadIdRef.current !== fileReadId) return;
         if (!boundary.ok) {
           dispatch({ type: "file-rejected", message: boundary.message });
           return;
@@ -199,6 +203,7 @@ export function usePlayground(): PlaygroundController {
           label: boundary.label,
         });
       } catch (caught) {
+        if (fileReadIdRef.current !== fileReadId) return;
         dispatch({
           type: "file-rejected",
           message: parseErrorMessage(caught),
@@ -210,6 +215,7 @@ export function usePlayground(): PlaygroundController {
 
   const selectTab = useCallback(
     (tab: PlaygroundTab): void => {
+      fileReadIdRef.current += 1;
       stop();
       dispatch({ type: "tab-changed", tab });
     },
@@ -217,6 +223,7 @@ export function usePlayground(): PlaygroundController {
   );
   const setPasteText = useCallback(
     (text: string): void => {
+      fileReadIdRef.current += 1;
       stop();
       dispatch({ type: "paste-text-changed", text });
     },
@@ -280,6 +287,7 @@ export function usePlayground(): PlaygroundController {
 
   useEffect(
     () => () => {
+      fileReadIdRef.current += 1;
       activeRequestRef.current?.controller.abort();
       activeRequestRef.current = null;
     },

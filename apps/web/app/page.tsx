@@ -87,13 +87,11 @@ export default function HomePage() {
                     Databases<small>CS205 · Room 305</small>
                   </span>
                 </li>
-                <li>
-                  <time>15:00</time>
-                  <span>
-                    Databases<small>CS205 · Room 305</small>
-                  </span>
-                </li>
               </ul>
+              <p className="sample-output-note">
+                6 normalized events. The duplicate row was removed before
+                export.
+              </p>
             </div>
           </div>
         </div>
